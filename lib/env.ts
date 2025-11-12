@@ -10,10 +10,6 @@ const clientEnvSchema = z.object({
 // Server-side environment variables (includes all vars)
 const serverEnvSchema = clientEnvSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  N8N_WEBHOOK_CREATE_PROCEDURE: z.union([z.string().url(), z.literal('')]).optional(),
-  N8N_WEBHOOK_REQUEST_DOCS: z.union([z.string().url(), z.literal('')]).optional(),
-  N8N_WEBHOOK_UPLOAD: z.union([z.string().url(), z.literal('')]).optional(),
-  SMTP_FROM: z.string().optional(),
 });
 
 function getClientEnv() {
@@ -39,10 +35,6 @@ function getServerEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    N8N_WEBHOOK_CREATE_PROCEDURE: process.env.N8N_WEBHOOK_CREATE_PROCEDURE,
-    N8N_WEBHOOK_REQUEST_DOCS: process.env.N8N_WEBHOOK_REQUEST_DOCS,
-    N8N_WEBHOOK_UPLOAD: process.env.N8N_WEBHOOK_UPLOAD,
-    SMTP_FROM: process.env.SMTP_FROM,
   };
 
   const parsed = serverEnvSchema.safeParse(env);
