@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/env';
+import { serverEnv } from '@/lib/env';
 import { fetcher } from '@/lib/fetcher';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 
@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
     });
 
     // Call n8n webhook
-    const url = `${env.N8N_BASE_URL}${env.N8N_WEBHOOK_CREATE_PROCEDURE}`;
-    const res = await fetcher(url, {
+    if (!serverEnv.N8N_WEBHOOK_CREATE_PROCEDURE) {
+      return NextResponse.json({ error: 'n8n webhook not configured' }, { status: 501 });
+    }
+    const res = await fetcher(serverEnv.N8N_WEBHOOK_CREATE_PROCEDURE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ procedureId, mode, contractVars }),

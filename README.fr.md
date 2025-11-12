@@ -20,12 +20,14 @@ Portail d'administration pour la gestion des clients et des procédures de forma
 ## 🔧 Installation
 
 1. **Cloner le projet**
+
 ```bash
 git clone https://github.com/Zakran27/tutorflow.git
 cd tutorflow
 ```
 
 2. **Installer les dépendances**
+
 ```bash
 pnpm install
 ```
@@ -122,11 +124,13 @@ tutorflow/
 ## 📊 Fonctionnalités
 
 ### Page d'accueil
+
 - Vitrine pour les cours et formations
 - Section services (domicile, école, expertise)
 - Formulaire de contact
 
 ### Portail Admin
+
 - **Clients** : Liste, création, modification, détails
 - **Procédures** : Affichage par client avec statuts
 - **Workflows n8n** : Boutons d'action (à connecter)
@@ -134,6 +138,7 @@ tutorflow/
 ## 🚀 Déploiement sur Vercel
 
 1. **Pusher le code sur GitHub**
+
 ```bash
 git add .
 git commit -m "Initial commit"
@@ -141,6 +146,7 @@ git push origin main
 ```
 
 2. **Connecter à Vercel**
+
 - Aller sur [vercel.com](https://vercel.com)
 - Importer le projet GitHub
 - Configurer les variables d'environnement
@@ -149,6 +155,7 @@ git push origin main
 3. **Variables d'environnement Vercel**
 
 Ajouter dans les settings du projet :
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `N8N_WEBHOOK_CREATE_PROCEDURE`
@@ -158,11 +165,13 @@ Ajouter dans les settings du projet :
 4. **Configurer les redirections Supabase**
 
 Dans Supabase Dashboard > Authentication > URL Configuration :
+
 - Ajouter l'URL de production Vercel aux **Redirect URLs**
 
 ## 🔄 Intégration n8n
 
 Les workflows n8n sont prêts à être connectés :
+
 - Création de procédure
 - Demande de documents
 - Upload de fichiers
