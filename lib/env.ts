@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Client-side environment variables (NEXT_PUBLIC_* only)
 const clientEnvSchema = z.object({
-  NEXT_PUBLIC_SITE_URL: z.string().url().optional().default('http://localhost:3000'),
+  NEXT_PUBLIC_SITE_URL: z.string().min(1).default('http://localhost:3000'),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
@@ -14,7 +14,7 @@ const serverEnvSchema = clientEnvSchema.extend({
 
 function getClientEnv() {
   const env = {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   };
@@ -31,7 +31,7 @@ function getClientEnv() {
 
 function getServerEnv() {
   const env = {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
