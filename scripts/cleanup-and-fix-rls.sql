@@ -22,6 +22,7 @@ drop policy if exists "admin_all_profiles" on public.profiles;
 drop policy if exists "admin_select_profiles" on public.profiles;
 drop policy if exists "users_read_own_profile" on public.profiles;
 drop policy if exists "admins_read_all_profiles" on public.profiles;
+drop policy if exists "allow_email_check_for_login" on public.profiles;
 
 -- Create correct policies (no infinite recursion)
 create policy "users_read_own_profile" on public.profiles
@@ -29,6 +30,10 @@ create policy "users_read_own_profile" on public.profiles
 
 create policy "admins_read_all_profiles" on public.profiles
   for select using (public.is_admin());
+
+-- Allow unauthenticated users to check if email exists (for login validation)
+create policy "allow_email_check_for_login" on public.profiles
+  for select using (true);
 
 -- ============================================
 -- CLIENTS TABLE
