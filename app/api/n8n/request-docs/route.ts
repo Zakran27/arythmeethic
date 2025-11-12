@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/env';
+import { serverEnv } from '@/lib/env';
 import { fetcher } from '@/lib/fetcher';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 
@@ -34,14 +34,15 @@ export async function POST(req: NextRequest) {
     });
 
     // Call n8n webhook (for email notification, etc.)
-    const url = `${env.N8N_BASE_URL}${env.N8N_WEBHOOK_REQUEST_DOCS}`;
-    const uploadUrl = `${env.NEXT_PUBLIC_SITE_URL}/deposit/${token}`;
+    const uploadUrl = `${serverEnv.NEXT_PUBLIC_SITE_URL}/deposit/${token}`;
 
-    await fetcher(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ procedureId, required, uploadUrl }),
-    });
+    if (serverEnv.N8N_WEBHOOK_REQUEST_DOCS) {
+      await fetcher(serverEnv.N8N_WEBHOOK_REQUEST_DOCS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ procedureId, required, uploadUrl }),
+      });
+    }
 
     return NextResponse.json({
       ok: true,
