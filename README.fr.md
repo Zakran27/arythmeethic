@@ -1,4 +1,4 @@
-# TutorFlow
+# A Rythme Ethic (Arythmeethic)
 
 Portail d'administration pour la gestion des clients et des procédures de formation.
 
@@ -22,8 +22,8 @@ Portail d'administration pour la gestion des clients et des procédures de forma
 1. **Cloner le projet**
 
 ```bash
-git clone https://github.com/Zakran27/tutorflow.git
-cd tutorflow
+git clone https://github.com/Zakran27/arythmeethic.git
+cd arythmeethic
 ```
 
 2. **Installer les dépendances**
@@ -96,7 +96,7 @@ Le site sera accessible sur [http://localhost:3000](http://localhost:3000)
 ## 📁 Structure du projet
 
 ```
-tutorflow/
+arythmeethic/
 ├── app/                      # App Router Next.js
 │   ├── page.tsx             # Page d'accueil (vitrine)
 │   ├── admin/               # Portail d'administration

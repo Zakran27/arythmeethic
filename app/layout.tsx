@@ -3,13 +3,21 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tutorflow - Manage Your Teaching Business',
-  description: 'Professional client and procedure management for educators',
+  title: 'A Rythme Ethic - Cours à domicile et interventions en établissement',
+  description: 'Accompagnement personnalisé pour élèves, parents et établissements scolaires',
+  icons: {
+    icon: '/logo.jpg',
+    shortcut: '/logo.jpg',
+    apple: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/logo.jpg" type="image/jpeg" />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

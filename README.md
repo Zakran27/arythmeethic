@@ -1,6 +1,6 @@
-# Tutorflow
+# A Rythme Ethic (Arythmeethic)
 
-Client and procedure management system for solo educators with automated document workflows and e-signature integration.
+Plateforme de gestion pour cours à domicile et interventions en établissement scolaire avec workflows automatisés.
 
 ## Tech Stack
 

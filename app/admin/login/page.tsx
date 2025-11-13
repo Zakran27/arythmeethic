@@ -114,7 +114,7 @@ export default function LoginPage() {
           <Box textAlign="center">
             <Link href="/">
               <Heading color="brand.600" mb={2}>
-                Tutorflow
+                A Rythme Ethic
               </Heading>
             </Link>
             <Text color="gray.600">Portail administrateur</Text>

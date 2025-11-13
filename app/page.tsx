@@ -11,215 +11,181 @@ import {
   CardBody,
   SimpleGrid,
   Icon,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  useToast,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  useDisclosure,
+  Image,
 } from '@chakra-ui/react';
 import { Nav } from '@/components/Nav';
-import { FiHome, FiBook, FiAward } from 'react-icons/fi';
+import { ContactModal } from '@/components/ContactModal';
+import { FiHome, FiBook, FiAward, FiUsers } from 'react-icons/fi';
 import { useState } from 'react';
 
 export default function HomePage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [defaultClientType, setDefaultClientType] = useState<'student' | 'parent' | 'school'>('student');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // TODO: Implement actual form submission
-    setTimeout(() => {
-      toast({
-        title: 'Message envoyé !',
-        description: 'Nous vous répondrons dans les plus brefs délais.',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      setFormData({ name: '', email: '', phone: '', message: '' });
-      setLoading(false);
-    }, 1000);
+  const handleContactClick = (type: 'student' | 'parent' | 'school') => {
+    setDefaultClientType(type);
+    onOpen();
   };
 
   return (
     <>
       <Nav />
+      <ContactModal isOpen={isOpen} onClose={onClose} defaultClientType={defaultClientType} />
       <Box>
         {/* Hero */}
-        <Box bg="brand.600" color="white" py={{ base: 16, md: 24 }}>
+        <Box bg="sand.100" color="graphite.500" py={{ base: 16, md: 24 }}>
           <Container maxW="container.xl">
             <Stack spacing={6} maxW="3xl" mx="auto" textAlign="center">
-              <Heading size={{ base: 'xl', md: '2xl' }}>
-                Cours et formations à domicile ou en école
-              </Heading>
-              <Text fontSize={{ base: 'lg', md: 'xl' }}>
-                Accompagnement personnalisé pour particuliers et établissements scolaires. Expertise
-                pédagogique et suivi adapté à chaque besoin.
-              </Text>
-              <Box pt={4}>
-                <Button
-                  as="a"
-                  href="#contact"
-                  size="lg"
-                  colorScheme="whiteAlpha"
-                  variant="solid"
-                  px={{ base: 6, md: 8 }}
-                >
-                  Nous contacter
-                </Button>
+              <Box mx="auto" mb={4}>
+                <Image src="/logo.jpg" alt="A Rythme Ethic" maxH="120px" mx="auto" />
               </Box>
+              <Heading size={{ base: 'xl', md: '2xl' }} color="graphite.500">
+                A Rythme Ethic
+              </Heading>
+              <Text fontSize={{ base: 'lg', md: 'xl' }} color="graphite.600">
+                Accompagnement personnalisé en mathématiques - Cours à domicile et interventions en établissement
+              </Text>
             </Stack>
           </Container>
         </Box>
 
-        {/* Services */}
+        {/* Services by Client Type */}
         <Container maxW="container.xl" py={{ base: 12, md: 20 }}>
-          <Stack spacing={12}>
+          <Stack spacing={8}>
             <Box textAlign="center">
-              <Heading size={{ base: 'lg', md: 'xl' }} mb={4}>
-                Nos services
+              <Heading size={{ base: 'lg', md: 'xl' }} mb={4} color="graphite.500">
+                Nos accompagnements
               </Heading>
-              <Text fontSize={{ base: 'md', md: 'lg' }} color="gray.600">
-                Un accompagnement sur mesure adapté à vos besoins
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="graphite.600">
+                Des solutions adaptées à chaque profil
               </Text>
             </Box>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
-              <Card>
-                <CardBody>
-                  <Stack spacing={4} align="center" textAlign="center">
-                    <Icon as={FiHome} boxSize={{ base: 10, md: 12 }} color="brand.500" />
-                    <Heading size="md">Cours à domicile</Heading>
-                    <Text color="gray.600">
-                      Enseignement personnalisé dans le confort de votre domicile. Horaires
-                      flexibles et approche pédagogique individualisée.
-                    </Text>
-                  </Stack>
-                </CardBody>
-              </Card>
+            <Tabs variant="soft-rounded" colorScheme="brand" align="center">
+              <TabList flexWrap="wrap" justifyContent="center" mb={8}>
+                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>Élève</Tab>
+                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>Parent</Tab>
+                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>École / Centre de formation</Tab>
+              </TabList>
 
-              <Card>
-                <CardBody>
-                  <Stack spacing={4} align="center" textAlign="center">
-                    <Icon as={FiBook} boxSize={{ base: 10, md: 12 }} color="brand.500" />
-                    <Heading size="md">Formations en école</Heading>
-                    <Text color="gray.600">
-                      Interventions dans les établissements scolaires. Programmes adaptés aux
-                      besoins des élèves et des institutions.
-                    </Text>
-                  </Stack>
-                </CardBody>
-              </Card>
+              <TabPanels>
+                {/* Élève Tab */}
+                <TabPanel>
+                  <Card maxW="4xl" mx="auto">
+                    <CardBody>
+                      <Stack spacing={6}>
+                        <Box textAlign="center">
+                          <Icon as={FiBook} boxSize={12} color="teal.500" mb={4} />
+                          <Heading size="lg" mb={4} color="graphite.500">Pour les élèves</Heading>
+                        </Box>
+                        <Text fontSize="lg" color="graphite.600">
+                          Besoin d'aide en mathématiques ? A Rythme Ethic propose des <strong>cours à domicile</strong> et un <strong>accompagnement personnalisé</strong> pour t'aider à progresser à ton rythme.
+                        </Text>
+                        <Stack spacing={3} pl={4}>
+                          <Text color="graphite.600">• Cours particuliers adaptés à ton niveau</Text>
+                          <Text color="graphite.600">• Soutien scolaire et aide aux devoirs</Text>
+                          <Text color="graphite.600">• Préparation aux examens (Brevet, Bac)</Text>
+                          <Text color="graphite.600">• Méthodologie et confiance en soi</Text>
+                        </Stack>
+                        <Button 
+                          size="lg" 
+                          colorScheme="brand" 
+                          onClick={() => handleContactClick('student')}
+                          mt={4}
+                        >
+                          Prendre contact avec A Rythme Ethic
+                        </Button>
+                      </Stack>
+                    </CardBody>
+                  </Card>
+                </TabPanel>
 
-              <Card>
-                <CardBody>
-                  <Stack spacing={4} align="center" textAlign="center">
-                    <Icon as={FiAward} boxSize={{ base: 10, md: 12 }} color="brand.500" />
-                    <Heading size="md">Expertise pédagogique</Heading>
-                    <Text color="gray.600">
-                      Méthodes d'enseignement éprouvées et suivi régulier. Accompagnement vers la
-                      réussite et l'autonomie.
-                    </Text>
-                  </Stack>
-                </CardBody>
-              </Card>
-            </SimpleGrid>
+                {/* Parent Tab */}
+                <TabPanel>
+                  <Card maxW="4xl" mx="auto">
+                    <CardBody>
+                      <Stack spacing={6}>
+                        <Box textAlign="center">
+                          <Icon as={FiUsers} boxSize={12} color="teal.500" mb={4} />
+                          <Heading size="lg" mb={4} color="graphite.500">Pour les parents</Heading>
+                        </Box>
+                        <Text fontSize="lg" color="graphite.600">
+                          Vous souhaitez offrir à votre enfant un accompagnement de qualité en mathématiques ? A Rythme Ethic propose des <strong>cours à domicile</strong> et un <strong>suivi personnalisé</strong> pour l'aider à réussir.
+                        </Text>
+                        <Stack spacing={3} pl={4}>
+                          <Text color="graphite.600">• Cours à domicile dans un cadre familier</Text>
+                          <Text color="graphite.600">• Pédagogie adaptée au profil de votre enfant</Text>
+                          <Text color="graphite.600">• Suivi régulier et bilan de progression</Text>
+                          <Text color="graphite.600">• Horaires flexibles selon vos contraintes</Text>
+                        </Stack>
+                        <Button 
+                          size="lg" 
+                          colorScheme="brand" 
+                          onClick={() => handleContactClick('parent')}
+                          mt={4}
+                        >
+                          Prendre contact avec A Rythme Ethic
+                        </Button>
+                      </Stack>
+                    </CardBody>
+                  </Card>
+                </TabPanel>
+
+                {/* École/Centre Tab */}
+                <TabPanel>
+                  <Card maxW="4xl" mx="auto">
+                    <CardBody>
+                      <Stack spacing={6}>
+                        <Box textAlign="center">
+                          <Icon as={FiHome} boxSize={12} color="teal.500" mb={4} />
+                          <Heading size="lg" mb={4} color="graphite.500">Pour les écoles et centres de formation</Heading>
+                        </Box>
+                        <Text fontSize="lg" color="graphite.600">
+                          Vous recherchez un intervenant qualifié en mathématiques ? A Rythme Ethic propose des <strong>interventions dans votre établissement</strong> adaptées aux besoins de vos élèves.
+                        </Text>
+                        <Stack spacing={3} pl={4}>
+                          <Text color="graphite.600">• Interventions ponctuelles ou régulières</Text>
+                          <Text color="graphite.600">• Cours de soutien et remise à niveau</Text>
+                          <Text color="graphite.600">• Ateliers thématiques en mathématiques</Text>
+                          <Text color="graphite.600">• Préparation aux examens et concours</Text>
+                        </Stack>
+                        <Button 
+                          size="lg" 
+                          colorScheme="brand" 
+                          onClick={() => handleContactClick('school')}
+                          mt={4}
+                        >
+                          Prendre contact avec A Rythme Ethic
+                        </Button>
+                      </Stack>
+                    </CardBody>
+                  </Card>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </Stack>
         </Container>
 
-        {/* Contact Form */}
-        <Box bg="gray.50" py={{ base: 12, md: 20 }} id="contact">
-          <Container maxW="container.md">
-            <Stack spacing={8}>
-              <Box textAlign="center">
-                <Heading size={{ base: 'lg', md: 'xl' }} mb={4}>
-                  Nous contacter
-                </Heading>
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="gray.600">
-                  Une question ? Un projet ? N'hésitez pas à nous écrire
-                </Text>
-              </Box>
 
-              <Card>
-                <CardBody>
-                  <form onSubmit={handleSubmit}>
-                    <Stack spacing={4}>
-                      <FormControl isRequired>
-                        <FormLabel>Nom complet</FormLabel>
-                        <Input
-                          value={formData.name}
-                          onChange={e => setFormData({ ...formData, name: e.target.value })}
-                          placeholder="Votre nom"
-                        />
-                      </FormControl>
-
-                      <FormControl isRequired>
-                        <FormLabel>Email</FormLabel>
-                        <Input
-                          type="email"
-                          value={formData.email}
-                          onChange={e => setFormData({ ...formData, email: e.target.value })}
-                          placeholder="votre@email.com"
-                        />
-                      </FormControl>
-
-                      <FormControl>
-                        <FormLabel>Téléphone</FormLabel>
-                        <Input
-                          type="tel"
-                          value={formData.phone}
-                          onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                          placeholder="06 12 34 56 78"
-                        />
-                      </FormControl>
-
-                      <FormControl isRequired>
-                        <FormLabel>Message</FormLabel>
-                        <Textarea
-                          value={formData.message}
-                          onChange={e => setFormData({ ...formData, message: e.target.value })}
-                          placeholder="Décrivez votre besoin..."
-                          rows={6}
-                        />
-                      </FormControl>
-
-                      <Button
-                        type="submit"
-                        colorScheme="brand"
-                        size="lg"
-                        width="full"
-                        isLoading={loading}
-                      >
-                        Envoyer le message
-                      </Button>
-                    </Stack>
-                  </form>
-                </CardBody>
-              </Card>
-            </Stack>
-          </Container>
-        </Box>
 
         {/* Footer */}
-        <Box bg="gray.800" color="white" py={{ base: 8, md: 12 }}>
+        <Box bg="graphite.500" color="white" py={{ base: 8, md: 12 }}>
           <Container maxW="container.xl">
             <Stack spacing={4} textAlign="center">
               <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
-                Tutorflow
+                A Rythme Ethic
               </Text>
-              <Text fontSize={{ base: 'sm', md: 'md' }} color="gray.400">
-                Cours et formations à domicile ou en école
+              <Text fontSize={{ base: 'sm', md: 'md' }} color="sand.200">
+                Accompagnement en mathématiques - Cours à domicile et interventions en établissement
               </Text>
-              <Text fontSize="sm" color="gray.500">
-                © {new Date().getFullYear()} Tous droits réservés
+              <Text fontSize="sm" color="sand.300">
+                © {new Date().getFullYear()} A Rythme Ethic - Tous droits réservés
               </Text>
             </Stack>
           </Container>
