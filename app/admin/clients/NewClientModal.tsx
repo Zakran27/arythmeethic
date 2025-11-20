@@ -117,8 +117,8 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       <ModalOverlay />
       <ModalContent>
         <form onSubmit={handleSubmit}>
-          <ModalHeader>Nouveau client</ModalHeader>
-          <ModalCloseButton />
+          <ModalHeader color="brand.500" fontFamily="heading">Nouveau client</ModalHeader>
+          <ModalCloseButton color="brand.500" />
           <ModalBody>
             <Stack spacing={4}>
               <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -252,10 +252,10 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={onClose} color="brand.500">
               Annuler
             </Button>
-            <Button colorScheme="brand" type="submit" isLoading={loading}>
+            <Button colorScheme="accent" type="submit" isLoading={loading}>
               Créer le client
             </Button>
           </ModalFooter>

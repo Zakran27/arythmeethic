@@ -24,12 +24,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Box minH="100vh">
+    <Box minH="100vh" bg="#f8f8f8">
       <Nav isAdmin />
-      <Box bg="gray.50" borderBottom="1px" borderColor="gray.200" py={2}>
+      <Box bg="white" borderBottom="1px" borderColor="grey.400" py={2} shadow="sm">
         <Container maxW="container.xl">
           <HStack justify="flex-end">
-            <Button size="sm" variant="ghost" onClick={handleLogout}>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={handleLogout}
+              color="brand.500"
+              _hover={{ bg: 'sand.100' }}
+            >
               Déconnexion
             </Button>
           </HStack>

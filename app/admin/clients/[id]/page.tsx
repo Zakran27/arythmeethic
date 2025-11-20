@@ -37,7 +37,7 @@ export default function ClientDetailPage() {
   if (loading) {
     return (
       <Box textAlign="center" py={10}>
-        <Spinner size="xl" color="brand.500" />
+        <Spinner size="xl" color="accent.500" />
       </Box>
     );
   }
@@ -54,15 +54,15 @@ export default function ClientDetailPage() {
   return (
     <Stack spacing={6}>
       <HStack justify="space-between" align="center">
-        <Heading>
+        <Heading color="brand.500" fontFamily="heading">
           {client.first_name} {client.last_name}
         </Heading>
-        <Button colorScheme="gray" variant="outline" onClick={onOpen}>
+        <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
           Modifier
         </Button>
       </HStack>
 
-      <Card>
+      <Card bg="white" shadow="sm">
         <CardBody>
           <Grid templateColumns="repeat(2, 1fr)" gap={4}>
             <GridItem>
@@ -107,23 +107,25 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
-      <Card>
+      <Card bg="white" shadow="sm">
         <CardBody>
           <Stack spacing={4}>
-            <Heading size="md">Procédures ({procedures.length})</Heading>
+            <Heading size="md" color="brand.500" fontFamily="heading">
+              Procédures ({procedures.length})
+            </Heading>
 
             {/* n8n Workflow Buttons */}
             <HStack spacing={3} flexWrap="wrap">
-              <Button colorScheme="blue" size="sm">
+              <Button colorScheme="accent" size="sm">
                 Nouveau client
               </Button>
-              <Button colorScheme="green" size="sm">
+              <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
                 Renouvellement
               </Button>
-              <Button colorScheme="purple" size="sm">
+              <Button bg="terracotta.500" color="white" size="sm" _hover={{ bg: 'terracotta.600' }}>
                 Demander documents
               </Button>
-              <Button colorScheme="orange" size="sm">
+              <Button bg="brand.400" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
                 Upload document
               </Button>
             </HStack>
@@ -131,7 +133,7 @@ export default function ClientDetailPage() {
             {procedures.length > 0 ? (
               <Stack spacing={3}>
                 {procedures.map(proc => (
-                  <Card key={proc.id} variant="outline">
+                  <Card key={proc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
                     <CardBody>
                       <Link href={`/admin/procedures/${proc.id}`}>
                         <HStack justify="space-between">
@@ -150,10 +152,10 @@ export default function ClientDetailPage() {
               </Stack>
             ) : (
               <Box textAlign="center" py={8}>
-                <Text color="gray.500" mb={4}>
+                <Text color="brand.400" mb={4}>
                   Aucune procédure pour le moment
                 </Text>
-                <Text fontSize="sm" color="gray.400">
+                <Text fontSize="sm" color="terracotta.400">
                   Utilisez les boutons ci-dessus pour lancer une procédure
                 </Text>
               </Box>
@@ -162,16 +164,16 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
-      <Card>
+      <Card bg="white" shadow="sm">
         <CardBody>
           <Stack spacing={4}>
             <HStack justify="space-between">
-              <Heading size="md">Documents</Heading>
-              <Button variant="outline" size="sm">
+              <Heading size="md" color="brand.500" fontFamily="heading">Documents</Heading>
+              <Button variant="outline" size="sm" borderColor="brand.500" color="brand.500">
                 Voir tous les documents
               </Button>
             </HStack>
-            <Text color="gray.500" fontSize="sm">
+            <Text color="brand.400" fontSize="sm">
               La gestion des documents sera disponible une fois les procédures créées
             </Text>
           </Stack>

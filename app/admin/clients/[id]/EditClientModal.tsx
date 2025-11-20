@@ -120,8 +120,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       <ModalOverlay />
       <ModalContent>
         <form onSubmit={handleSubmit}>
-          <ModalHeader>Modifier le client</ModalHeader>
-          <ModalCloseButton />
+          <ModalHeader color="brand.500" fontFamily="heading">Modifier le client</ModalHeader>
+          <ModalCloseButton color="brand.500" />
           <ModalBody>
             <Stack spacing={4}>
               <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -255,10 +255,10 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={onClose} color="brand.500">
               Annuler
             </Button>
-            <Button colorScheme="brand" type="submit" isLoading={loading}>
+            <Button colorScheme="accent" type="submit" isLoading={loading}>
               Enregistrer
             </Button>
           </ModalFooter>
