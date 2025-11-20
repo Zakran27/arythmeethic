@@ -107,10 +107,10 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
-      <Card bg="white" shadow="sm">
+      <Card bg="white">
         <CardBody>
           <Stack spacing={4}>
-            <Heading size="md" color="brand.500" fontFamily="heading">
+            <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
               Procédures ({procedures.length})
             </Heading>
 
@@ -122,10 +122,10 @@ export default function ClientDetailPage() {
               <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
                 Renouvellement
               </Button>
-              <Button bg="terracotta.500" color="white" size="sm" _hover={{ bg: 'terracotta.600' }}>
+              <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
                 Demander documents
               </Button>
-              <Button bg="brand.400" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
+              <Button bg="brand.600" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
                 Upload document
               </Button>
             </HStack>
@@ -164,16 +164,16 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
-      <Card bg="white" shadow="sm">
+      <Card bg="white">
         <CardBody>
           <Stack spacing={4}>
             <HStack justify="space-between">
-              <Heading size="md" color="brand.500" fontFamily="heading">Documents</Heading>
-              <Button variant="outline" size="sm" borderColor="brand.500" color="brand.500">
+              <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">Documents</Heading>
+              <Button variant="outline" size="sm" borderColor="brand.600" color="brand.600">
                 Voir tous les documents
               </Button>
             </HStack>
-            <Text color="brand.400" fontSize="sm">
+            <Text color="brand.600" fontSize="sm">
               La gestion des documents sera disponible une fois les procédures créées
             </Text>
           </Stack>

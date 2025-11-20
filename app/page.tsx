@@ -40,20 +40,19 @@ export default function HomePage() {
       <Box>
         {/* Hero */}
         <Box 
-          bg="sand.500" 
-          bgGradient="linear(to-b, sand.500, sand.100)"
+          bgGradient="linear(to-b, #f9f3ee, #efe3d7)"
           py={{ base: 16, md: 24 }}
         >
           <Container maxW="container.xl">
-            <Stack spacing={8} maxW="3xl" mx="auto" textAlign="center">
+            <Stack spacing={6} maxW="3xl" mx="auto" textAlign="center">
               <Box mx="auto" mb={2}>
                 <Image 
                   src="/logo.jpg" 
                   alt="A Rythme Ethic" 
-                  maxH="140px" 
+                  maxH="120px" 
                   mx="auto" 
                   borderRadius="xl"
-                  boxShadow="lg"
+                  boxShadow="sm"
                 />
               </Box>
               <Heading 
@@ -61,31 +60,30 @@ export default function HomePage() {
                 size={{ base: '2xl', md: '3xl' }} 
                 color="brand.500"
                 fontFamily="heading"
-                fontWeight="700"
+                fontWeight="600"
               >
                 A Rythme Ethic
               </Heading>
               <Text 
                 fontSize={{ base: 'xl', md: '2xl' }} 
                 color="terracotta.500"
-                fontWeight="500"
+                fontWeight="400"
               >
                 Accompagnement humain et bienveillant
               </Text>
               <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" maxW="2xl" mx="auto">
                 Cours de mathématiques • Développement personnel • Éducation financière
               </Text>
-              <Text fontSize={{ base: 'sm', md: 'md' }} color="brand.500" maxW="2xl" mx="auto" fontStyle="italic">
+              <Text fontSize={{ base: 'sm', md: 'md' }} color="brand.600" maxW="2xl" mx="auto" opacity="0.8">
                 Interventions à Nantes Est, Thouaré-sur-Loire et en établissements sur Nantes
               </Text>
               <Button 
                 colorScheme="accent" 
-                size="lg" 
-                fontSize="lg"
+                size="md"
+                fontSize="md"
                 px={8}
-                py={6}
                 onClick={() => handleContactClick('student')}
-                mt={4}
+                mt={2}
               >
                 Prendre contact
               </Button>
@@ -104,10 +102,11 @@ export default function HomePage() {
                   mb={4} 
                   color="brand.500"
                   fontFamily="heading"
+                  fontWeight="600"
                 >
                   Mes accompagnements
                 </Heading>
-                <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500" fontWeight="500">
+                <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500" fontWeight="400">
                   Une approche personnalisée pour chaque besoin
                 </Text>
               </Box>
@@ -141,13 +140,13 @@ export default function HomePage() {
                       <CardBody p={8}>
                         <Stack spacing={6}>
                           <Box textAlign="center">
-                            <Icon as={FiUsers} boxSize={14} color="accent.500" mb={4} />
-                            <Heading size="lg" mb={4} color="brand.500" fontFamily="heading">
+                            <Icon as={FiUsers} boxSize={12} color="accent.500" mb={4} />
+                            <Heading size="lg" mb={4} color="brand.500" fontFamily="heading" fontWeight="600">
                               Accompagnement privé
                             </Heading>
                           </Box>
                           
-                          <Text fontSize="lg" color="brand.700" fontWeight="600">
+                          <Text fontSize="md" color="brand.600" fontWeight="500">
                             📍 Secteur : Nantes Est et autour de Thouaré-sur-Loire
                           </Text>
                           
@@ -182,7 +181,7 @@ export default function HomePage() {
                           </Box>
 
                           <Button 
-                            size="lg" 
+                            size="md" 
                             colorScheme="accent" 
                             onClick={() => handleContactClick('parent')}
                             mt={4}
@@ -194,23 +193,21 @@ export default function HomePage() {
                     </Card>
                   </TabPanel>
 
-                {/* Établissements Tab */}
+                  {/* Établissements Tab */}
                 <TabPanel>
                   <Card maxW="4xl" mx="auto" variant="beige">
                     <CardBody p={8}>
                       <Stack spacing={6}>
                         <Box textAlign="center">
-                          <Icon as={FiHome} boxSize={14} color="accent.500" mb={4} />
-                          <Heading size="lg" mb={4} color="brand.500" fontFamily="heading">
+                          <Icon as={FiHome} boxSize={12} color="accent.500" mb={4} />
+                          <Heading size="lg" mb={4} color="brand.500" fontFamily="heading" fontWeight="600">
                             Interventions en établissements
                           </Heading>
                         </Box>
                         
-                        <Text fontSize="lg" color="brand.700" fontWeight="600">
+                        <Text fontSize="md" color="brand.600" fontWeight="500">
                           📍 Secteur : Nantes (selon récurrence des interventions)
-                        </Text>
-
-                        <Box>
+                        </Text>                        <Box>
                           <Heading size="md" color="brand.500" mb={3}>
                             Établissements d'enseignement supérieur
                           </Heading>
@@ -234,7 +231,7 @@ export default function HomePage() {
                         </Box>
 
                         <Button 
-                          size="lg" 
+                          size="md" 
                           colorScheme="accent" 
                           onClick={() => handleContactClick('school')}
                           mt={4}
@@ -252,7 +249,7 @@ export default function HomePage() {
         </Box>
 
         {/* Pédagogie Section */}
-        <Box bg="sand.200" py={{ base: 12, md: 20 }}>
+        <Box bg="#faf6f2" py={{ base: 12, md: 20 }}>
           <Container maxW="container.lg">
             <Stack spacing={8} textAlign="center">
               <Heading 
@@ -260,11 +257,12 @@ export default function HomePage() {
                 size={{ base: 'xl', md: '2xl' }} 
                 color="brand.500"
                 fontFamily="heading"
+                fontWeight="600"
               >
                 Ma pédagogie
               </Heading>
               
-              <Card bg="white" shadow="md" maxW="3xl" mx="auto">
+              <Card bg="white" maxW="3xl" mx="auto">
                 <CardBody p={{ base: 6, md: 10 }}>
                   <Stack spacing={6} textAlign="left">
                     <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.8">
@@ -279,16 +277,16 @@ export default function HomePage() {
                     </Text>
 
                     <Box 
-                      bg="sand.100" 
+                      bg="#f9f3ee" 
                       p={6} 
                       borderRadius="lg" 
-                      borderLeft="4px solid"
+                      borderLeft="3px solid"
                       borderColor="accent.500"
                     >
                       <Text 
-                        fontSize={{ base: 'lg', md: 'xl' }} 
-                        color="terracotta.600" 
-                        fontWeight="500"
+                        fontSize={{ base: 'md', md: 'lg' }} 
+                        color="terracotta.500" 
+                        fontWeight="400"
                         fontStyle="italic"
                         textAlign="center"
                       >
@@ -301,12 +299,10 @@ export default function HomePage() {
 
               <Button 
                 colorScheme="accent" 
-                size="lg" 
-                fontSize="lg"
+                size="md"
                 px={8}
-                py={6}
                 onClick={() => handleContactClick('student')}
-                mt={6}
+                mt={4}
               >
                 Découvrir l'accompagnement
               </Button>
