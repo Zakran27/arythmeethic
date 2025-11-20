@@ -28,9 +28,6 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
                 <Link href="/admin/clients">
                   <Button variant="ghost" color="brand.600">Clients</Button>
                 </Link>
-                <Link href="/admin/procedures">
-                  <Button variant="ghost" color="brand.600">Procédures</Button>
-                </Link>
               </>
             ) : (
               <Link href="/admin/login">
