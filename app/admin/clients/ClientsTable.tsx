@@ -17,7 +17,7 @@ export function ClientsTable({ clients, loading, error }: ClientsTableProps) {
   if (loading) {
     return (
       <Box textAlign="center" py={10}>
-        <Spinner size="xl" color="brand.500" />
+        <Spinner size="xl" color="accent.500" />
       </Box>
     );
   }
@@ -44,7 +44,11 @@ export function ClientsTable({ clients, loading, error }: ClientsTableProps) {
           key: 'type_client',
           label: 'Type',
           render: (client: Client) => (
-            <Badge colorScheme={client.type_client === 'École' ? 'purple' : 'blue'}>
+            <Badge 
+              colorScheme={client.type_client === 'École' ? 'accent' : 'brand'}
+              bg={client.type_client === 'École' ? 'accent.100' : 'sand.200'}
+              color={client.type_client === 'École' ? 'accent.700' : 'brand.700'}
+            >
               {client.type_client}
             </Badge>
           ),

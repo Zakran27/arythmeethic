@@ -39,65 +39,133 @@ export default function HomePage() {
       <ContactModal isOpen={isOpen} onClose={onClose} defaultClientType={defaultClientType} />
       <Box>
         {/* Hero */}
-        <Box bg="sand.100" color="graphite.500" py={{ base: 16, md: 24 }}>
+        <Box 
+          bg="sand.500" 
+          bgGradient="linear(to-b, sand.500, sand.100)"
+          py={{ base: 16, md: 24 }}
+        >
           <Container maxW="container.xl">
-            <Stack spacing={6} maxW="3xl" mx="auto" textAlign="center">
-              <Box mx="auto" mb={4}>
-                <Image src="/logo.jpg" alt="A Rythme Ethic" maxH="120px" mx="auto" />
+            <Stack spacing={8} maxW="3xl" mx="auto" textAlign="center">
+              <Box mx="auto" mb={2}>
+                <Image 
+                  src="/logo.jpg" 
+                  alt="A Rythme Ethic" 
+                  maxH="140px" 
+                  mx="auto" 
+                  borderRadius="xl"
+                  boxShadow="lg"
+                />
               </Box>
-              <Heading size={{ base: 'xl', md: '2xl' }} color="graphite.500">
+              <Heading 
+                as="h1"
+                size={{ base: '2xl', md: '3xl' }} 
+                color="brand.500"
+                fontFamily="heading"
+                fontWeight="700"
+              >
                 A Rythme Ethic
               </Heading>
-              <Text fontSize={{ base: 'lg', md: 'xl' }} color="graphite.600">
-                Accompagnement personnalisé en mathématiques - Cours à domicile et interventions en établissement
+              <Text 
+                fontSize={{ base: 'xl', md: '2xl' }} 
+                color="terracotta.500"
+                fontWeight="500"
+              >
+                Accompagnement personnalisé en mathématiques
               </Text>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" maxW="2xl" mx="auto">
+                Cours à domicile et interventions en établissement
+              </Text>
+              <Button 
+                colorScheme="accent" 
+                size="lg" 
+                fontSize="lg"
+                px={8}
+                py={6}
+                onClick={() => handleContactClick('student')}
+                mt={4}
+              >
+                Prendre contact
+              </Button>
             </Stack>
           </Container>
         </Box>
 
         {/* Services by Client Type */}
-        <Container maxW="container.xl" py={{ base: 12, md: 20 }}>
-          <Stack spacing={8}>
-            <Box textAlign="center">
-              <Heading size={{ base: 'lg', md: 'xl' }} mb={4} color="graphite.500">
-                Nos accompagnements
-              </Heading>
-              <Text fontSize={{ base: 'md', md: 'lg' }} color="graphite.600">
-                Des solutions adaptées à chaque profil
-              </Text>
-            </Box>
+        <Box bg="white" py={{ base: 12, md: 20 }}>
+          <Container maxW="container.xl">
+            <Stack spacing={10}>
+              <Box textAlign="center">
+                <Heading 
+                  as="h2"
+                  size={{ base: 'xl', md: '2xl' }} 
+                  mb={4} 
+                  color="brand.500"
+                  fontFamily="heading"
+                >
+                  Nos accompagnements
+                </Heading>
+                <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500" fontWeight="500">
+                  Des solutions adaptées à chaque profil
+                </Text>
+              </Box>
 
-            <Tabs variant="soft-rounded" colorScheme="brand" align="center">
-              <TabList flexWrap="wrap" justifyContent="center" mb={8}>
-                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>Élève</Tab>
-                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>Parent</Tab>
-                <Tab fontSize={{ base: 'md', md: 'lg' }} px={{ base: 4, md: 6 }}>École / Centre de formation</Tab>
-              </TabList>
+              <Tabs variant="soft-rounded" colorScheme="accent" align="center">
+                <TabList flexWrap="wrap" justifyContent="center" mb={10}>
+                  <Tab 
+                    fontSize={{ base: 'md', md: 'lg' }} 
+                    px={{ base: 4, md: 6 }}
+                    fontWeight="500"
+                    color="brand.500"
+                    _selected={{ bg: 'accent.500', color: 'white' }}
+                  >
+                    Élève
+                  </Tab>
+                  <Tab 
+                    fontSize={{ base: 'md', md: 'lg' }} 
+                    px={{ base: 4, md: 6 }}
+                    fontWeight="500"
+                    color="brand.500"
+                    _selected={{ bg: 'accent.500', color: 'white' }}
+                  >
+                    Parent
+                  </Tab>
+                  <Tab 
+                    fontSize={{ base: 'md', md: 'lg' }} 
+                    px={{ base: 4, md: 6 }}
+                    fontWeight="500"
+                    color="brand.500"
+                    _selected={{ bg: 'accent.500', color: 'white' }}
+                  >
+                    École / Centre de formation
+                  </Tab>
+                </TabList>
 
-              <TabPanels>
-                {/* Élève Tab */}
-                <TabPanel>
-                  <Card maxW="4xl" mx="auto">
-                    <CardBody>
-                      <Stack spacing={6}>
-                        <Box textAlign="center">
-                          <Icon as={FiBook} boxSize={12} color="teal.500" mb={4} />
-                          <Heading size="lg" mb={4} color="graphite.500">Pour les élèves</Heading>
-                        </Box>
-                        <Text fontSize="lg" color="graphite.600">
-                          Besoin d'aide en mathématiques ? A Rythme Ethic propose des <strong>cours à domicile</strong> et un <strong>accompagnement personnalisé</strong> pour t'aider à progresser à ton rythme.
-                        </Text>
-                        <Stack spacing={3} pl={4}>
-                          <Text color="graphite.600">• Cours particuliers adaptés à ton niveau</Text>
-                          <Text color="graphite.600">• Soutien scolaire et aide aux devoirs</Text>
-                          <Text color="graphite.600">• Préparation aux examens (Brevet, Bac)</Text>
-                          <Text color="graphite.600">• Méthodologie et confiance en soi</Text>
-                        </Stack>
-                        <Button 
-                          size="lg" 
-                          colorScheme="brand" 
-                          onClick={() => handleContactClick('student')}
-                          mt={4}
+                <TabPanels>
+                  {/* Élève Tab */}
+                  <TabPanel>
+                    <Card maxW="4xl" mx="auto" variant="beige">
+                      <CardBody p={8}>
+                        <Stack spacing={6}>
+                          <Box textAlign="center">
+                            <Icon as={FiBook} boxSize={14} color="accent.500" mb={4} />
+                            <Heading size="lg" mb={4} color="brand.500" fontFamily="heading">
+                              Pour les élèves
+                            </Heading>
+                          </Box>
+                          <Text fontSize="lg" color="brand.600">
+                            Besoin d'aide en mathématiques ? A Rythme Ethic propose des <strong>cours à domicile</strong> et un <strong>accompagnement personnalisé</strong> pour t'aider à progresser à ton rythme.
+                          </Text>
+                          <Stack spacing={3} pl={4}>
+                            <Text color="brand.600">• Cours particuliers adaptés à ton niveau</Text>
+                            <Text color="brand.600">• Soutien scolaire et aide aux devoirs</Text>
+                            <Text color="brand.600">• Préparation aux examens (Brevet, Bac)</Text>
+                            <Text color="brand.600">• Méthodologie et confiance en soi</Text>
+                          </Stack>
+                          <Button 
+                            size="lg" 
+                            colorScheme="accent" 
+                            onClick={() => handleContactClick('student')}
+                            mt={4}
                         >
                           Prendre contact avec A Rythme Ethic
                         </Button>
@@ -108,25 +176,27 @@ export default function HomePage() {
 
                 {/* Parent Tab */}
                 <TabPanel>
-                  <Card maxW="4xl" mx="auto">
-                    <CardBody>
+                  <Card maxW="4xl" mx="auto" variant="beige">
+                    <CardBody p={8}>
                       <Stack spacing={6}>
                         <Box textAlign="center">
-                          <Icon as={FiUsers} boxSize={12} color="teal.500" mb={4} />
-                          <Heading size="lg" mb={4} color="graphite.500">Pour les parents</Heading>
+                          <Icon as={FiUsers} boxSize={14} color="accent.500" mb={4} />
+                          <Heading size="lg" mb={4} color="brand.500" fontFamily="heading">
+                            Pour les parents
+                          </Heading>
                         </Box>
-                        <Text fontSize="lg" color="graphite.600">
+                        <Text fontSize="lg" color="brand.600">
                           Vous souhaitez offrir à votre enfant un accompagnement de qualité en mathématiques ? A Rythme Ethic propose des <strong>cours à domicile</strong> et un <strong>suivi personnalisé</strong> pour l'aider à réussir.
                         </Text>
                         <Stack spacing={3} pl={4}>
-                          <Text color="graphite.600">• Cours à domicile dans un cadre familier</Text>
-                          <Text color="graphite.600">• Pédagogie adaptée au profil de votre enfant</Text>
-                          <Text color="graphite.600">• Suivi régulier et bilan de progression</Text>
-                          <Text color="graphite.600">• Horaires flexibles selon vos contraintes</Text>
+                          <Text color="brand.600">• Cours à domicile dans un cadre familier</Text>
+                          <Text color="brand.600">• Pédagogie adaptée au profil de votre enfant</Text>
+                          <Text color="brand.600">• Suivi régulier et bilan de progression</Text>
+                          <Text color="brand.600">• Horaires flexibles selon vos contraintes</Text>
                         </Stack>
                         <Button 
                           size="lg" 
-                          colorScheme="brand" 
+                          colorScheme="accent" 
                           onClick={() => handleContactClick('parent')}
                           mt={4}
                         >
@@ -139,25 +209,27 @@ export default function HomePage() {
 
                 {/* École/Centre Tab */}
                 <TabPanel>
-                  <Card maxW="4xl" mx="auto">
-                    <CardBody>
+                  <Card maxW="4xl" mx="auto" variant="beige">
+                    <CardBody p={8}>
                       <Stack spacing={6}>
                         <Box textAlign="center">
-                          <Icon as={FiHome} boxSize={12} color="teal.500" mb={4} />
-                          <Heading size="lg" mb={4} color="graphite.500">Pour les écoles et centres de formation</Heading>
+                          <Icon as={FiHome} boxSize={14} color="accent.500" mb={4} />
+                          <Heading size="lg" mb={4} color="brand.500" fontFamily="heading">
+                            Pour les écoles et centres de formation
+                          </Heading>
                         </Box>
-                        <Text fontSize="lg" color="graphite.600">
+                        <Text fontSize="lg" color="brand.600">
                           Vous recherchez un intervenant qualifié en mathématiques ? A Rythme Ethic propose des <strong>interventions dans votre établissement</strong> adaptées aux besoins de vos élèves.
                         </Text>
                         <Stack spacing={3} pl={4}>
-                          <Text color="graphite.600">• Interventions ponctuelles ou régulières</Text>
-                          <Text color="graphite.600">• Cours de soutien et remise à niveau</Text>
-                          <Text color="graphite.600">• Ateliers thématiques en mathématiques</Text>
-                          <Text color="graphite.600">• Préparation aux examens et concours</Text>
+                          <Text color="brand.600">• Interventions ponctuelles ou régulières</Text>
+                          <Text color="brand.600">• Cours de soutien et remise à niveau</Text>
+                          <Text color="brand.600">• Ateliers thématiques en mathématiques</Text>
+                          <Text color="brand.600">• Préparation aux examens et concours</Text>
                         </Stack>
                         <Button 
                           size="lg" 
-                          colorScheme="brand" 
+                          colorScheme="accent" 
                           onClick={() => handleContactClick('school')}
                           mt={4}
                         >
@@ -170,15 +242,14 @@ export default function HomePage() {
               </TabPanels>
             </Tabs>
           </Stack>
-        </Container>
-
-
+          </Container>
+        </Box>
 
         {/* Footer */}
-        <Box bg="graphite.500" color="white" py={{ base: 8, md: 12 }}>
+        <Box bg="brand.500" color="white" py={{ base: 8, md: 12 }}>
           <Container maxW="container.xl">
             <Stack spacing={4} textAlign="center">
-              <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold">
+              <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" fontFamily="heading">
                 A Rythme Ethic
               </Text>
               <Text fontSize={{ base: 'sm', md: 'md' }} color="sand.200">

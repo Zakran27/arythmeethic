@@ -1,20 +1,23 @@
 'use client';
 
-import { Box, Flex, Button, Container, HStack, useColorModeValue, Text, Image } from '@chakra-ui/react';
+import { Box, Flex, Button, Container, HStack, Text, Image } from '@chakra-ui/react';
 import Link from 'next/link';
 
 export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
-  const bg = useColorModeValue('white', 'graphite.700');
-  const borderColor = useColorModeValue('sand.200', 'graphite.600');
-
   return (
-    <Box bg={bg} borderBottom="1px" borderColor={borderColor}>
+    <Box bg="white" borderBottom="1px" borderColor="grey.400" shadow="sm">
       <Container maxW="container.xl">
         <Flex h={16} alignItems="center" justifyContent="space-between">
           <Link href="/">
-            <HStack spacing={3}>
-              <Image src="/logo.jpg" alt="A Rythme Ethic" h="40px" />
-              <Text fontSize="xl" fontWeight="bold" color="brand.500" display={{ base: 'none', md: 'block' }}>
+            <HStack spacing={3} cursor="pointer" _hover={{ opacity: 0.8 }} transition="opacity 0.2s">
+              <Image src="/logo.jpg" alt="A Rythme Ethic" h="40px" borderRadius="md" />
+              <Text 
+                fontSize="xl" 
+                fontWeight="bold" 
+                color="brand.500" 
+                display={{ base: 'none', md: 'block' }}
+                fontFamily="heading"
+              >
                 A Rythme Ethic
               </Text>
             </HStack>
@@ -23,12 +26,15 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
             {isAdmin ? (
               <>
                 <Link href="/admin/clients">
-                  <Button variant="ghost" color="graphite.600" _hover={{ bg: 'sand.100' }}>Clients</Button>
+                  <Button variant="ghost" color="brand.500">Clients</Button>
+                </Link>
+                <Link href="/admin/procedures">
+                  <Button variant="ghost" color="brand.500">Procédures</Button>
                 </Link>
               </>
             ) : (
               <Link href="/admin/login">
-                <Button colorScheme="brand" size={{ base: 'sm', md: 'md' }}>
+                <Button colorScheme="accent" size={{ base: 'sm', md: 'md' }}>
                   Connexion
                 </Button>
               </Link>

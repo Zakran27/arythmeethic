@@ -16,9 +16,9 @@ export default function ClientsPage() {
 
   return (
     <Stack spacing={6}>
-      <HStack justify="space-between">
-        <Heading>Clients</Heading>
-        <Button colorScheme="brand" onClick={onOpen}>
+      <HStack justify="space-between" align="center">
+        <Heading color="brand.500" fontFamily="heading">Clients</Heading>
+        <Button colorScheme="accent" onClick={onOpen}>
           + Nouveau client
         </Button>
       </HStack>

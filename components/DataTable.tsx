@@ -21,10 +21,10 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <Card>
+      <Card bg="white">
         <CardBody>
-          <Text color="gray.500" textAlign="center">
-            No data available
+          <Text color="brand.400" textAlign="center">
+            Aucune donnée disponible
           </Text>
         </CardBody>
       </Card>
@@ -32,13 +32,15 @@ export function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <Card>
+    <Card bg="white" shadow="sm">
       <Box overflowX="auto">
         <Table variant="simple">
-          <Thead>
+          <Thead bg="sand.100">
             <Tr>
               {columns.map(col => (
-                <Th key={col.key}>{col.label}</Th>
+                <Th key={col.key} color="brand.600" textTransform="none" fontSize="sm" fontWeight="600">
+                  {col.label}
+                </Th>
               ))}
             </Tr>
           </Thead>
@@ -48,10 +50,13 @@ export function DataTable<T extends Record<string, any>>({
                 key={idx}
                 onClick={() => onRowClick?.(item)}
                 cursor={onRowClick ? 'pointer' : 'default'}
-                _hover={onRowClick ? { bg: 'gray.50' } : undefined}
+                _hover={onRowClick ? { bg: 'sand.50' } : undefined}
+                transition="background 0.2s"
               >
                 {columns.map(col => (
-                  <Td key={col.key}>{col.render ? col.render(item) : item[col.key]}</Td>
+                  <Td key={col.key} color="brand.500">
+                    {col.render ? col.render(item) : item[col.key]}
+                  </Td>
                 ))}
               </Tr>
             ))}
