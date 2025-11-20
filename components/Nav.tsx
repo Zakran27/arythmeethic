@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
-    <Box bg="white" borderBottom="1px" borderColor="grey.400" shadow="sm">
+    <Box bg="white" borderBottom="1px" borderColor="grey.300">
       <Container maxW="container.xl">
         <Flex h={16} alignItems="center" justifyContent="space-between">
           <Link href="/">
@@ -13,7 +13,7 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
               <Image src="/logo.jpg" alt="A Rythme Ethic" h="40px" borderRadius="md" />
               <Text 
                 fontSize="xl" 
-                fontWeight="bold" 
+                fontWeight="600" 
                 color="brand.500" 
                 display={{ base: 'none', md: 'block' }}
                 fontFamily="heading"
@@ -26,10 +26,10 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
             {isAdmin ? (
               <>
                 <Link href="/admin/clients">
-                  <Button variant="ghost" color="brand.500">Clients</Button>
+                  <Button variant="ghost" color="brand.600">Clients</Button>
                 </Link>
                 <Link href="/admin/procedures">
-                  <Button variant="ghost" color="brand.500">Procédures</Button>
+                  <Button variant="ghost" color="brand.600">Procédures</Button>
                 </Link>
               </>
             ) : (

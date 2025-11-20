@@ -2,31 +2,31 @@ import { extendTheme } from '@chakra-ui/react';
 
 export const theme = extendTheme({
   colors: {
-    // Primary - Dark Brown (primary text / strong accent)
+    // Primary - Brown (headings and accents)
     brand: {
       50: '#faf6f4',
       100: '#f0e6e0',
       200: '#e0cdc1',
       300: '#c8a895',
       400: '#a97761',
-      500: '#6e3a25', // Main dark brown
-      600: '#5f3220',
+      500: '#6e3a25', // Main dark brown for headings
+      600: '#7b4a31', // Lighter brown for body text
       700: '#4f291b',
       800: '#3f2116',
       900: '#2f1910',
     },
-    // Secondary - Bright Cyan (highlight / links / CTA)
+    // Secondary - Softer Cyan (links / CTA)
     accent: {
-      50: '#e6f9fd',
-      100: '#c2eef8',
-      200: '#9be3f3',
-      300: '#6fd8ee',
-      400: '#4dcee9',
-      500: '#25accc', // Main bright cyan
-      600: '#1f92ad',
-      700: '#19788e',
-      800: '#135d6f',
-      900: '#0d4350',
+      50: '#e8f7fa',
+      100: '#c8ebf2',
+      200: '#a3dee9',
+      300: '#7cd1e0',
+      400: '#5bc4d7',
+      500: '#2ba1bd', // Main softer cyan
+      600: '#2388a0',
+      700: '#1c6e83',
+      800: '#145466',
+      900: '#0d3a49',
     },
     // Warm Terracotta (secondary / subtle accents)
     terracotta: {
@@ -75,9 +75,9 @@ export const theme = extendTheme({
   styles: {
     global: {
       body: {
-        bg: '#f8f8f8',
-        color: 'brand.500',
-        lineHeight: '1.6',
+        bg: '#fafafa',
+        color: 'brand.600',
+        lineHeight: '1.7',
       },
       'h1, h2, h3, h4, h5, h6': {
         color: 'brand.500',
@@ -96,7 +96,7 @@ export const theme = extendTheme({
     Button: {
       baseStyle: {
         fontWeight: '500',
-        borderRadius: 'md',
+        borderRadius: 'lg',
       },
       variants: {
         solid: (props: any) => {
@@ -104,23 +104,31 @@ export const theme = extendTheme({
             return {
               bg: 'accent.500',
               color: 'white',
+              shadow: 'sm',
               _hover: {
                 bg: 'accent.600',
+                shadow: 'md',
+                transform: 'translateY(-1px)',
                 _disabled: {
                   bg: 'accent.500',
+                  transform: 'none',
                 },
               },
+              transition: 'all 0.2s',
             };
           }
           return {
             bg: 'brand.500',
             color: 'white',
+            shadow: 'sm',
             _hover: {
               bg: 'brand.600',
+              shadow: 'md',
               _disabled: {
                 bg: 'brand.500',
               },
             },
+            transition: 'all 0.2s',
           };
         },
         outline: (props: any) => {
@@ -165,15 +173,19 @@ export const theme = extendTheme({
       baseStyle: {
         container: {
           bg: 'white',
-          borderRadius: 'lg',
-          boxShadow: 'sm',
+          borderRadius: 'xl',
+          boxShadow: 'xs',
+          border: '1px solid',
+          borderColor: 'grey.200',
         },
       },
       variants: {
         beige: {
           container: {
-            bg: 'sand.500',
-            color: 'brand.500',
+            bg: 'sand.100',
+            color: 'brand.600',
+            border: '1px solid',
+            borderColor: 'sand.200',
           },
         },
       },

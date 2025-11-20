@@ -23,7 +23,7 @@ export function DataTable<T extends Record<string, any>>({
     return (
       <Card bg="white">
         <CardBody>
-          <Text color="brand.400" textAlign="center">
+          <Text color="brand.600" textAlign="center">
             Aucune donnée disponible
           </Text>
         </CardBody>
@@ -32,10 +32,10 @@ export function DataTable<T extends Record<string, any>>({
   }
 
   return (
-    <Card bg="white" shadow="sm">
+    <Card bg="white">
       <Box overflowX="auto">
         <Table variant="simple">
-          <Thead bg="sand.100">
+          <Thead bg="#faf6f2">
             <Tr>
               {columns.map(col => (
                 <Th key={col.key} color="brand.600" textTransform="none" fontSize="sm" fontWeight="600">
@@ -50,11 +50,11 @@ export function DataTable<T extends Record<string, any>>({
                 key={idx}
                 onClick={() => onRowClick?.(item)}
                 cursor={onRowClick ? 'pointer' : 'default'}
-                _hover={onRowClick ? { bg: 'sand.50' } : undefined}
+                _hover={onRowClick ? { bg: '#fafafa' } : undefined}
                 transition="background 0.2s"
               >
                 {columns.map(col => (
-                  <Td key={col.key} color="brand.500">
+                  <Td key={col.key} color="brand.600">
                     {col.render ? col.render(item) : item[col.key]}
                   </Td>
                 ))}
