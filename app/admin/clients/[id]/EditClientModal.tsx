@@ -39,7 +39,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     first_name: client.first_name,
     last_name: client.last_name,
     email: client.email,
-    phone: client.phone || '',
+    phone1: client.phone1 || '',
+    phone2: client.phone2 || '',
+    phone3: client.phone3 || '',
     type_client: client.type_client as ClientType,
     organisation: client.organisation || '',
     address_line1: client.address_line1 || '',
@@ -54,7 +56,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       first_name: client.first_name,
       last_name: client.last_name,
       email: client.email,
-      phone: client.phone || '',
+      phone1: client.phone1 || '',
+      phone2: client.phone2 || '',
+      phone3: client.phone3 || '',
       type_client: client.type_client as ClientType,
       organisation: client.organisation || '',
       address_line1: client.address_line1 || '',
@@ -74,7 +78,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
         .from('clients')
         .update({
           ...formData,
-          phone: formData.phone || null,
+          phone1: formData.phone1 || null,
+          phone2: formData.phone2 || null,
+          phone3: formData.phone3 || null,
           organisation: formData.organisation || null,
           address_line1: formData.address_line1 || null,
           postal_code: formData.postal_code || null,
@@ -148,26 +154,43 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                 />
               </FormControl>
 
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+              <FormControl isRequired>
+                <FormLabel>Type</FormLabel>
+                <Select
+                  value={formData.type_client}
+                  onChange={e => handleChange('type_client', e.target.value)}
+                >
+                  <option value="Particulier">Particulier</option>
+                  <option value="École">École</option>
+                </Select>
+              </FormControl>
+
+              <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                 <GridItem>
                   <FormControl>
-                    <FormLabel>Téléphone</FormLabel>
+                    <FormLabel>Téléphone 1</FormLabel>
                     <Input
-                      value={formData.phone}
-                      onChange={e => handleChange('phone', e.target.value)}
+                      value={formData.phone1}
+                      onChange={e => handleChange('phone1', e.target.value)}
                     />
                   </FormControl>
                 </GridItem>
                 <GridItem>
-                  <FormControl isRequired>
-                    <FormLabel>Type</FormLabel>
-                    <Select
-                      value={formData.type_client}
-                      onChange={e => handleChange('type_client', e.target.value)}
-                    >
-                      <option value="Particulier">Particulier</option>
-                      <option value="École">École</option>
-                    </Select>
+                  <FormControl>
+                    <FormLabel>Téléphone 2</FormLabel>
+                    <Input
+                      value={formData.phone2}
+                      onChange={e => handleChange('phone2', e.target.value)}
+                    />
+                  </FormControl>
+                </GridItem>
+                <GridItem>
+                  <FormControl>
+                    <FormLabel>Téléphone 3</FormLabel>
+                    <Input
+                      value={formData.phone3}
+                      onChange={e => handleChange('phone3', e.target.value)}
+                    />
                   </FormControl>
                 </GridItem>
               </Grid>
