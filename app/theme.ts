@@ -69,7 +69,7 @@ export const theme = extendTheme({
     },
   },
   fonts: {
-    heading: `'Georgia', 'Times New Roman', serif`,
+    heading: `'Libre Baskerville', 'Georgia', 'Times New Roman', serif`,
     body: `'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif`,
   },
   styles: {
