@@ -25,7 +25,9 @@ export interface Client {
   first_name: string;
   last_name: string;
   email: string;
-  phone?: string;
+  phone1?: string;
+  phone2?: string;
+  phone3?: string;
   type_client: ClientType;
   organisation?: string;
   address_line1?: string;

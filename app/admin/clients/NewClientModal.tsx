@@ -38,7 +38,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
     first_name: '',
     last_name: '',
     email: '',
-    phone: '',
+    phone1: '',
+    phone2: '',
+    phone3: '',
     type_client: 'Particulier' as ClientType,
     organisation: '',
     address_line1: '',
@@ -56,7 +58,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       const { error } = await supabase.from('clients').insert([
         {
           ...formData,
-          phone: formData.phone || null,
+          phone1: formData.phone1 || null,
+          phone2: formData.phone2 || null,
+          phone3: formData.phone3 || null,
           organisation: formData.organisation || null,
           address_line1: formData.address_line1 || null,
           postal_code: formData.postal_code || null,
@@ -79,7 +83,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
         first_name: '',
         last_name: '',
         email: '',
-        phone: '',
+        phone1: '',
+        phone2: '',
+        phone3: '',
         type_client: 'Particulier',
         organisation: '',
         address_line1: '',
@@ -145,26 +151,43 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 />
               </FormControl>
 
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+              <FormControl isRequired>
+                <FormLabel>Type</FormLabel>
+                <Select
+                  value={formData.type_client}
+                  onChange={e => handleChange('type_client', e.target.value)}
+                >
+                  <option value="Particulier">Particulier</option>
+                  <option value="École">École</option>
+                </Select>
+              </FormControl>
+
+              <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                 <GridItem>
                   <FormControl>
-                    <FormLabel>Téléphone</FormLabel>
+                    <FormLabel>Téléphone 1</FormLabel>
                     <Input
-                      value={formData.phone}
-                      onChange={e => handleChange('phone', e.target.value)}
+                      value={formData.phone1}
+                      onChange={e => handleChange('phone1', e.target.value)}
                     />
                   </FormControl>
                 </GridItem>
                 <GridItem>
-                  <FormControl isRequired>
-                    <FormLabel>Type</FormLabel>
-                    <Select
-                      value={formData.type_client}
-                      onChange={e => handleChange('type_client', e.target.value)}
-                    >
-                      <option value="Particulier">Particulier</option>
-                      <option value="École">École</option>
-                    </Select>
+                  <FormControl>
+                    <FormLabel>Téléphone 2</FormLabel>
+                    <Input
+                      value={formData.phone2}
+                      onChange={e => handleChange('phone2', e.target.value)}
+                    />
+                  </FormControl>
+                </GridItem>
+                <GridItem>
+                  <FormControl>
+                    <FormLabel>Téléphone 3</FormLabel>
+                    <Input
+                      value={formData.phone3}
+                      onChange={e => handleChange('phone3', e.target.value)}
+                    />
                   </FormControl>
                 </GridItem>
               </Grid>

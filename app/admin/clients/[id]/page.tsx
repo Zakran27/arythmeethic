@@ -70,8 +70,16 @@ export default function ClientDetailPage() {
               <Text>{client.email}</Text>
             </GridItem>
             <GridItem>
-              <Text fontWeight="bold">Téléphone</Text>
-              <Text>{client.phone || '—'}</Text>
+              <Text fontWeight="bold">Téléphone 1</Text>
+              <Text>{client.phone1 || '—'}</Text>
+            </GridItem>
+            <GridItem>
+              <Text fontWeight="bold">Téléphone 2</Text>
+              <Text>{client.phone2 || '—'}</Text>
+            </GridItem>
+            <GridItem>
+              <Text fontWeight="bold">Téléphone 3</Text>
+              <Text>{client.phone3 || '—'}</Text>
             </GridItem>
             <GridItem>
               <Text fontWeight="bold">Type</Text>
