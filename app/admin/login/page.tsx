@@ -14,10 +14,6 @@ import {
   CardBody,
   useToast,
   Link as ChakraLink,
-  Alert,
-  AlertIcon,
-  AlertTitle,
-  AlertDescription,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
@@ -26,78 +22,50 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const toast = useToast();
   const router = useRouter();
   const supabase = createClient();
 
-  // Check for auth errors in URL hash
+  // Check if user is already logged in
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('error=')) {
-      const params = new URLSearchParams(hash.substring(1));
-      const error = params.get('error');
-      const errorDescription = params.get('error_description');
-
-      if (error === 'access_denied' || errorDescription?.includes('expired')) {
-        toast({
-          title: 'Lien expiré',
-          description: 'Ce lien magique a expiré. Veuillez en demander un nouveau.',
-          status: 'error',
-          duration: 7000,
-          isClosable: true,
-        });
-        // Clean up URL
-        window.history.replaceState({}, document.title, '/admin/login');
-      }
-    }
-
-    // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         router.push('/admin/clients');
       }
     });
-  }, [supabase, toast, router]);
+  }, [supabase, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Check if user exists in profiles table (authorized users only)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .single();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (!profile) {
-        throw new Error("Email non autorisé. Contactez l'administrateur.");
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          throw new Error('Email ou mot de passe incorrect');
+        }
+        throw error;
       }
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-
-      setEmailSent(true);
       toast({
-        title: 'Lien magique envoyé !',
-        description: 'Consultez votre email pour le lien de connexion',
+        title: 'Connexion réussie',
         status: 'success',
-        duration: 5000,
+        duration: 3000,
         isClosable: true,
       });
+
+      router.push('/admin/clients');
     } catch (error) {
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : "Échec de l'envoi du lien magique",
+        title: 'Erreur de connexion',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -123,54 +91,48 @@ export default function LoginPage() {
           <Card>
             <CardBody>
               <Stack spacing={6}>
-                {!emailSent ? (
-                  <>
-                    <Box>
-                      <Heading size="md" mb={2}>
-                        Connexion
-                      </Heading>
-                      <Text color="gray.600" fontSize="sm">
-                        Nous vous enverrons un lien magique pour vous connecter
-                      </Text>
-                    </Box>
+                <Box>
+                  <Heading size="md" mb={2}>
+                    Connexion
+                  </Heading>
+                  <Text color="gray.600" fontSize="sm">
+                    Connectez-vous avec votre email et mot de passe
+                  </Text>
+                </Box>
 
-                    <form onSubmit={handleLogin}>
-                      <Stack spacing={4}>
-                        <FormControl isRequired>
-                          <FormLabel>Email</FormLabel>
-                          <Input
-                            type="email"
-                            placeholder="admin@example.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                          />
-                        </FormControl>
+                <form onSubmit={handleLogin}>
+                  <Stack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>Email</FormLabel>
+                      <Input
+                        type="email"
+                        placeholder="admin@example.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                      />
+                    </FormControl>
 
-                        <Button
-                          type="submit"
-                          colorScheme="brand"
-                          size="lg"
-                          width="full"
-                          isLoading={loading}
-                        >
-                          Envoyer le lien magique
-                        </Button>
-                      </Stack>
-                    </form>
-                  </>
-                ) : (
-                  <Box textAlign="center" py={4}>
-                    <Heading size="md" mb={2}>
-                      Vérifiez votre email
-                    </Heading>
-                    <Text color="gray.600" mb={4}>
-                      Nous avons envoyé un lien magique à <strong>{email}</strong>
-                    </Text>
-                    <Button variant="link" colorScheme="brand" onClick={() => setEmailSent(false)}>
-                      Utiliser un autre email
+                    <FormControl isRequired>
+                      <FormLabel>Mot de passe</FormLabel>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                      />
+                    </FormControl>
+
+                    <Button
+                      type="submit"
+                      colorScheme="brand"
+                      size="lg"
+                      width="full"
+                      isLoading={loading}
+                    >
+                      Se connecter
                     </Button>
-                  </Box>
-                )}
+                  </Stack>
+                </form>
 
                 <Box textAlign="center" pt={4} borderTop="1px" borderColor="gray.200">
                   <ChakraLink as={Link} href="/" color="brand.600" fontSize="sm">

@@ -72,7 +72,7 @@ export default function HomePage() {
                 Accompagnement humain et bienveillant
               </Text>
               <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" maxW="2xl" mx="auto">
-                Cours de mathématiques • Développement personnel • Éducation financière
+                Cours de mathématiques • Compétences psychosociales • Éducation financière
               </Text>
               <Text fontSize={{ base: 'sm', md: 'md' }} color="brand.600" maxW="2xl" mx="auto" opacity="0.8">
                 Interventions à Nantes Est, Thouaré-sur-Loire et en établissements sur Nantes
@@ -173,7 +173,7 @@ export default function HomePage() {
                               Un accompagnement vers l'autonomie et l'indépendance dans la vie adulte.
                             </Text>
                             <Stack spacing={2} pl={4}>
-                              <Text color="brand.600">• Connaissance de soi et développement personnel</Text>
+                              <Text color="brand.600">• Connaissance de soi et compétences psychosociales</Text>
                               <Text color="brand.600">• Gestion du stress et des émotions</Text>
                               <Text color="brand.600">• Éducation financière et autonomie</Text>
                               <Text color="brand.600">• Préparation à l'indépendance</Text>

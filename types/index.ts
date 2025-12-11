@@ -9,6 +9,10 @@ export type ProcStatus =
 
 export type ClientType = 'Particulier' | 'École';
 
+export type ClientSubType = 'Jeune' | 'Parent' | null;
+
+export type ClientStatus = 'Prospect' | 'Client';
+
 export type DocumentKind = 'CONTRACT' | 'CONTRACT_SIGNED' | 'ANNEX' | 'SUPPORTING_DOC';
 
 export type UploadedBy = 'ADMIN' | 'CLIENT' | 'EMAIL';
@@ -29,12 +33,27 @@ export interface Client {
   phone2?: string;
   phone3?: string;
   type_client: ClientType;
+  sub_type?: ClientSubType;
+  client_status: ClientStatus;
   organisation?: string;
   address_line1?: string;
   postal_code?: string;
   city?: string;
   country?: string;
   notes?: string;
+  // New fields for Particulier (Jeune/Parent)
+  first_name_jeune?: string;
+  last_name_jeune?: string;
+  email_jeune?: string;
+  phone_jeune?: string;
+  first_name_parent1?: string;
+  last_name_parent1?: string;
+  email_parent1?: string;
+  phone_parent1?: string;
+  first_name_parent2?: string;
+  last_name_parent2?: string;
+  email_parent2?: string;
+  phone_parent2?: string;
   created_at: string;
 }
 

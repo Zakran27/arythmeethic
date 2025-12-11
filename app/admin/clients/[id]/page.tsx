@@ -13,9 +13,10 @@ import {
   Alert,
   AlertIcon,
   HStack,
-  Badge,
   Box,
   useDisclosure,
+  Divider,
+  Badge,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
@@ -51,6 +52,9 @@ export default function ClientDetailPage() {
     );
   }
 
+  const isParticulier = client.type_client === 'Particulier';
+  const isEcole = client.type_client === 'École';
+
   return (
     <Stack spacing={6}>
       <HStack justify="space-between" align="center">
@@ -64,46 +68,136 @@ export default function ClientDetailPage() {
 
       <Card bg="white" shadow="sm">
         <CardBody>
-          <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-            <GridItem>
-              <Text fontWeight="bold">Email</Text>
-              <Text>{client.email}</Text>
-            </GridItem>
-            <GridItem>
-              <Text fontWeight="bold">Téléphone 1</Text>
-              <Text>{client.phone1 || '—'}</Text>
-            </GridItem>
-            <GridItem>
-              <Text fontWeight="bold">Téléphone 2</Text>
-              <Text>{client.phone2 || '—'}</Text>
-            </GridItem>
-            <GridItem>
-              <Text fontWeight="bold">Téléphone 3</Text>
-              <Text>{client.phone3 || '—'}</Text>
-            </GridItem>
-            <GridItem>
-              <Text fontWeight="bold">Type</Text>
-              <Text>{client.type_client}</Text>
-            </GridItem>
-            <GridItem>
-              <Text fontWeight="bold">Organisation</Text>
-              <Text>{client.organisation || '—'}</Text>
-            </GridItem>
-            <GridItem colSpan={2}>
-              <Text fontWeight="bold">Adresse</Text>
-              <Text>
-                {client.address_line1 || '—'}
-                {client.postal_code && `, ${client.postal_code}`}
-                {client.city && ` ${client.city}`}
-              </Text>
-            </GridItem>
-            {client.notes && (
-              <GridItem colSpan={2}>
-                <Text fontWeight="bold">Notes</Text>
-                <Text>{client.notes}</Text>
+          <Stack spacing={4}>
+            <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+              <GridItem>
+                <Text fontWeight="bold">Statut</Text>
+                <Badge colorScheme={client.client_status === 'Client' ? 'green' : 'orange'}>
+                  {client.client_status || 'Prospect'}
+                </Badge>
               </GridItem>
+              <GridItem>
+                <Text fontWeight="bold">Type</Text>
+                <Text>{client.type_client}{client.sub_type ? ` (${client.sub_type})` : ''}</Text>
+              </GridItem>
+              {isEcole && (
+                <GridItem>
+                  <Text fontWeight="bold">Organisation</Text>
+                  <Text>{client.organisation || '—'}</Text>
+                </GridItem>
+              )}
+            </Grid>
+
+            {isParticulier && (
+              <>
+                <Divider />
+                <Text fontWeight="bold" fontSize="md" color="brand.500">Jeune / Élève</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <Text fontWeight="bold">Nom</Text>
+                    <Text>{client.last_name_jeune || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Prénom</Text>
+                    <Text>{client.first_name_jeune || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone</Text>
+                    <Text>{client.phone_jeune || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Email</Text>
+                    <Text>{client.email_jeune || '—'}</Text>
+                  </GridItem>
+                </Grid>
+
+                <Divider />
+                <Text fontWeight="bold" fontSize="md" color="brand.500">Parent 1</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <Text fontWeight="bold">Nom</Text>
+                    <Text>{client.last_name_parent1 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Prénom</Text>
+                    <Text>{client.first_name_parent1 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone</Text>
+                    <Text>{client.phone_parent1 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Email</Text>
+                    <Text>{client.email_parent1 || '—'}</Text>
+                  </GridItem>
+                </Grid>
+
+                <Divider />
+                <Text fontWeight="bold" fontSize="md" color="brand.500">Parent 2</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <Text fontWeight="bold">Nom</Text>
+                    <Text>{client.last_name_parent2 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Prénom</Text>
+                    <Text>{client.first_name_parent2 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone</Text>
+                    <Text>{client.phone_parent2 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Email</Text>
+                    <Text>{client.email_parent2 || '—'}</Text>
+                  </GridItem>
+                </Grid>
+              </>
             )}
-          </Grid>
+
+            {isEcole && (
+              <>
+                <Divider />
+                <Text fontWeight="bold" fontSize="md" color="brand.500">Contact</Text>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  <GridItem>
+                    <Text fontWeight="bold">Email</Text>
+                    <Text>{client.email}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone 1</Text>
+                    <Text>{client.phone1 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone 2</Text>
+                    <Text>{client.phone2 || '—'}</Text>
+                  </GridItem>
+                  <GridItem>
+                    <Text fontWeight="bold">Téléphone 3</Text>
+                    <Text>{client.phone3 || '—'}</Text>
+                  </GridItem>
+                </Grid>
+              </>
+            )}
+
+            <Divider />
+            <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+              <GridItem colSpan={2}>
+                <Text fontWeight="bold">Adresse</Text>
+                <Text>
+                  {client.address_line1 || '—'}
+                  {client.postal_code && `, ${client.postal_code}`}
+                  {client.city && ` ${client.city}`}
+                </Text>
+              </GridItem>
+              {client.notes && (
+                <GridItem colSpan={2}>
+                  <Text fontWeight="bold">Notes</Text>
+                  <Text>{client.notes}</Text>
+                </GridItem>
+              )}
+            </Grid>
+          </Stack>
         </CardBody>
       </Card>
 
@@ -114,20 +208,36 @@ export default function ClientDetailPage() {
               Procédures ({procedures.length})
             </Heading>
 
-            {/* n8n Workflow Buttons */}
+            {/* Procedure Buttons - Different for École */}
             <HStack spacing={3} flexWrap="wrap">
-              <Button colorScheme="accent" size="sm">
-                Nouveau client
-              </Button>
-              <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
-                Renouvellement
-              </Button>
-              <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
-                Demander documents
-              </Button>
-              <Button bg="brand.600" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
-                Upload document
-              </Button>
+              {isEcole ? (
+                <>
+                  <Button colorScheme="accent" size="sm">
+                    Qualification
+                  </Button>
+                  <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
+                    Contractualisation
+                  </Button>
+                  <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
+                    Enquête de satisfaction
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button colorScheme="accent" size="sm">
+                    Nouveau client
+                  </Button>
+                  <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
+                    Renouvellement
+                  </Button>
+                  <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
+                    Demander documents
+                  </Button>
+                  <Button bg="brand.600" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
+                    Upload document
+                  </Button>
+                </>
+              )}
             </HStack>
 
             {procedures.length > 0 ? (
