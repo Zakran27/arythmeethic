@@ -34,7 +34,7 @@ function SortIndicator({ direction, isActive }: { direction: SortDirection; isAc
   );
 }
 
-export function DataTable<T extends { [key: string]: unknown }>({
+export function DataTable<T>({
   columns,
   data,
   onRowClick,
@@ -65,8 +65,8 @@ export function DataTable<T extends { [key: string]: unknown }>({
     if (!sortColumn || !sortDirection) return data;
 
     return [...data].sort((a, b) => {
-      const aValue = a[sortColumn];
-      const bValue = b[sortColumn];
+      const aValue = (a as Record<string, unknown>)[sortColumn];
+      const bValue = (b as Record<string, unknown>)[sortColumn];
 
       // Handle null/undefined
       if (aValue == null && bValue == null) return 0;
@@ -152,7 +152,7 @@ export function DataTable<T extends { [key: string]: unknown }>({
               >
                 {columns.map(col => (
                   <Td key={col.key} color="brand.600">
-                    {col.render ? col.render(item) : (item[col.key] as React.ReactNode)}
+                    {col.render ? col.render(item) : ((item as Record<string, unknown>)[col.key] as React.ReactNode)}
                   </Td>
                 ))}
               </Tr>
