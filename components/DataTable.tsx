@@ -34,7 +34,7 @@ function SortIndicator({ direction, isActive }: { direction: SortDirection; isAc
   );
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends { [key: string]: unknown }>({
   columns,
   data,
   onRowClick,
