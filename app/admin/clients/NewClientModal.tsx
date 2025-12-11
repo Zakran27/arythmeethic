@@ -138,11 +138,17 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       setFormData(initialFormData);
       onSuccess();
     } catch (error) {
+      console.error('Error creating contact:', error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : JSON.stringify(error);
       toast({
         title: 'Erreur lors de la création du contact',
-        description: error instanceof Error ? error.message : 'Erreur inconnue',
+        description: errorMessage,
         status: 'error',
-        duration: 5000,
+        duration: 10000,
       });
     } finally {
       setLoading(false);
