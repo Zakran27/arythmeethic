@@ -54,6 +54,11 @@ export interface Client {
   last_name_parent2?: string;
   email_parent2?: string;
   phone_parent2?: string;
+  // Additional fields from contact form
+  niveau_eleve?: string;
+  demande_type?: string;
+  how_did_you_hear?: string;
+  referrer_name?: string;
   created_at: string;
 }
 

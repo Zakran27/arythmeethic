@@ -15,7 +15,6 @@ import {
   HStack,
   Box,
   useDisclosure,
-  Divider,
   Badge,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
@@ -54,152 +53,234 @@ export default function ClientDetailPage() {
 
   const isParticulier = client.type_client === 'Particulier';
   const isEcole = client.type_client === 'École';
+  const isJeune = client.sub_type === 'Jeune';
+  const isParent = client.sub_type === 'Parent';
+
+  // Get display name for header
+  const getDisplayName = () => {
+    if (isEcole) {
+      return client.organisation || `${client.first_name} ${client.last_name}`;
+    }
+    if (isJeune && (client.first_name_jeune || client.last_name_jeune)) {
+      return `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim();
+    }
+    if (isParent && (client.first_name_parent1 || client.last_name_parent1)) {
+      return `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim();
+    }
+    return `${client.first_name} ${client.last_name}`;
+  };
 
   return (
     <Stack spacing={6}>
       <HStack justify="space-between" align="center">
         <Heading color="brand.500" fontFamily="heading">
-          {client.first_name} {client.last_name}
+          {getDisplayName()}
         </Heading>
         <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
           Modifier
         </Button>
       </HStack>
 
+      {/* Informations générales */}
       <Card bg="white" shadow="sm">
         <CardBody>
           <Stack spacing={4}>
-            <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+            <Heading size="sm" color="brand.500" fontFamily="heading">Informations générales</Heading>
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
               <GridItem>
-                <Text fontWeight="bold">Statut</Text>
-                <Badge colorScheme={client.client_status === 'Client' ? 'green' : 'orange'}>
+                <Text fontSize="sm" color="gray.500">Statut</Text>
+                <Badge colorScheme={client.client_status === 'Client' ? 'green' : 'orange'} mt={1}>
                   {client.client_status || 'Prospect'}
                 </Badge>
               </GridItem>
               <GridItem>
-                <Text fontWeight="bold">Type</Text>
-                <Text>{client.type_client}{client.sub_type ? ` (${client.sub_type})` : ''}</Text>
+                <Text fontSize="sm" color="gray.500">Type</Text>
+                <Text fontWeight="medium">{isEcole ? 'Établissement' : 'Particulier'}</Text>
               </GridItem>
-              {isEcole && (
+              {isParticulier && client.sub_type && (
                 <GridItem>
-                  <Text fontWeight="bold">Organisation</Text>
-                  <Text>{client.organisation || '—'}</Text>
+                  <Text fontSize="sm" color="gray.500">Sous-type</Text>
+                  <Text fontWeight="medium">{client.sub_type === 'Jeune' ? 'Jeune / Élève' : 'Parent'}</Text>
                 </GridItem>
               )}
-            </Grid>
-
-            {isParticulier && (
-              <>
-                <Divider />
-                <Text fontWeight="bold" fontSize="md" color="brand.500">Jeune / Élève</Text>
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                  <GridItem>
-                    <Text fontWeight="bold">Nom</Text>
-                    <Text>{client.last_name_jeune || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Prénom</Text>
-                    <Text>{client.first_name_jeune || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone</Text>
-                    <Text>{client.phone_jeune || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Email</Text>
-                    <Text>{client.email_jeune || '—'}</Text>
-                  </GridItem>
-                </Grid>
-
-                <Divider />
-                <Text fontWeight="bold" fontSize="md" color="brand.500">Parent 1</Text>
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                  <GridItem>
-                    <Text fontWeight="bold">Nom</Text>
-                    <Text>{client.last_name_parent1 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Prénom</Text>
-                    <Text>{client.first_name_parent1 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone</Text>
-                    <Text>{client.phone_parent1 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Email</Text>
-                    <Text>{client.email_parent1 || '—'}</Text>
-                  </GridItem>
-                </Grid>
-
-                <Divider />
-                <Text fontWeight="bold" fontSize="md" color="brand.500">Parent 2</Text>
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                  <GridItem>
-                    <Text fontWeight="bold">Nom</Text>
-                    <Text>{client.last_name_parent2 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Prénom</Text>
-                    <Text>{client.first_name_parent2 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone</Text>
-                    <Text>{client.phone_parent2 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Email</Text>
-                    <Text>{client.email_parent2 || '—'}</Text>
-                  </GridItem>
-                </Grid>
-              </>
-            )}
-
-            {isEcole && (
-              <>
-                <Divider />
-                <Text fontWeight="bold" fontSize="md" color="brand.500">Contact</Text>
-                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                  <GridItem>
-                    <Text fontWeight="bold">Email</Text>
-                    <Text>{client.email}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone 1</Text>
-                    <Text>{client.phone1 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone 2</Text>
-                    <Text>{client.phone2 || '—'}</Text>
-                  </GridItem>
-                  <GridItem>
-                    <Text fontWeight="bold">Téléphone 3</Text>
-                    <Text>{client.phone3 || '—'}</Text>
-                  </GridItem>
-                </Grid>
-              </>
-            )}
-
-            <Divider />
-            <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-              <GridItem colSpan={2}>
-                <Text fontWeight="bold">Adresse</Text>
-                <Text>
-                  {client.address_line1 || '—'}
-                  {client.postal_code && `, ${client.postal_code}`}
-                  {client.city && ` ${client.city}`}
-                </Text>
-              </GridItem>
-              {client.notes && (
-                <GridItem colSpan={2}>
-                  <Text fontWeight="bold">Notes</Text>
-                  <Text>{client.notes}</Text>
+              {(isJeune || isParent) && client.niveau_eleve && (
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Niveau</Text>
+                  <Text fontWeight="medium">{client.niveau_eleve}</Text>
+                </GridItem>
+              )}
+              {(isJeune || isParent) && client.demande_type && (
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Type de demande</Text>
+                  <Text fontWeight="medium">{client.demande_type}</Text>
                 </GridItem>
               )}
             </Grid>
           </Stack>
         </CardBody>
       </Card>
+
+      {/* ========== JEUNE / ÉLÈVE CONTACTS ========== */}
+      {isJeune && (
+        <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap={4}>
+          {/* Jeune */}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Jeune / Élève</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.first_name_jeune || client.last_name_jeune
+                      ? `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.phone_jeune || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.email_jeune || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
+
+          {/* Parent 1 */}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Parent 1</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.first_name_parent1 || client.last_name_parent1
+                      ? `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.phone_parent1 || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.email_parent1 || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
+
+          {/* Parent 2 */}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Parent 2</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.first_name_parent2 || client.last_name_parent2
+                      ? `${client.first_name_parent2 || ''} ${client.last_name_parent2 || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.phone_parent2 || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.email_parent2 || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
+        </Grid>
+      )}
+
+      {/* ========== PARENT CONTACT ========== */}
+      {isParent && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={3}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Parent</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.first_name_parent1 || client.last_name_parent1
+                      ? `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.phone_parent1 || '—'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.email_parent1 || '—'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT CONTACT ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Contact de l'établissement</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">{client.first_name} {client.last_name}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.phone1 || '—'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.email}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Adresse & Notes */}
+      <Grid templateColumns={{ base: '1fr', md: client.notes ? 'repeat(2, 1fr)' : '1fr' }} gap={4}>
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={3}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Adresse</Heading>
+              <Text fontWeight="medium">
+                {client.address_line1 || '—'}
+                {client.postal_code && <><br />{client.postal_code}</>}
+                {client.city && ` ${client.city}`}
+                {client.country && <><br />{client.country}</>}
+              </Text>
+            </Stack>
+          </CardBody>
+        </Card>
+
+        {client.notes && (
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Notes</Heading>
+                <Text>{client.notes}</Text>
+              </Stack>
+            </CardBody>
+          </Card>
+        )}
+      </Grid>
 
       <Card bg="white">
         <CardBody>
