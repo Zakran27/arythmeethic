@@ -31,64 +31,74 @@ interface NewClientModalProps {
   onSuccess: () => void;
 }
 
+const initialFormData = {
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone1: '',
+  type_client: 'Particulier' as ClientType,
+  sub_type: '' as ClientSubType | '',
+  client_status: 'Prospect' as ClientStatus,
+  organisation: '',
+  address_line1: '',
+  postal_code: '',
+  city: '',
+  country: '',
+  notes: '',
+  // Jeune fields
+  first_name_jeune: '',
+  last_name_jeune: '',
+  email_jeune: '',
+  phone_jeune: '',
+  niveau_eleve: '',
+  demande_type: '',
+  // Parent 1 fields
+  first_name_parent1: '',
+  last_name_parent1: '',
+  email_parent1: '',
+  phone_parent1: '',
+  // Parent 2 fields
+  first_name_parent2: '',
+  last_name_parent2: '',
+  email_parent2: '',
+  phone_parent2: '',
+};
+
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const supabase = createClient();
-
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone1: '',
-    phone2: '',
-    phone3: '',
-    type_client: 'Particulier' as ClientType,
-    sub_type: '' as ClientSubType | '',
-    client_status: 'Prospect' as ClientStatus,
-    organisation: '',
-    address_line1: '',
-    postal_code: '',
-    city: '',
-    country: '',
-    notes: '',
-    // New fields for Particulier
-    first_name_jeune: '',
-    last_name_jeune: '',
-    email_jeune: '',
-    phone_jeune: '',
-    first_name_parent1: '',
-    last_name_parent1: '',
-    email_parent1: '',
-    phone_parent1: '',
-    first_name_parent2: '',
-    last_name_parent2: '',
-    email_parent2: '',
-    phone_parent2: '',
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // For Particulier, set main email from appropriate contact field
+      // Determine main email based on type
       let mainEmail = formData.email;
+      let mainFirstName = formData.first_name;
+      let mainLastName = formData.last_name;
+
       if (formData.type_client === 'Particulier') {
         if (formData.sub_type === 'Jeune') {
           mainEmail = formData.email_jeune || formData.email_parent1 || '';
-        } else {
-          mainEmail = formData.email_parent1 || formData.email_jeune || '';
+          mainFirstName = formData.first_name_jeune || formData.first_name;
+          mainLastName = formData.last_name_jeune || formData.last_name;
+        } else if (formData.sub_type === 'Parent') {
+          mainEmail = formData.email_parent1 || '';
+          mainFirstName = formData.first_name_parent1 || formData.first_name;
+          mainLastName = formData.last_name_parent1 || formData.last_name;
         }
       }
 
       const { error } = await supabase.from('clients').insert([
         {
-          ...formData,
+          first_name: mainFirstName,
+          last_name: mainLastName,
           email: mainEmail,
           phone1: formData.phone1 || null,
-          phone2: formData.phone2 || null,
-          phone3: formData.phone3 || null,
+          type_client: formData.type_client,
           sub_type: formData.sub_type || null,
           client_status: formData.client_status,
           organisation: formData.organisation || null,
@@ -97,64 +107,39 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           city: formData.city || null,
           country: formData.country || null,
           notes: formData.notes || null,
+          // Jeune fields (for Jeune type)
           first_name_jeune: formData.first_name_jeune || null,
           last_name_jeune: formData.last_name_jeune || null,
           email_jeune: formData.email_jeune || null,
           phone_jeune: formData.phone_jeune || null,
+          niveau_eleve: formData.niveau_eleve || null,
+          demande_type: formData.demande_type || null,
+          // Parent 1 fields
           first_name_parent1: formData.first_name_parent1 || null,
           last_name_parent1: formData.last_name_parent1 || null,
           email_parent1: formData.email_parent1 || null,
           phone_parent1: formData.phone_parent1 || null,
-          first_name_parent2: formData.first_name_parent2 || null,
-          last_name_parent2: formData.last_name_parent2 || null,
-          email_parent2: formData.email_parent2 || null,
-          phone_parent2: formData.phone_parent2 || null,
+          // Parent 2 fields (only for Jeune type)
+          first_name_parent2: formData.sub_type === 'Jeune' ? (formData.first_name_parent2 || null) : null,
+          last_name_parent2: formData.sub_type === 'Jeune' ? (formData.last_name_parent2 || null) : null,
+          email_parent2: formData.sub_type === 'Jeune' ? (formData.email_parent2 || null) : null,
+          phone_parent2: formData.sub_type === 'Jeune' ? (formData.phone_parent2 || null) : null,
         },
       ]);
 
       if (error) throw error;
 
       toast({
-        title: 'Client créé',
+        title: 'Contact créé',
         status: 'success',
         duration: 3000,
       });
 
-      // Reset form
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone1: '',
-        phone2: '',
-        phone3: '',
-        type_client: 'Particulier',
-        sub_type: '',
-        client_status: 'Prospect',
-        organisation: '',
-        address_line1: '',
-        postal_code: '',
-        city: '',
-        country: '',
-        notes: '',
-        first_name_jeune: '',
-        last_name_jeune: '',
-        email_jeune: '',
-        phone_jeune: '',
-        first_name_parent1: '',
-        last_name_parent1: '',
-        email_parent1: '',
-        phone_parent1: '',
-        first_name_parent2: '',
-        last_name_parent2: '',
-        email_parent2: '',
-        phone_parent2: '',
-      });
-
+      setFormData(initialFormData);
       onSuccess();
     } catch (error) {
       toast({
-        title: 'Erreur lors de la création du client',
+        title: 'Erreur lors de la création du contact',
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         status: 'error',
         duration: 5000,
@@ -170,37 +155,19 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
 
   const isParticulier = formData.type_client === 'Particulier';
   const isEcole = formData.type_client === 'École';
+  const isJeune = formData.sub_type === 'Jeune';
+  const isParent = formData.sub_type === 'Parent';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent>
         <form onSubmit={handleSubmit}>
-          <ModalHeader color="brand.500" fontFamily="heading">Nouveau client</ModalHeader>
+          <ModalHeader color="brand.500" fontFamily="heading">Nouveau contact</ModalHeader>
           <ModalCloseButton color="brand.500" />
           <ModalBody>
             <Stack spacing={4}>
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                <GridItem>
-                  <FormControl isRequired>
-                    <FormLabel>Prénom</FormLabel>
-                    <Input
-                      value={formData.first_name}
-                      onChange={e => handleChange('first_name', e.target.value)}
-                    />
-                  </FormControl>
-                </GridItem>
-                <GridItem>
-                  <FormControl isRequired>
-                    <FormLabel>Nom</FormLabel>
-                    <Input
-                      value={formData.last_name}
-                      onChange={e => handleChange('last_name', e.target.value)}
-                    />
-                  </FormControl>
-                </GridItem>
-              </Grid>
-
+              {/* Type Selection */}
               <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                 <GridItem>
                   <FormControl isRequired>
@@ -219,7 +186,10 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     <FormLabel>Type</FormLabel>
                     <Select
                       value={formData.type_client}
-                      onChange={e => handleChange('type_client', e.target.value)}
+                      onChange={e => {
+                        handleChange('type_client', e.target.value);
+                        handleChange('sub_type', '');
+                      }}
                     >
                       <option value="Particulier">Particulier</option>
                       <option value="École">Établissement</option>
@@ -228,7 +198,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 </GridItem>
                 {isParticulier && (
                   <GridItem>
-                    <FormControl>
+                    <FormControl isRequired>
                       <FormLabel>Sous-type</FormLabel>
                       <Select
                         value={formData.sub_type || ''}
@@ -243,23 +213,14 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 )}
               </Grid>
 
-              {isEcole && (
-                <FormControl>
-                  <FormLabel>Nom de l'établissement</FormLabel>
-                  <Input
-                    value={formData.organisation}
-                    onChange={e => handleChange('organisation', e.target.value)}
-                  />
-                </FormControl>
-              )}
-
-              {isParticulier && (
+              {/* ========== JEUNE / ÉLÈVE FIELDS ========== */}
+              {isJeune && (
                 <>
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">Jeune / Élève</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
-                      <FormControl>
+                      <FormControl isRequired>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.first_name_jeune}
@@ -268,7 +229,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                     <GridItem>
-                      <FormControl>
+                      <FormControl isRequired>
                         <FormLabel>Nom</FormLabel>
                         <Input
                           value={formData.last_name_jeune}
@@ -297,6 +258,49 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </GridItem>
                   </Grid>
 
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Niveau de l'élève</FormLabel>
+                        <Select
+                          value={formData.niveau_eleve}
+                          onChange={e => handleChange('niveau_eleve', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="CP">CP</option>
+                          <option value="CE1">CE1</option>
+                          <option value="CE2">CE2</option>
+                          <option value="CM1">CM1</option>
+                          <option value="CM2">CM2</option>
+                          <option value="6ème">6ème</option>
+                          <option value="5ème">5ème</option>
+                          <option value="4ème">4ème</option>
+                          <option value="3ème">3ème</option>
+                          <option value="2nde">2nde</option>
+                          <option value="1ère">1ère</option>
+                          <option value="Terminale">Terminale</option>
+                          <option value="Supérieur">Supérieur</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Type de demande</FormLabel>
+                        <Select
+                          value={formData.demande_type}
+                          onChange={e => handleChange('demande_type', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="Bilan">Bilan</option>
+                          <option value="Accompagnement">Accompagnement</option>
+                          <option value="Atelier">Atelier</option>
+                          <option value="Information">Information</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Divider />
                   <Text fontWeight="bold" color="brand.500">Parent 1</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
@@ -338,6 +342,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </GridItem>
                   </Grid>
 
+                  <Divider />
                   <Text fontWeight="bold" color="brand.500">Parent 2</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
@@ -381,22 +386,130 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 </>
               )}
 
+              {/* ========== PARENT FIELDS ========== */}
+              {isParent && (
+                <>
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Parent</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl isRequired>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.first_name_parent1}
+                          onChange={e => handleChange('first_name_parent1', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl isRequired>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.last_name_parent1}
+                          onChange={e => handleChange('last_name_parent1', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Téléphone</FormLabel>
+                        <Input
+                          value={formData.phone_parent1}
+                          onChange={e => handleChange('phone_parent1', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl isRequired>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.email_parent1}
+                          onChange={e => handleChange('email_parent1', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Niveau de l'élève</FormLabel>
+                        <Select
+                          value={formData.niveau_eleve}
+                          onChange={e => handleChange('niveau_eleve', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="CP">CP</option>
+                          <option value="CE1">CE1</option>
+                          <option value="CE2">CE2</option>
+                          <option value="CM1">CM1</option>
+                          <option value="CM2">CM2</option>
+                          <option value="6ème">6ème</option>
+                          <option value="5ème">5ème</option>
+                          <option value="4ème">4ème</option>
+                          <option value="3ème">3ème</option>
+                          <option value="2nde">2nde</option>
+                          <option value="1ère">1ère</option>
+                          <option value="Terminale">Terminale</option>
+                          <option value="Supérieur">Supérieur</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Type de demande</FormLabel>
+                        <Select
+                          value={formData.demande_type}
+                          onChange={e => handleChange('demande_type', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="Bilan">Bilan</option>
+                          <option value="Accompagnement">Accompagnement</option>
+                          <option value="Atelier">Atelier</option>
+                          <option value="Information">Information</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+                </>
+              )}
+
+              {/* ========== ÉTABLISSEMENT FIELDS ========== */}
               {isEcole && (
                 <>
                   <Divider />
                   <FormControl isRequired>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Nom de l'établissement</FormLabel>
                     <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={e => handleChange('email', e.target.value)}
+                      value={formData.organisation}
+                      onChange={e => handleChange('organisation', e.target.value)}
                     />
                   </FormControl>
 
-                  <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                  <Text fontWeight="bold" color="brand.500" mt={2}>Contact de l'établissement</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl isRequired>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.first_name}
+                          onChange={e => handleChange('first_name', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl isRequired>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.last_name}
+                          onChange={e => handleChange('last_name', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
                     <GridItem>
                       <FormControl>
-                        <FormLabel>Téléphone 1</FormLabel>
+                        <FormLabel>Téléphone</FormLabel>
                         <Input
                           value={formData.phone1}
                           onChange={e => handleChange('phone1', e.target.value)}
@@ -404,20 +517,12 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                     <GridItem>
-                      <FormControl>
-                        <FormLabel>Téléphone 2</FormLabel>
+                      <FormControl isRequired>
+                        <FormLabel>Email</FormLabel>
                         <Input
-                          value={formData.phone2}
-                          onChange={e => handleChange('phone2', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Téléphone 3</FormLabel>
-                        <Input
-                          value={formData.phone3}
-                          onChange={e => handleChange('phone3', e.target.value)}
+                          type="email"
+                          value={formData.email}
+                          onChange={e => handleChange('email', e.target.value)}
                         />
                       </FormControl>
                     </GridItem>
@@ -425,8 +530,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 </>
               )}
 
+              {/* ========== COMMON FIELDS: Address & Notes ========== */}
               <Divider />
-
+              <Text fontWeight="bold" color="brand.500">Adresse</Text>
               <FormControl>
                 <FormLabel>Adresse</FormLabel>
                 <Input
@@ -481,7 +587,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
               Annuler
             </Button>
             <Button colorScheme="accent" type="submit" isLoading={loading}>
-              Créer le client
+              Créer le contact
             </Button>
           </ModalFooter>
         </form>
