@@ -353,7 +353,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       <ModalContent maxH="90vh">
         <ModalHeader>Prendre contact avec A Rythme Ethic</ModalHeader>
         <ModalCloseButton />
-        <ModalBody pb={6}>
+        <ModalBody pb={6} overflowY="auto">
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
               <FormControl isRequired>
