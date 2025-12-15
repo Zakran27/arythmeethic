@@ -194,10 +194,10 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <form onSubmit={handleSubmit}>
-          <ModalHeader color="brand.500" fontFamily="heading">Modifier le contact</ModalHeader>
-          <ModalCloseButton color="brand.500" />
-          <ModalBody>
+        <ModalHeader color="brand.500" fontFamily="heading">Modifier le contact</ModalHeader>
+        <ModalCloseButton color="brand.500" />
+        <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
+          <ModalBody overflowY="auto">
             <Stack spacing={4}>
               {/* Type Selection */}
               <Grid templateColumns="repeat(3, 1fr)" gap={4}>
