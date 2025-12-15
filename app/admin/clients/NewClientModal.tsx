@@ -167,7 +167,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxH="90vh">
         <form onSubmit={handleSubmit}>
           <ModalHeader color="brand.500" fontFamily="heading">Nouveau contact</ModalHeader>
           <ModalCloseButton color="brand.500" />
