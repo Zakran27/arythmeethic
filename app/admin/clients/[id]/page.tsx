@@ -289,33 +289,36 @@ export default function ClientDetailPage() {
               Procédures ({procedures.length})
             </Heading>
 
-            {/* Procedure Buttons - Different for École */}
+            {/* Procedure Buttons - Different for Particulier vs École */}
             <HStack spacing={3} flexWrap="wrap">
               {isEcole ? (
                 <>
                   <Button colorScheme="accent" size="sm">
                     Qualification
                   </Button>
-                  <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
+                  <Button colorScheme="green" size="sm">
                     Contractualisation
-                  </Button>
-                  <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
-                    Enquête de satisfaction
                   </Button>
                 </>
               ) : (
                 <>
                   <Button colorScheme="accent" size="sm">
-                    Nouveau client
+                    Qualification
                   </Button>
-                  <Button bg="green.500" color="white" size="sm" _hover={{ bg: 'green.600' }}>
+                  <Button colorScheme="blue" size="sm">
+                    Préparation RDV 1
+                  </Button>
+                  <Button colorScheme="green" size="sm">
+                    Contractualisation
+                  </Button>
+                  <Button colorScheme="purple" size="sm">
+                    Déclaration des heures
+                  </Button>
+                  <Button colorScheme="orange" size="sm">
                     Renouvellement
                   </Button>
-                  <Button bg="terracotta.400" color="white" size="sm" _hover={{ bg: 'terracotta.500' }}>
-                    Demander documents
-                  </Button>
-                  <Button bg="brand.600" color="white" size="sm" _hover={{ bg: 'brand.500' }}>
-                    Upload document
+                  <Button colorScheme="red" size="sm">
+                    Fin du contrat
                   </Button>
                 </>
               )}
