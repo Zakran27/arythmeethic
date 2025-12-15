@@ -348,9 +348,9 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxH="90vh">
         <ModalHeader>Prendre contact avec A Rythme Ethic</ModalHeader>
         <ModalCloseButton />
         <ModalBody pb={6}>

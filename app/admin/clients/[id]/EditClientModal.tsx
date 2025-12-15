@@ -193,7 +193,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
-      <ModalContent>
+      <ModalContent maxH="90vh">
         <form onSubmit={handleSubmit}>
           <ModalHeader color="brand.500" fontFamily="heading">Modifier le contact</ModalHeader>
           <ModalCloseButton color="brand.500" />
