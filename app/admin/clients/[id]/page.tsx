@@ -16,8 +16,17 @@ import {
   Box,
   useDisclosure,
   Badge,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useToast,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -28,10 +37,53 @@ export default function ClientDetailPage() {
   const clientId = params.id as string;
   const { client, procedures, loading, error, refetch } = useClientDetail(clientId);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isRecueilOpen,
+    onOpen: onRecueilOpen,
+    onClose: onRecueilClose
+  } = useDisclosure();
+  const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
+  const toast = useToast();
 
   const handleClientUpdated = () => {
     refetch();
     onClose();
+  };
+
+  const handleLaunchRecueilProcedure = async () => {
+    setIsLaunchingProcedure(true);
+    try {
+      const response = await fetch('/api/procedures/recueil-informations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du lancement de la procédure');
+      }
+
+      toast({
+        title: 'Procédure lancée',
+        description: 'Un email avec le formulaire a été envoyé au client.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onRecueilClose();
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
   };
 
   if (loading) {
@@ -53,18 +105,17 @@ export default function ClientDetailPage() {
 
   const isParticulier = client.type_client === 'Particulier';
   const isEcole = client.type_client === 'École';
-  const isJeune = client.sub_type === 'Jeune';
-  const isParent = client.sub_type === 'Parent';
 
   // Get display name for header
   const getDisplayName = () => {
     if (isEcole) {
       return client.organisation || `${client.first_name} ${client.last_name}`;
     }
-    if (isJeune && (client.first_name_jeune || client.last_name_jeune)) {
+    // For Particulier, prefer jeune name, then parent1 name
+    if (client.first_name_jeune || client.last_name_jeune) {
       return `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim();
     }
-    if (isParent && (client.first_name_parent1 || client.last_name_parent1)) {
+    if (client.first_name_parent1 || client.last_name_parent1) {
       return `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim();
     }
     return `${client.first_name} ${client.last_name}`;
@@ -97,22 +148,24 @@ export default function ClientDetailPage() {
                 <Text fontSize="sm" color="gray.500">Type</Text>
                 <Text fontWeight="medium">{isEcole ? 'Établissement' : 'Particulier'}</Text>
               </GridItem>
-              {isParticulier && client.sub_type && (
+              {isParticulier && (
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Sous-type</Text>
-                  <Text fontWeight="medium">{client.sub_type === 'Jeune' ? 'Jeune / Élève' : 'Parent'}</Text>
+                  <Text fontWeight="medium">
+                    {client.sub_type === 'Jeune' ? 'Jeune / Élève' : client.sub_type === 'Parent' ? 'Parent' : '—'}
+                  </Text>
                 </GridItem>
               )}
-              {(isJeune || isParent) && client.niveau_eleve && (
+              {isParticulier && (
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Niveau</Text>
-                  <Text fontWeight="medium">{client.niveau_eleve}</Text>
+                  <Text fontWeight="medium">{client.niveau_eleve || '—'}</Text>
                 </GridItem>
               )}
-              {(isJeune || isParent) && client.demande_type && (
+              {isParticulier && (
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Type de demande</Text>
-                  <Text fontWeight="medium">{client.demande_type}</Text>
+                  <Text fontWeight="medium">{client.demande_type || '—'}</Text>
                 </GridItem>
               )}
             </Grid>
@@ -120,8 +173,8 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
-      {/* ========== JEUNE / ÉLÈVE CONTACTS ========== */}
-      {isJeune && (
+      {/* ========== PARTICULIER - Tous les contacts ========== */}
+      {isParticulier && (
         <Grid templateColumns={{ base: '1fr', lg: 'repeat(3, 1fr)' }} gap={4}>
           {/* Jeune */}
           <Card bg="white" shadow="sm">
@@ -200,35 +253,6 @@ export default function ClientDetailPage() {
         </Grid>
       )}
 
-      {/* ========== PARENT CONTACT ========== */}
-      {isParent && (
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={3}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">Parent</Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
-                  <Text fontWeight="medium">
-                    {client.first_name_parent1 || client.last_name_parent1
-                      ? `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim()
-                      : '—'}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
-                  <Text fontWeight="medium">{client.phone_parent1 || '—'}</Text>
-                </GridItem>
-                <GridItem colSpan={{ base: 1, md: 2 }}>
-                  <Text fontSize="sm" color="gray.500">Email</Text>
-                  <Text fontWeight="medium">{client.email_parent1 || '—'}</Text>
-                </GridItem>
-              </Grid>
-            </Stack>
-          </CardBody>
-        </Card>
-      )}
-
       {/* ========== ÉTABLISSEMENT CONTACT ========== */}
       {isEcole && (
         <Card bg="white" shadow="sm">
@@ -296,28 +320,28 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm">
                     Qualification
                   </Button>
-                  <Button colorScheme="green" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Contractualisation
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button colorScheme="accent" size="sm">
-                    Qualification
+                  <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
+                    Recueil des informations
                   </Button>
-                  <Button colorScheme="blue" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Préparation RDV 1
                   </Button>
-                  <Button colorScheme="green" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Contractualisation
                   </Button>
-                  <Button colorScheme="purple" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Déclaration des heures
                   </Button>
-                  <Button colorScheme="orange" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Renouvellement
                   </Button>
-                  <Button colorScheme="red" size="sm">
+                  <Button colorScheme="accent" size="sm">
                     Fin du contrat
                   </Button>
                 </>
@@ -382,6 +406,38 @@ export default function ClientDetailPage() {
           client={client}
         />
       )}
+
+      {/* Modal de confirmation - Recueil des informations */}
+      <Modal isOpen={isRecueilOpen} onClose={onRecueilClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Lancer la procédure
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Vous êtes sur le point de lancer la procédure <strong>Recueil des informations</strong>.
+            </Text>
+            <Text mt={3}>
+              Un email sera envoyé à <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> avec un lien vers un formulaire pré-rempli pour compléter les informations du dossier.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onRecueilClose}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchRecueilProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+            >
+              Confirmer et envoyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Stack>
   );
 }

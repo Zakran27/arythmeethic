@@ -152,11 +152,11 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           last_name_parent1: formData.last_name_parent1 || null,
           email_parent1: formData.email_parent1 || null,
           phone_parent1: formData.phone_parent1 || null,
-          // Parent 2 fields (only for Jeune type)
-          first_name_parent2: formData.sub_type === 'Jeune' ? (formData.first_name_parent2 || null) : null,
-          last_name_parent2: formData.sub_type === 'Jeune' ? (formData.last_name_parent2 || null) : null,
-          email_parent2: formData.sub_type === 'Jeune' ? (formData.email_parent2 || null) : null,
-          phone_parent2: formData.sub_type === 'Jeune' ? (formData.phone_parent2 || null) : null,
+          // Parent 2 fields
+          first_name_parent2: formData.first_name_parent2 || null,
+          last_name_parent2: formData.last_name_parent2 || null,
+          email_parent2: formData.email_parent2 || null,
+          phone_parent2: formData.phone_parent2 || null,
         })
         .eq('id', client.id);
 
@@ -187,8 +187,6 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
   const isParticulier = formData.type_client === 'Particulier';
   const isEcole = formData.type_client === 'École';
-  const isJeune = formData.sub_type === 'Jeune';
-  const isParent = formData.sub_type === 'Parent';
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
@@ -245,14 +243,15 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                 )}
               </Grid>
 
-              {/* ========== JEUNE / ÉLÈVE FIELDS ========== */}
-              {isJeune && (
+              {/* ========== PARTICULIER FIELDS ========== */}
+              {isParticulier && (
                 <>
+                  {/* Jeune / Élève */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">Jeune / Élève</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
-                      <FormControl isRequired>
+                      <FormControl>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.first_name_jeune}
@@ -261,7 +260,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       </FormControl>
                     </GridItem>
                     <GridItem>
-                      <FormControl isRequired>
+                      <FormControl>
                         <FormLabel>Nom</FormLabel>
                         <Input
                           value={formData.last_name_jeune}
@@ -332,6 +331,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     </GridItem>
                   </Grid>
 
+                  {/* Parent 1 */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">Parent 1</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -374,6 +374,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     </GridItem>
                   </Grid>
 
+                  {/* Parent 2 */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">Parent 2</Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -412,95 +413,6 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                           value={formData.email_parent2}
                           onChange={e => handleChange('email_parent2', e.target.value)}
                         />
-                      </FormControl>
-                    </GridItem>
-                  </Grid>
-                </>
-              )}
-
-              {/* ========== PARENT FIELDS ========== */}
-              {isParent && (
-                <>
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent</Text>
-                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                    <GridItem>
-                      <FormControl isRequired>
-                        <FormLabel>Prénom</FormLabel>
-                        <Input
-                          value={formData.first_name_parent1}
-                          onChange={e => handleChange('first_name_parent1', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl isRequired>
-                        <FormLabel>Nom</FormLabel>
-                        <Input
-                          value={formData.last_name_parent1}
-                          onChange={e => handleChange('last_name_parent1', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Téléphone</FormLabel>
-                        <Input
-                          value={formData.phone_parent1}
-                          onChange={e => handleChange('phone_parent1', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl isRequired>
-                        <FormLabel>Email</FormLabel>
-                        <Input
-                          type="email"
-                          value={formData.email_parent1}
-                          onChange={e => handleChange('email_parent1', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                  </Grid>
-
-                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Niveau de l'élève</FormLabel>
-                        <Select
-                          value={formData.niveau_eleve}
-                          onChange={e => handleChange('niveau_eleve', e.target.value)}
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="CP">CP</option>
-                          <option value="CE1">CE1</option>
-                          <option value="CE2">CE2</option>
-                          <option value="CM1">CM1</option>
-                          <option value="CM2">CM2</option>
-                          <option value="6ème">6ème</option>
-                          <option value="5ème">5ème</option>
-                          <option value="4ème">4ème</option>
-                          <option value="3ème">3ème</option>
-                          <option value="2nde">2nde</option>
-                          <option value="1ère">1ère</option>
-                          <option value="Terminale">Terminale</option>
-                          <option value="Supérieur">Supérieur</option>
-                        </Select>
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Type de demande</FormLabel>
-                        <Select
-                          value={formData.demande_type}
-                          onChange={e => handleChange('demande_type', e.target.value)}
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="Bilan">Bilan</option>
-                          <option value="Accompagnement">Accompagnement</option>
-                          <option value="Atelier">Atelier</option>
-                          <option value="Information">Information</option>
-                        </Select>
                       </FormControl>
                     </GridItem>
                   </Grid>
