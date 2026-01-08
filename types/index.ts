@@ -59,6 +59,15 @@ export interface Client {
   demande_type?: string;
   how_did_you_hear?: string;
   referrer_name?: string;
+  // Fields for "Recueil des informations" procedure
+  numero_cesu?: string;
+  adresse_cours?: string;
+  etablissement_scolaire?: string;
+  moyenne_maths?: string;
+  moyenne_generale?: string;
+  jours_disponibles?: string[];
+  form_token?: string;
+  form_token_expires_at?: string;
   created_at: string;
 }
 
