@@ -278,6 +278,60 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
+      {/* Informations scolaires / Recueil - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Informations scolaires</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Établissement scolaire</Text>
+                  <Text fontWeight="medium">{client.etablissement_scolaire || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Moyenne maths</Text>
+                  <Text fontWeight="medium">{client.moyenne_maths || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Moyenne générale</Text>
+                  <Text fontWeight="medium">{client.moyenne_generale || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Numéro CESU</Text>
+                  <Text fontWeight="medium">{client.numero_cesu || '—'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Lieu et disponibilités - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Lieu et disponibilités</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Adresse des cours</Text>
+                  <Text fontWeight="medium">{client.adresse_cours || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Jours disponibles</Text>
+                  <Text fontWeight="medium">
+                    {client.jours_disponibles && client.jours_disponibles.length > 0
+                      ? client.jours_disponibles.join(', ')
+                      : '—'}
+                  </Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Adresse & Notes */}
       <Grid templateColumns={{ base: '1fr', md: client.notes ? 'repeat(2, 1fr)' : '1fr' }} gap={4}>
         <Card bg="white" shadow="sm">
