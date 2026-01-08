@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -25,7 +25,7 @@ interface ClientData {
   first_name?: string;
 }
 
-export default function RenouvellementFormPage() {
+function RenouvellementFormContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -220,5 +220,19 @@ export default function RenouvellementFormPage() {
         </VStack>
       </Container>
     </Box>
+  );
+}
+
+export default function RenouvellementFormPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
+          <Spinner size="xl" color="accent.500" />
+        </Box>
+      }
+    >
+      <RenouvellementFormContent />
+    </Suspense>
   );
 }
