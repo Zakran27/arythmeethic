@@ -42,6 +42,11 @@ export default function ClientDetailPage() {
     onOpen: onRecueilOpen,
     onClose: onRecueilClose
   } = useDisclosure();
+  const {
+    isOpen: isRdv1Open,
+    onOpen: onRdv1Open,
+    onClose: onRdv1Close
+  } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const toast = useToast();
 
@@ -72,6 +77,42 @@ export default function ClientDetailPage() {
       });
 
       onRecueilClose();
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleLaunchRdv1Procedure = async () => {
+    setIsLaunchingProcedure(true);
+    try {
+      const response = await fetch('/api/procedures/preparation-rdv1', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du lancement de la procédure');
+      }
+
+      toast({
+        title: 'Procédure lancée',
+        description: 'Un email de préparation du RDV 1 a été envoyé au client.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onRdv1Close();
       refetch();
     } catch (err) {
       toast({
@@ -383,7 +424,7 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
                     Recueil des informations
                   </Button>
-                  <Button colorScheme="accent" size="sm">
+                  <Button colorScheme="accent" size="sm" onClick={onRdv1Open}>
                     Préparation RDV 1
                   </Button>
                   <Button colorScheme="accent" size="sm">
@@ -484,6 +525,44 @@ export default function ClientDetailPage() {
             <Button
               colorScheme="accent"
               onClick={handleLaunchRecueilProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+            >
+              Confirmer et envoyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de confirmation - Préparation RDV 1 */}
+      <Modal isOpen={isRdv1Open} onClose={onRdv1Close} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Préparation du RDV 1
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Vous êtes sur le point de lancer la procédure <strong>Préparation du premier rendez-vous</strong>.
+            </Text>
+            <Text mt={3}>
+              Un email sera envoyé à <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> pour demander de préparer :
+            </Text>
+            <Box as="ul" pl={5} mt={3} color="brand.600">
+              <li>Les 3 derniers bulletins de notes</li>
+              <li>Les 2 dernières évaluations de mathématiques</li>
+              <li>Le(s) cahier(s) ou classeur de mathématiques</li>
+              <li>L'emploi du temps du jeune</li>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onRdv1Close}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchRdv1Procedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
             >
