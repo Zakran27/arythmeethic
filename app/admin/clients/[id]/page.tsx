@@ -47,6 +47,11 @@ export default function ClientDetailPage() {
     onOpen: onRdv1Open,
     onClose: onRdv1Close
   } = useDisclosure();
+  const {
+    isOpen: isRenouvellementOpen,
+    onOpen: onRenouvellementOpen,
+    onClose: onRenouvellementClose
+  } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const toast = useToast();
 
@@ -113,6 +118,42 @@ export default function ClientDetailPage() {
       });
 
       onRdv1Close();
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleLaunchRenouvellementProcedure = async () => {
+    setIsLaunchingProcedure(true);
+    try {
+      const response = await fetch('/api/procedures/souhait-renouvellement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du lancement de la procédure');
+      }
+
+      toast({
+        title: 'Procédure lancée',
+        description: 'Un email de demande de renouvellement a été envoyé au client.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onRenouvellementClose();
       refetch();
     } catch (err) {
       toast({
@@ -373,6 +414,38 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
+      {/* Souhait de renouvellement - Particulier uniquement, si réponse reçue */}
+      {isParticulier && client.renouvellement_date_reponse && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Souhait de renouvellement</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Souhaite renouveler</Text>
+                  <Badge
+                    colorScheme={client.renouvellement_souhaite ? 'green' : 'red'}
+                    mt={1}
+                  >
+                    {client.renouvellement_souhaite ? 'Oui' : 'Non'}
+                  </Badge>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Date de réponse</Text>
+                  <Text fontWeight="medium">
+                    {new Date(client.renouvellement_date_reponse).toLocaleDateString('fr-FR')}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Commentaire</Text>
+                  <Text fontWeight="medium">{client.renouvellement_commentaire || '—'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Adresse & Notes */}
       <Grid templateColumns={{ base: '1fr', md: client.notes ? 'repeat(2, 1fr)' : '1fr' }} gap={4}>
         <Card bg="white" shadow="sm">
@@ -433,8 +506,8 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm">
                     Déclaration des heures
                   </Button>
-                  <Button colorScheme="accent" size="sm">
-                    Renouvellement
+                  <Button colorScheme="accent" size="sm" onClick={onRenouvellementOpen}>
+                    Souhait de renouvellement
                   </Button>
                   <Button colorScheme="accent" size="sm">
                     Fin du contrat
@@ -563,6 +636,41 @@ export default function ClientDetailPage() {
             <Button
               colorScheme="accent"
               onClick={handleLaunchRdv1Procedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+            >
+              Confirmer et envoyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal de confirmation - Souhait de renouvellement */}
+      <Modal isOpen={isRenouvellementOpen} onClose={onRenouvellementClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Souhait de renouvellement
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Vous êtes sur le point de lancer la procédure <strong>Souhait de renouvellement</strong>.
+            </Text>
+            <Text mt={3}>
+              Un email sera envoyé à <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> pour demander s'il souhaite poursuivre l'accompagnement l'année prochaine.
+            </Text>
+            <Text mt={3} fontSize="sm" color="gray.600">
+              Le client pourra répondre via un formulaire sécurisé (lien valable 30 jours). Une relance automatique sera envoyée chaque vendredi si pas de réponse.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onRenouvellementClose}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchRenouvellementProcedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
             >

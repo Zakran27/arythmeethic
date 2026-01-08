@@ -68,6 +68,13 @@ export interface Client {
   jours_disponibles?: string[];
   form_token?: string;
   form_token_expires_at?: string;
+  // Fields for "Souhait de renouvellement" procedure
+  renouvellement_souhaite?: boolean;
+  renouvellement_commentaire?: string;
+  renouvellement_date_reponse?: string;
+  renouvellement_token?: string;
+  renouvellement_token_expires_at?: string;
+  renouvellement_dernier_email_at?: string;
   created_at: string;
 }
 
