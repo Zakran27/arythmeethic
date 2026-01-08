@@ -20,6 +20,8 @@ import {
   useToast,
   Divider,
   Text,
+  Checkbox,
+  SimpleGrid,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
@@ -68,6 +70,13 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     last_name_parent2: client.last_name_parent2 || '',
     email_parent2: client.email_parent2 || '',
     phone_parent2: client.phone_parent2 || '',
+    // Recueil des informations fields
+    numero_cesu: client.numero_cesu || '',
+    etablissement_scolaire: client.etablissement_scolaire || '',
+    moyenne_maths: client.moyenne_maths || '',
+    moyenne_generale: client.moyenne_generale || '',
+    adresse_cours: client.adresse_cours || '',
+    jours_disponibles: client.jours_disponibles || [] as string[],
   });
 
   useEffect(() => {
@@ -99,6 +108,13 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       last_name_parent2: client.last_name_parent2 || '',
       email_parent2: client.email_parent2 || '',
       phone_parent2: client.phone_parent2 || '',
+      // Recueil des informations fields
+      numero_cesu: client.numero_cesu || '',
+      etablissement_scolaire: client.etablissement_scolaire || '',
+      moyenne_maths: client.moyenne_maths || '',
+      moyenne_generale: client.moyenne_generale || '',
+      adresse_cours: client.adresse_cours || '',
+      jours_disponibles: client.jours_disponibles || [],
     });
   }, [client]);
 
@@ -157,6 +173,13 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           last_name_parent2: formData.last_name_parent2 || null,
           email_parent2: formData.email_parent2 || null,
           phone_parent2: formData.phone_parent2 || null,
+          // Recueil des informations fields
+          numero_cesu: formData.numero_cesu || null,
+          etablissement_scolaire: formData.etablissement_scolaire || null,
+          moyenne_maths: formData.moyenne_maths || null,
+          moyenne_generale: formData.moyenne_generale || null,
+          adresse_cours: formData.adresse_cours || null,
+          jours_disponibles: formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
         })
         .eq('id', client.id);
 
@@ -416,6 +439,92 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       </FormControl>
                     </GridItem>
                   </Grid>
+
+                  {/* Informations scolaires */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Informations scolaires</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Établissement scolaire</FormLabel>
+                        <Input
+                          value={formData.etablissement_scolaire}
+                          onChange={e => handleChange('etablissement_scolaire', e.target.value)}
+                          placeholder="Nom du collège/lycée"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Moyenne en maths</FormLabel>
+                        <Input
+                          value={formData.moyenne_maths}
+                          onChange={e => handleChange('moyenne_maths', e.target.value)}
+                          placeholder="Ex: 12/20"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Moyenne générale</FormLabel>
+                        <Input
+                          value={formData.moyenne_generale}
+                          onChange={e => handleChange('moyenne_generale', e.target.value)}
+                          placeholder="Ex: 14/20"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Numéro CESU</FormLabel>
+                        <Input
+                          value={formData.numero_cesu}
+                          onChange={e => handleChange('numero_cesu', e.target.value)}
+                          placeholder="Numéro CESU si applicable"
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Lieu et disponibilités */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Lieu et disponibilités</Text>
+                  <FormControl>
+                    <FormLabel>Adresse des cours</FormLabel>
+                    <Input
+                      value={formData.adresse_cours}
+                      onChange={e => handleChange('adresse_cours', e.target.value)}
+                      placeholder="Adresse où se dérouleront les cours"
+                    />
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Jours disponibles</FormLabel>
+                    <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2}>
+                      {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map(jour => (
+                        <Checkbox
+                          key={jour}
+                          isChecked={formData.jours_disponibles.includes(jour)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                jours_disponibles: [...prev.jours_disponibles, jour],
+                              }));
+                            } else {
+                              setFormData(prev => ({
+                                ...prev,
+                                jours_disponibles: prev.jours_disponibles.filter(j => j !== jour),
+                              }));
+                            }
+                          }}
+                          colorScheme="accent"
+                        >
+                          {jour}
+                        </Checkbox>
+                      ))}
+                    </SimpleGrid>
+                  </FormControl>
                 </>
               )}
 

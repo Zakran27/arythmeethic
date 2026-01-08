@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aperçu Formulaire - A Rythme Ethic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #fafafa;
+      color: #7b4a31;
+      line-height: 1.6;
+      padding: 32px 16px;
+    }
+    .container { max-width: 700px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 24px; }
+    h1 {
+      font-family: 'Libre Baskerville', serif;
+      color: #6e3a25;
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .subtitle { color: #7b4a31; font-size: 16px; }
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid #e8e1db;
+    }
+    .card-title {
+      font-family: 'Libre Baskerville', serif;
+      color: #6e3a25;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    .form-group { margin-bottom: 16px; }
+    .form-group:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-size: 14px;
+      color: #7b4a31;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d9cfc5;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #6e3a25;
+      background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #2ba1bd;
+      box-shadow: 0 0 0 3px rgba(43, 161, 189, 0.1);
+    }
+    input::placeholder { color: #c1afa1; }
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 600px) { .checkbox-grid { grid-template-columns: repeat(2, 1fr); } }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #2ba1bd;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px 32px;
+      background: #2ba1bd;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:hover { background: #2388a0; }
+    .btn:active { transform: scale(0.98); }
+    .required::after {
+      content: " *";
+      color: #c3826e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Recueil des informations</h1>
+    </div>
+
+    <!-- Parent 1 -->
+    <div class="card">
+      <h2 class="card-title">Parent 1 (responsable légal)</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label class="required">Prénom</label>
+          <input type="text" value="Marie" placeholder="Prénom">
+        </div>
+        <div class="form-group">
+          <label class="required">Nom</label>
+          <input type="text" value="Dupont" placeholder="Nom">
+        </div>
+        <div class="form-group">
+          <label class="required">Téléphone portable</label>
+          <input type="tel" value="06 12 34 56 78" placeholder="06 XX XX XX XX">
+        </div>
+        <div class="form-group">
+          <label class="required">Email</label>
+          <input type="email" value="marie.dupont@email.com" placeholder="email@exemple.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Parent 2 -->
+    <div class="card">
+      <h2 class="card-title">Parent 2 (facultatif)</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label>Prénom</label>
+          <input type="text" placeholder="Prénom">
+        </div>
+        <div class="form-group">
+          <label>Nom</label>
+          <input type="text" placeholder="Nom">
+        </div>
+        <div class="form-group">
+          <label>Téléphone portable</label>
+          <input type="tel" placeholder="06 XX XX XX XX">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="email@exemple.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- CESU -->
+    <div class="card">
+      <div class="form-group">
+        <label>Numéro CESU (facultatif)</label>
+        <input type="text" placeholder="Numéro CESU si vous en avez un">
+      </div>
+    </div>
+
+    <!-- Jeune -->
+    <div class="card">
+      <h2 class="card-title">Jeune / Élève</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label class="required">Prénom</label>
+          <input type="text" value="Lucas" placeholder="Prénom">
+        </div>
+        <div class="form-group">
+          <label class="required">Nom</label>
+          <input type="text" value="Dupont" placeholder="Nom">
+        </div>
+        <div class="form-group">
+          <label>Téléphone portable</label>
+          <input type="tel" placeholder="06 XX XX XX XX">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" placeholder="email@exemple.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Infos scolaires -->
+    <div class="card">
+      <h2 class="card-title">Informations scolaires</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label class="required">Niveau de l'élève</label>
+          <input type="text" value="3ème" placeholder="Ex: 3ème, 2nde, Terminale...">
+        </div>
+        <div class="form-group">
+          <label class="required">Établissement scolaire</label>
+          <input type="text" value="Collège Jules Verne" placeholder="Nom du collège/lycée">
+        </div>
+        <div class="form-group">
+          <label>Moyenne en mathématiques</label>
+          <input type="text" value="9/20" placeholder="Ex: 12/20">
+        </div>
+        <div class="form-group">
+          <label>Moyenne générale</label>
+          <input type="text" value="12/20" placeholder="Ex: 14/20">
+        </div>
+      </div>
+    </div>
+
+    <!-- Lieu et disponibilités -->
+    <div class="card">
+      <h2 class="card-title">Lieu et disponibilités</h2>
+      <div class="form-group">
+        <label class="required">Adresse des cours particuliers</label>
+        <input type="text" value="15 rue des Lilas, 44000 Nantes" placeholder="Adresse complète où se dérouleront les cours">
+      </div>
+      <div class="form-group" style="margin-top: 16px;">
+        <label>Jours possibles pour le cours</label>
+        <div class="checkbox-grid">
+          <label class="checkbox-item"><input type="checkbox"> Lundi</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Mardi</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Mercredi</label>
+          <label class="checkbox-item"><input type="checkbox"> Jeudi</label>
+          <label class="checkbox-item"><input type="checkbox" checked> Vendredi</label>
+          <label class="checkbox-item"><input type="checkbox"> Samedi</label>
+          <label class="checkbox-item"><input type="checkbox"> Dimanche</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn">Envoyer les informations</button>
+  </div>
+</body>
+</html>
