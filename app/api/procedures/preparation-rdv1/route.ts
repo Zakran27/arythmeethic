@@ -149,12 +149,6 @@ export async function POST(request: NextRequest) {
                           Le(s) <strong>cahier(s) ou classeur de mathématiques</strong>
                         </td>
                       </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: #6e3a25; font-size: 15px;">
-                          <span style="display: inline-block; width: 24px; height: 24px; background-color: #2ba1bd; color: white; border-radius: 50%; text-align: center; line-height: 24px; margin-right: 12px; font-size: 13px;">4</span>
-                          L'<strong>emploi du temps</strong> du jeune
-                        </td>
-                      </tr>
                     </table>
                   </td>
                 </tr>
