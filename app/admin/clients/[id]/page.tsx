@@ -24,6 +24,9 @@ import {
   ModalFooter,
   ModalCloseButton,
   useToast,
+  FormControl,
+  FormLabel,
+  Select,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -53,6 +56,7 @@ export default function ClientDetailPage() {
     onClose: onRenouvellementClose
   } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
+  const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const toast = useToast();
 
   const handleClientUpdated = () => {
@@ -61,12 +65,23 @@ export default function ClientDetailPage() {
   };
 
   const handleLaunchRecueilProcedure = async () => {
+    if (!selectedRecueilEmail) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un destinataire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsLaunchingProcedure(true);
     try {
       const response = await fetch('/api/procedures/recueil-informations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId }),
+        body: JSON.stringify({ clientId, email: selectedRecueilEmail }),
       });
 
       if (!response.ok) {
@@ -75,13 +90,14 @@ export default function ClientDetailPage() {
 
       toast({
         title: 'Procédure lancée',
-        description: 'Un email avec le formulaire a été envoyé au client.',
+        description: `Un email avec le formulaire a été envoyé à ${selectedRecueilEmail}.`,
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
 
       onRecueilClose();
+      setSelectedRecueilEmail('');
       refetch();
     } catch (err) {
       toast({
@@ -576,7 +592,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* Modal de confirmation - Recueil des informations */}
-      <Modal isOpen={isRecueilOpen} onClose={onRecueilClose} isCentered>
+      <Modal isOpen={isRecueilOpen} onClose={() => { onRecueilClose(); setSelectedRecueilEmail(''); }} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader color="brand.500" fontFamily="heading">
@@ -587,12 +603,42 @@ export default function ClientDetailPage() {
             <Text>
               Vous êtes sur le point de lancer la procédure <strong>Recueil des informations</strong>.
             </Text>
-            <Text mt={3}>
-              Un email sera envoyé à <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> avec un lien vers un formulaire pré-rempli pour compléter les informations du dossier.
+            <Text mt={3} mb={4}>
+              Un email sera envoyé avec un lien vers un formulaire pré-rempli pour compléter les informations du dossier.
             </Text>
+
+            <FormControl isRequired>
+              <FormLabel color="brand.600">Envoyer à</FormLabel>
+              <Select
+                placeholder="Sélectionner un destinataire"
+                value={selectedRecueilEmail}
+                onChange={(e) => setSelectedRecueilEmail(e.target.value)}
+              >
+                {client?.email_parent1 && (
+                  <option value={client.email_parent1}>
+                    {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                  </option>
+                )}
+                {client?.email_parent2 && (
+                  <option value={client.email_parent2}>
+                    {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
+                  </option>
+                )}
+                {client?.email_jeune && (
+                  <option value={client.email_jeune}>
+                    {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}&gt; (Jeune)
+                  </option>
+                )}
+                {client?.email && !client?.email_parent1 && !client?.email_parent2 && !client?.email_jeune && (
+                  <option value={client.email}>
+                    {client.first_name} {client.last_name} &lt;{client.email}&gt;
+                  </option>
+                )}
+              </Select>
+            </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onRecueilClose}>
+            <Button variant="ghost" mr={3} onClick={() => { onRecueilClose(); setSelectedRecueilEmail(''); }}>
               Annuler
             </Button>
             <Button
@@ -600,6 +646,7 @@ export default function ClientDetailPage() {
               onClick={handleLaunchRecueilProcedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
+              isDisabled={!selectedRecueilEmail}
             >
               Confirmer et envoyer
             </Button>

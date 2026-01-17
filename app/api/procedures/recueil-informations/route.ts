@@ -47,10 +47,75 @@ async function sendBrevoEmail({
   return { success: true };
 }
 
+// Format phone number to international format (France)
+function formatPhoneNumber(phone: string): string | null {
+  if (!phone) return null;
+
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+
+  // French number starting with 0
+  if (digits.startsWith('0') && digits.length === 10) {
+    return '33' + digits.substring(1);
+  }
+
+  // Already international format with 33
+  if (digits.startsWith('33') && digits.length === 11) {
+    return digits;
+  }
+
+  // Return null if format not recognized
+  return null;
+}
+
+// Send SMS via Brevo API
+async function sendBrevoSMS({
+  recipient,
+  content,
+}: {
+  recipient: string;
+  content: string;
+}) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.warn('BREVO_API_KEY not configured, skipping SMS');
+    return { success: false, reason: 'API key not configured' };
+  }
+
+  const formattedPhone = formatPhoneNumber(recipient);
+  if (!formattedPhone) {
+    console.warn('Invalid phone number format:', recipient);
+    return { success: false, reason: 'Invalid phone number format' };
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/transactionalSMS/send', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: 'ARythmeEthic',
+      recipient: formattedPhone,
+      content,
+      type: 'transactional',
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('Brevo SMS API error:', error);
+    return { success: false, reason: error };
+  }
+
+  return { success: true };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId } = body;
+    const { clientId, email: requestedEmail } = body;
 
     if (!clientId) {
       return NextResponse.json(
@@ -117,9 +182,22 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
     const formUrl = `${baseUrl}/formulaire/recueil-informations?token=${formToken}`;
 
-    // Determine the email to send to (priority: parent1 > jeune > main email)
-    const recipientEmail = client.email_parent1 || client.email_jeune || client.email;
-    const recipientName = client.first_name_parent1 || client.first_name_jeune || client.first_name;
+    // Determine the email to send to (use requested email if provided, otherwise fallback to priority)
+    const recipientEmail = requestedEmail || client.email_parent1 || client.email_jeune || client.email;
+
+    // Determine recipient name and phone based on the email used
+    let recipientName = client.first_name;
+    let recipientPhone = client.phone1;
+    if (recipientEmail === client.email_parent1) {
+      recipientName = client.first_name_parent1 || client.first_name;
+      recipientPhone = client.phone_parent1 || client.phone1;
+    } else if (recipientEmail === client.email_parent2) {
+      recipientName = client.first_name_parent2 || client.first_name;
+      recipientPhone = client.phone_parent2 || client.phone1;
+    } else if (recipientEmail === client.email_jeune) {
+      recipientName = client.first_name_jeune || client.first_name;
+      recipientPhone = client.phone_jeune || client.phone1;
+    }
 
     // Send email via Brevo
     const emailHtml = `
@@ -209,6 +287,25 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error('Error sending email:', emailError);
       // Don't fail the request if email fails
+    }
+
+    // Send SMS notification
+    if (recipientPhone) {
+      try {
+        const smsContent = `Bonjour, je suis Florence d'A Rythme Ethic. Je vous ai envoyé un mail pour recueillir un peu plus d'informations sur votre demande d'accompagnement. Veuillez vérifier votre boîte mail et votre boîte de spam/indésirables. A très vite !`;
+
+        const smsResult = await sendBrevoSMS({
+          recipient: recipientPhone,
+          content: smsContent,
+        });
+
+        if (!smsResult.success) {
+          console.warn('SMS not sent:', smsResult.reason);
+        }
+      } catch (smsError) {
+        console.error('Error sending SMS:', smsError);
+        // Don't fail the request if SMS fails
+      }
     }
 
     return NextResponse.json({
