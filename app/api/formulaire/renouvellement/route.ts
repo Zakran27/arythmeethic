@@ -48,7 +48,7 @@ async function sendBrevoEmail({
 
 // Generate the Google review request email HTML
 function generateGoogleReviewEmailHtml(recipientName: string): string {
-  const googleReviewUrl = process.env.GOOGLE_REVIEW_URL || 'https://g.page/r/YOUR_GOOGLE_REVIEW_LINK/review';
+  const googleReviewUrl = process.env.GOOGLE_REVIEW_URL || 'https://g.page/r/CbjO5-4OLiLWEBM/review';
 
   return `
 <!DOCTYPE html>
