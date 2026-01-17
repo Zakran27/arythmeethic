@@ -85,6 +85,9 @@ function generateRenewalEmailHtml(recipientName: string, jeuneName: string, form
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
                 Afin de préparer la rentrée prochaine, <strong>souhaitez-vous poursuivre l'accompagnement l'année suivante ?</strong>
               </p>
+              <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
+                Votre réponse me permettra d'organiser mon planning. <strong>Répondre "oui" ne vous engage à rien</strong>, c'est simplement une indication pour mieux anticiper la rentrée.
+              </p>
               <p style="margin: 0 0 30px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
                 Merci de me faire part de votre décision en cliquant sur le bouton ci-dessous :
               </p>
