@@ -27,9 +27,12 @@ import {
   FormControl,
   FormLabel,
   Select,
+  Icon,
+  IconButton,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -38,7 +41,7 @@ import { EditClientModal } from './EditClientModal';
 export default function ClientDetailPage() {
   const params = useParams();
   const clientId = params.id as string;
-  const { client, procedures, loading, error, refetch } = useClientDetail(clientId);
+  const { client, procedures, documents, loading, error, refetch } = useClientDetail(clientId);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isRecueilOpen,
@@ -534,23 +537,32 @@ export default function ClientDetailPage() {
 
             {procedures.length > 0 ? (
               <Stack spacing={3}>
-                {procedures.map(proc => (
-                  <Card key={proc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
-                    <CardBody>
-                      <Link href={`/admin/procedures/${proc.id}`}>
-                        <HStack justify="space-between">
-                          <Stack spacing={1}>
-                            <Text fontWeight="bold">{proc.procedure_type?.label}</Text>
-                            <Text fontSize="sm" color="gray.600">
-                              Créé le : {new Date(proc.created_at).toLocaleDateString('fr-FR')}
-                            </Text>
-                          </Stack>
-                          <StatusBadge status={proc.status} />
-                        </HStack>
-                      </Link>
-                    </CardBody>
-                  </Card>
-                ))}
+                {procedures.map(proc => {
+                  const isCompleted = proc.status !== 'DRAFT';
+                  const completedAt = isCompleted && proc.updated_at !== proc.created_at ? proc.updated_at : null;
+                  return (
+                    <Card key={proc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
+                      <CardBody>
+                        <Link href={`/admin/procedures/${proc.id}`}>
+                          <HStack justify="space-between">
+                            <Stack spacing={1}>
+                              <Text fontWeight="bold">{proc.procedure_type?.label}</Text>
+                              <Text fontSize="sm" color="gray.600">
+                                Lancée le : {new Date(proc.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </Text>
+                              {completedAt && (
+                                <Text fontSize="sm" color="green.600">
+                                  Complétée le : {new Date(completedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                              )}
+                            </Stack>
+                            <StatusBadge status={proc.status} />
+                          </HStack>
+                        </Link>
+                      </CardBody>
+                    </Card>
+                  );
+                })}
               </Stack>
             ) : (
               <Box textAlign="center" py={8}>
@@ -570,14 +582,84 @@ export default function ClientDetailPage() {
         <CardBody>
           <Stack spacing={4}>
             <HStack justify="space-between">
-              <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">Documents</Heading>
-              <Button variant="outline" size="sm" borderColor="brand.600" color="brand.600">
-                Voir tous les documents
-              </Button>
+              <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
+                Documents ({documents.length})
+              </Heading>
             </HStack>
-            <Text color="brand.600" fontSize="sm">
-              La gestion des documents sera disponible une fois les procédures créées
-            </Text>
+            {documents.length > 0 ? (
+              <Stack spacing={3}>
+                {documents.map(doc => {
+                  // Find the procedure for this document
+                  const docProcedure = procedures.find(p => p.id === doc.procedure_id);
+                  return (
+                    <Card key={doc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
+                      <CardBody py={3}>
+                        <HStack justify="space-between">
+                          <Stack spacing={0}>
+                            <HStack>
+                              <Text fontWeight="medium">{doc.title}</Text>
+                              <Badge size="sm" colorScheme={doc.uploaded_by === 'CLIENT' ? 'blue' : 'gray'}>
+                                {doc.uploaded_by === 'CLIENT' ? 'Client' : 'Admin'}
+                              </Badge>
+                            </HStack>
+                            <Text fontSize="xs" color="gray.500">
+                              {docProcedure?.procedure_type?.label || 'Document'} • {new Date(doc.created_at).toLocaleDateString('fr-FR')}
+                            </Text>
+                          </Stack>
+                          <HStack>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              colorScheme="accent"
+                              onClick={async () => {
+                                if (!doc.storage_path) return;
+                                const supabase = createClient();
+                                const { data } = await supabase.storage
+                                  .from('client-files')
+                                  .createSignedUrl(doc.storage_path, 60);
+                                if (data?.signedUrl) {
+                                  window.open(data.signedUrl, '_blank');
+                                }
+                              }}
+                            >
+                              Ouvrir
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="accent"
+                              onClick={async () => {
+                                if (!doc.storage_path) return;
+                                const supabase = createClient();
+                                const { data } = await supabase.storage
+                                  .from('client-files')
+                                  .download(doc.storage_path);
+                                if (data) {
+                                  const url = URL.createObjectURL(data);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = doc.title || 'document';
+                                  a.click();
+                                  URL.revokeObjectURL(url);
+                                }
+                              }}
+                            >
+                              Télécharger
+                            </Button>
+                          </HStack>
+                        </HStack>
+                      </CardBody>
+                    </Card>
+                  );
+                })}
+              </Stack>
+            ) : (
+              <Box textAlign="center" py={6}>
+                <Text color="brand.400">
+                  Aucun document pour le moment
+                </Text>
+              </Box>
+            )}
           </Stack>
         </CardBody>
       </Card>

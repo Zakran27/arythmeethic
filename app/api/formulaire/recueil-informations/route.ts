@@ -162,11 +162,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Find the RECUEIL_INFORMATIONS procedure type
+    const { data: procedureType } = await supabase
+      .from('procedure_types')
+      .select('id')
+      .eq('code', 'RECUEIL_INFORMATIONS')
+      .single();
+
     // Update the procedure status to PDF_GENERATED (or next step)
+    // Find the most recent RECUEIL_INFORMATIONS procedure for this client
     const { data: procedure } = await supabase
       .from('procedures')
       .select('id')
       .eq('client_id', client.id)
+      .eq('procedure_type_id', procedureType?.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
