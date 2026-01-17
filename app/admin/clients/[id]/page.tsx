@@ -755,7 +755,6 @@ export default function ClientDetailPage() {
               <li>Les 3 derniers bulletins de notes</li>
               <li>Les 2 dernières évaluations de mathématiques</li>
               <li>Le(s) cahier(s) ou classeur de mathématiques</li>
-              <li>L'emploi du temps du jeune</li>
             </Box>
           </ModalBody>
           <ModalFooter>
