@@ -48,7 +48,7 @@ async function sendBrevoEmail({
 
 // Generate the Google review request email HTML
 function generateGoogleReviewEmailHtml(recipientName: string): string {
-  const googleReviewUrl = process.env.GOOGLE_REVIEW_URL || 'https://g.page/r/CbjO5-4OLiLWEBM/review';
+  const googleReviewUrl = process.env.GOOGLE_REVIEW_URL || 'https://www.google.com/search?client=opera-gx&hs=6VG&sca_esv=35cc2770783c4fd6&sxsrf=ANbL-n6bYbkzt6xGvHh1_otCAXk20Au6KQ:1768676583605&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOS6yz36kfP72E4isVy8v8-pFookA6FMMRDADc8El-4xFDUMXGbnFcfunlKbeZg9huqxDGg5poe5Dz1Nsz59GQE2_MvgA&q=A+Rythme+Ethic+Avis&sa=X&ved=2ahUKEwib5_PboZOSAxVVU6QEHQrTNJkQ0bkNegQIRxAF&cshid=1768676643833155&biw=2132&bih=1064&dpr=0.9&aic=0#lrd=0x4805e5f079b17ced:0xd6262e0deee7ceb8,3,,,,';
 
   return `
 <!DOCTYPE html>
