@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Find client by token
     const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id, form_token_expires_at')
+      .select('id, form_token_expires_at, address_line1')
       .eq('form_token', token)
       .single();
 
@@ -117,33 +117,41 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Build update data
+    const updateData: Record<string, unknown> = {
+      first_name_parent1: formData.first_name_parent1 || null,
+      last_name_parent1: formData.last_name_parent1 || null,
+      phone_parent1: formData.phone_parent1 || null,
+      email_parent1: formData.email_parent1 || null,
+      first_name_parent2: formData.first_name_parent2 || null,
+      last_name_parent2: formData.last_name_parent2 || null,
+      phone_parent2: formData.phone_parent2 || null,
+      email_parent2: formData.email_parent2 || null,
+      numero_cesu: formData.numero_cesu || null,
+      first_name_jeune: formData.first_name_jeune || null,
+      last_name_jeune: formData.last_name_jeune || null,
+      phone_jeune: formData.phone_jeune || null,
+      email_jeune: formData.email_jeune || null,
+      adresse_cours: formData.adresse_cours || null,
+      niveau_eleve: formData.niveau_eleve || null,
+      etablissement_scolaire: formData.etablissement_scolaire || null,
+      moyenne_maths: formData.moyenne_maths || null,
+      moyenne_generale: formData.moyenne_generale || null,
+      jours_disponibles: formData.jours_disponibles || null,
+      // Clear the token after successful submission
+      form_token: null,
+      form_token_expires_at: null,
+    };
+
+    // If address_line1 is empty and adresse_cours is provided, copy it
+    if (!client.address_line1 && formData.adresse_cours) {
+      updateData.address_line1 = formData.adresse_cours;
+    }
+
     // Update client with form data
     const { error: updateError } = await supabase
       .from('clients')
-      .update({
-        first_name_parent1: formData.first_name_parent1 || null,
-        last_name_parent1: formData.last_name_parent1 || null,
-        phone_parent1: formData.phone_parent1 || null,
-        email_parent1: formData.email_parent1 || null,
-        first_name_parent2: formData.first_name_parent2 || null,
-        last_name_parent2: formData.last_name_parent2 || null,
-        phone_parent2: formData.phone_parent2 || null,
-        email_parent2: formData.email_parent2 || null,
-        numero_cesu: formData.numero_cesu || null,
-        first_name_jeune: formData.first_name_jeune || null,
-        last_name_jeune: formData.last_name_jeune || null,
-        phone_jeune: formData.phone_jeune || null,
-        email_jeune: formData.email_jeune || null,
-        adresse_cours: formData.adresse_cours || null,
-        niveau_eleve: formData.niveau_eleve || null,
-        etablissement_scolaire: formData.etablissement_scolaire || null,
-        moyenne_maths: formData.moyenne_maths || null,
-        moyenne_generale: formData.moyenne_generale || null,
-        jours_disponibles: formData.jours_disponibles || null,
-        // Clear the token after successful submission
-        form_token: null,
-        form_token_expires_at: null,
-      })
+      .update(updateData)
       .eq('id', client.id);
 
     if (updateError) {

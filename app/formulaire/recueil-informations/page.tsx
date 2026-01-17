@@ -483,8 +483,11 @@ function RecueilFormContent() {
                         placeholder="Adresse complète où se dérouleront les cours"
                       />
                     </FormControl>
-                    <FormControl isRequired isInvalid={!!joursError}>
-                      <FormLabel color="brand.600">Jours possibles pour le cours</FormLabel>
+                    <FormControl isInvalid={!!joursError}>
+                      <FormLabel color="brand.600">
+                        Jours possibles pour le cours
+                        <Text as="span" color="red.500" ml={1}>*</Text>
+                      </FormLabel>
                       <CheckboxGroup
                         value={formData.jours_disponibles}
                         onChange={handleJoursChange}
