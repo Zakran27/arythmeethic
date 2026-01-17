@@ -180,6 +180,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Informations enregistrées avec succès',
+      procedureId: procedure?.id || null,
     });
   } catch (error) {
     console.error('Error updating client from form:', error);

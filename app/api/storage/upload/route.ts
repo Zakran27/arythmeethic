@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     const procedureId = formData.get('procedureId') as string;
     const title = formData.get('title') as string;
     const kind = (formData.get('kind') as string) || 'SUPPORTING_DOC';
+    const uploadedBy = (formData.get('uploadedBy') as string) || 'ADMIN';
 
     if (!file || !procedureId || !title) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       title,
       kind,
       storage_path: path,
-      uploaded_by: 'ADMIN',
+      uploaded_by: uploadedBy,
     });
 
     if (insertError) {

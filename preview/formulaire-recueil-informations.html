@@ -114,7 +114,7 @@
 
     <!-- Parent 1 -->
     <div class="card">
-      <h2 class="card-title">Parent 1 (responsable légal)</h2>
+      <h2 class="card-title">Parent 1</h2>
       <div class="grid">
         <div class="form-group">
           <label class="required">Prénom</label>
@@ -137,22 +137,22 @@
 
     <!-- Parent 2 -->
     <div class="card">
-      <h2 class="card-title">Parent 2 (facultatif)</h2>
+      <h2 class="card-title">Parent 2</h2>
       <div class="grid">
         <div class="form-group">
-          <label>Prénom</label>
+          <label class="required">Prénom</label>
           <input type="text" placeholder="Prénom">
         </div>
         <div class="form-group">
-          <label>Nom</label>
+          <label class="required">Nom</label>
           <input type="text" placeholder="Nom">
         </div>
         <div class="form-group">
-          <label>Téléphone portable</label>
+          <label class="required">Téléphone portable</label>
           <input type="tel" placeholder="06 XX XX XX XX">
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <label class="required">Email</label>
           <input type="email" placeholder="email@exemple.com">
         </div>
       </div>
@@ -179,11 +179,11 @@
           <input type="text" value="Dupont" placeholder="Nom">
         </div>
         <div class="form-group">
-          <label>Téléphone portable</label>
+          <label class="required">Téléphone portable</label>
           <input type="tel" placeholder="06 XX XX XX XX">
         </div>
         <div class="form-group">
-          <label>Email</label>
+          <label class="required">Email</label>
           <input type="email" placeholder="email@exemple.com">
         </div>
       </div>
@@ -202,11 +202,11 @@
           <input type="text" value="Collège Jules Verne" placeholder="Nom du collège/lycée">
         </div>
         <div class="form-group">
-          <label>Moyenne en mathématiques</label>
+          <label class="required">Moyenne en mathématiques</label>
           <input type="text" value="9/20" placeholder="Ex: 12/20">
         </div>
         <div class="form-group">
-          <label>Moyenne générale</label>
+          <label class="required">Moyenne générale</label>
           <input type="text" value="12/20" placeholder="Ex: 14/20">
         </div>
       </div>
@@ -220,7 +220,7 @@
         <input type="text" value="15 rue des Lilas, 44000 Nantes" placeholder="Adresse complète où se dérouleront les cours">
       </div>
       <div class="form-group" style="margin-top: 16px;">
-        <label>Jours possibles pour le cours</label>
+        <label class="required">Jours possibles pour le cours</label>
         <div class="checkbox-grid">
           <label class="checkbox-item"><input type="checkbox"> Lundi</label>
           <label class="checkbox-item"><input type="checkbox" checked> Mardi</label>
@@ -229,6 +229,17 @@
           <label class="checkbox-item"><input type="checkbox" checked> Vendredi</label>
           <label class="checkbox-item"><input type="checkbox"> Samedi</label>
           <label class="checkbox-item"><input type="checkbox"> Dimanche</label>
+        </div>
+      </div>
+      <hr style="border: none; border-top: 1px solid #e8e1db; margin: 20px 0;">
+      <div class="form-group">
+        <label>Emploi du temps de l'élève</label>
+        <p style="font-size: 13px; color: #999; margin-bottom: 10px;">Vous pouvez joindre l'emploi du temps de l'élève (image ou PDF)</p>
+        <div style="border: 2px dashed #d9cfc5; border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s;">
+          <svg style="width: 32px; height: 32px; color: #c1afa1; margin-bottom: 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+          <p style="color: #999; font-size: 14px;">Cliquez pour sélectionner un fichier</p>
         </div>
       </div>
     </div>
