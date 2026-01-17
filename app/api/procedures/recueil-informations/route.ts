@@ -88,6 +88,17 @@ async function sendBrevoSMS({
     return { success: false, reason: 'Invalid phone number format' };
   }
 
+  console.log('Attempting to send SMS to:', formattedPhone);
+
+  const smsPayload = {
+    sender: 'ARythmeEth', // Max 11 characters for alphanumeric sender
+    recipient: formattedPhone,
+    content,
+    type: 'transactional',
+  };
+
+  console.log('SMS payload:', JSON.stringify(smsPayload));
+
   const response = await fetch('https://api.brevo.com/v3/transactionalSMS/send', {
     method: 'POST',
     headers: {
@@ -95,18 +106,16 @@ async function sendBrevoSMS({
       'api-key': apiKey,
       'content-type': 'application/json',
     },
-    body: JSON.stringify({
-      sender: 'ARythmeEthic',
-      recipient: formattedPhone,
-      content,
-      type: 'transactional',
-    }),
+    body: JSON.stringify(smsPayload),
   });
 
+  const responseText = await response.text();
+  console.log('Brevo SMS API response status:', response.status);
+  console.log('Brevo SMS API response:', responseText);
+
   if (!response.ok) {
-    const error = await response.text();
-    console.error('Brevo SMS API error:', error);
-    return { success: false, reason: error };
+    console.error('Brevo SMS API error:', responseText);
+    return { success: false, reason: responseText };
   }
 
   return { success: true };
