@@ -180,6 +180,7 @@ function RecueilFormContent() {
 
       // If there's a file to upload, upload it
       if (emploiDuTempsFile && data.procedureId) {
+        console.log('Uploading file:', emploiDuTempsFile.name, 'to procedure:', data.procedureId);
         const fileFormData = new FormData();
         fileFormData.append('file', emploiDuTempsFile);
         fileFormData.append('procedureId', data.procedureId);
@@ -193,8 +194,12 @@ function RecueilFormContent() {
         });
 
         if (!uploadResponse.ok) {
-          console.error('Failed to upload file, but form was submitted');
+          console.error('Failed to upload file:', await uploadResponse.text());
+        } else {
+          console.log('File uploaded successfully');
         }
+      } else {
+        console.log('No file to upload. File:', !!emploiDuTempsFile, 'ProcedureId:', data.procedureId);
       }
 
       // Redirect to confirmation page
