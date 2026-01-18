@@ -175,11 +175,12 @@ CREATE INDEX idx_procedure_status_history_created_at ON public.procedure_status_
 
 -- Procedure types
 INSERT INTO public.procedure_types (code, label) VALUES
-  ('NEW_CLIENT', 'Nouveau client'),
-  ('RENEWAL', 'Renouvellement'),
   ('RECUEIL_INFORMATIONS', 'Recueil des informations'),
   ('PREPARATION_RDV1', 'Préparation RDV 1'),
-  ('SOUHAIT_RENOUVELLEMENT', 'Souhait de renouvellement')
+  ('CONTRACTUALISATION', 'Contractualisation'),
+  ('DECLARATION_HEURES', 'Déclaration des heures'),
+  ('SOUHAIT_RENOUVELLEMENT', 'Souhait de renouvellement'),
+  ('FIN_CONTRAT', 'Fin de contrat')
 ON CONFLICT (code) DO NOTHING;
 
 -- ============================================
