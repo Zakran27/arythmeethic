@@ -61,16 +61,23 @@ export default function ClientDetailPage() {
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
-  const HISTORY_PER_PAGE = 25;
+  const [docsPage, setDocsPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
   const toast = useToast();
 
   // Pagination for procedure history
   const paginatedHistory = useMemo(() => {
-    const start = (historyPage - 1) * HISTORY_PER_PAGE;
-    return procedureHistory.slice(start, start + HISTORY_PER_PAGE);
+    const start = (historyPage - 1) * ITEMS_PER_PAGE;
+    return procedureHistory.slice(start, start + ITEMS_PER_PAGE);
   }, [procedureHistory, historyPage]);
+  const totalHistoryPages = Math.ceil(procedureHistory.length / ITEMS_PER_PAGE);
 
-  const totalHistoryPages = Math.ceil(procedureHistory.length / HISTORY_PER_PAGE);
+  // Pagination for documents
+  const paginatedDocs = useMemo(() => {
+    const start = (docsPage - 1) * ITEMS_PER_PAGE;
+    return documents.slice(start, start + ITEMS_PER_PAGE);
+  }, [documents, docsPage]);
+  const totalDocsPages = Math.ceil(documents.length / ITEMS_PER_PAGE);
 
   const handleClientUpdated = () => {
     refetch();
@@ -621,75 +628,100 @@ export default function ClientDetailPage() {
               </Heading>
             </HStack>
             {documents.length > 0 ? (
-              <Stack spacing={2}>
-                {documents.map(doc => {
-                  // Find the procedure for this document
-                  const docProcedure = procedures.find(p => p.id === doc.procedure_id);
-                  return (
-                    <HStack
-                      key={doc.id}
-                      py={2}
-                      px={3}
-                      bg="gray.50"
-                      borderRadius="md"
-                      justify="space-between"
-                    >
-                      <Stack spacing={0} flex={1}>
-                        <Text fontWeight="medium" fontSize="sm">{doc.title}</Text>
-                        <Text fontSize="xs" color="gray.500">
-                          De : {docProcedure?.procedure_type?.label || 'Document'} • {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </Text>
-                        {doc.original_filename && (
-                          <Text fontSize="xs" color="gray.400" fontStyle="italic">
-                            {doc.original_filename}
+              <>
+                <Stack spacing={2}>
+                  {paginatedDocs.map(doc => {
+                    // Find the procedure for this document
+                    const docProcedure = procedures.find(p => p.id === doc.procedure_id);
+                    return (
+                      <HStack
+                        key={doc.id}
+                        py={2}
+                        px={3}
+                        bg="gray.50"
+                        borderRadius="md"
+                        justify="space-between"
+                      >
+                        <Stack spacing={0} flex={1}>
+                          <Text fontWeight="medium" fontSize="sm">{doc.title}</Text>
+                          <Text fontSize="xs" color="gray.500">
+                            De : {docProcedure?.procedure_type?.label || 'Document'} • {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </Text>
-                        )}
-                      </Stack>
-                      <HStack>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          colorScheme="accent"
-                          onClick={async () => {
-                            if (!doc.storage_path) return;
-                            const supabase = createClient();
-                            const { data } = await supabase.storage
-                              .from('client-files')
-                              .createSignedUrl(doc.storage_path, 60);
-                            if (data?.signedUrl) {
-                              window.open(data.signedUrl, '_blank');
-                            }
-                          }}
-                        >
-                          Ouvrir
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="accent"
-                          onClick={async () => {
-                            if (!doc.storage_path) return;
-                            const supabase = createClient();
-                            const { data } = await supabase.storage
-                              .from('client-files')
-                              .download(doc.storage_path);
-                            if (data) {
-                              const url = URL.createObjectURL(data);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = doc.original_filename || doc.title || 'document';
-                              a.click();
-                              URL.revokeObjectURL(url);
-                            }
-                          }}
-                        >
-                          Télécharger
-                        </Button>
+                          {doc.original_filename && (
+                            <Text fontSize="xs" color="gray.400" fontStyle="italic">
+                              {doc.original_filename}
+                            </Text>
+                          )}
+                        </Stack>
+                        <HStack>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            colorScheme="accent"
+                            onClick={async () => {
+                              if (!doc.storage_path) return;
+                              const supabase = createClient();
+                              const { data } = await supabase.storage
+                                .from('client-files')
+                                .createSignedUrl(doc.storage_path, 60);
+                              if (data?.signedUrl) {
+                                window.open(data.signedUrl, '_blank');
+                              }
+                            }}
+                          >
+                            Ouvrir
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="accent"
+                            onClick={async () => {
+                              if (!doc.storage_path) return;
+                              const supabase = createClient();
+                              const { data } = await supabase.storage
+                                .from('client-files')
+                                .download(doc.storage_path);
+                              if (data) {
+                                const url = URL.createObjectURL(data);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = doc.original_filename || doc.title || 'document';
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }
+                            }}
+                          >
+                            Télécharger
+                          </Button>
+                        </HStack>
                       </HStack>
-                    </HStack>
-                  );
-                })}
-              </Stack>
+                    );
+                  })}
+                </Stack>
+                {totalDocsPages > 1 && (
+                  <HStack justify="center" pt={3} spacing={2}>
+                    <IconButton
+                      aria-label="Page précédente"
+                      icon={<Icon as={FiChevronLeft} />}
+                      size="sm"
+                      variant="outline"
+                      isDisabled={docsPage === 1}
+                      onClick={() => setDocsPage(p => p - 1)}
+                    />
+                    <Text fontSize="sm" color="gray.600">
+                      Page {docsPage} / {totalDocsPages}
+                    </Text>
+                    <IconButton
+                      aria-label="Page suivante"
+                      icon={<Icon as={FiChevronRight} />}
+                      size="sm"
+                      variant="outline"
+                      isDisabled={docsPage === totalDocsPages}
+                      onClick={() => setDocsPage(p => p + 1)}
+                    />
+                  </HStack>
+                )}
+              </>
             ) : (
               <Box textAlign="center" py={6}>
                 <Text color="brand.400">
