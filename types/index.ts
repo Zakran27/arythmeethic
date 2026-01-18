@@ -73,6 +73,39 @@ export interface Client {
   renouvellement_token?: string;
   renouvellement_token_expires_at?: string;
   renouvellement_dernier_email_at?: string;
+  // École-specific fields for "Recueil des informations"
+  ecole_siret?: string;
+  ecole_nda?: string;
+  // Responsable modules
+  ecole_resp_modules_nom?: string;
+  ecole_resp_modules_prenom?: string;
+  ecole_resp_modules_email?: string;
+  ecole_resp_modules_phone?: string;
+  ecole_resp_modules_peut_negocier?: boolean;
+  // Responsable autorisation prix
+  ecole_resp_autorisation_nom?: string;
+  ecole_resp_autorisation_prenom?: string;
+  ecole_resp_autorisation_email?: string;
+  ecole_resp_autorisation_phone?: string;
+  // Responsable facturation
+  ecole_resp_facturation_nom?: string;
+  ecole_resp_facturation_prenom?: string;
+  ecole_resp_facturation_email?: string;
+  ecole_resp_facturation_phone?: string;
+  // Responsable planning
+  ecole_resp_planning_nom?: string;
+  ecole_resp_planning_prenom?: string;
+  ecole_resp_planning_email?: string;
+  ecole_resp_planning_phone?: string;
+  // Module info
+  ecole_module_nom?: string;
+  ecole_module_heures?: number;
+  ecole_formation_type?: 'initiale_en_alternance' | 'continue';
+  ecole_classes_noms?: string;
+  ecole_groupe_taille?: number;
+  ecole_evaluation_modalites?: string;
+  ecole_evaluation_nombre_min?: number;
+  ecole_module_periode?: string;
   created_at: string;
 }
 

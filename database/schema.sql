@@ -95,6 +95,39 @@ CREATE TABLE public.clients (
   renouvellement_token text,
   renouvellement_token_expires_at timestamptz,
   renouvellement_dernier_email_at timestamptz,
+  -- École-specific fields for "Recueil des informations"
+  ecole_siret text,
+  ecole_nda text,
+  -- Responsable modules
+  ecole_resp_modules_nom text,
+  ecole_resp_modules_prenom text,
+  ecole_resp_modules_email text,
+  ecole_resp_modules_phone text,
+  ecole_resp_modules_peut_negocier boolean,
+  -- Responsable autorisation prix
+  ecole_resp_autorisation_nom text,
+  ecole_resp_autorisation_prenom text,
+  ecole_resp_autorisation_email text,
+  ecole_resp_autorisation_phone text,
+  -- Responsable facturation
+  ecole_resp_facturation_nom text,
+  ecole_resp_facturation_prenom text,
+  ecole_resp_facturation_email text,
+  ecole_resp_facturation_phone text,
+  -- Responsable planning
+  ecole_resp_planning_nom text,
+  ecole_resp_planning_prenom text,
+  ecole_resp_planning_email text,
+  ecole_resp_planning_phone text,
+  -- Module info
+  ecole_module_nom text,
+  ecole_module_heures integer,
+  ecole_formation_type text CHECK (ecole_formation_type IS NULL OR ecole_formation_type IN ('initiale_en_alternance', 'continue')),
+  ecole_classes_noms text,
+  ecole_groupe_taille integer,
+  ecole_evaluation_modalites text,
+  ecole_evaluation_nombre_min integer,
+  ecole_module_periode text,
   -- Timestamps
   created_at timestamptz NOT NULL DEFAULT now()
 );
