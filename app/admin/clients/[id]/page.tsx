@@ -31,7 +31,8 @@ import {
   IconButton,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
@@ -59,7 +60,17 @@ export default function ClientDetailPage() {
   } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
+  const HISTORY_PER_PAGE = 25;
   const toast = useToast();
+
+  // Pagination for procedure history
+  const paginatedHistory = useMemo(() => {
+    const start = (historyPage - 1) * HISTORY_PER_PAGE;
+    return procedureHistory.slice(start, start + HISTORY_PER_PAGE);
+  }, [procedureHistory, historyPage]);
+
+  const totalHistoryPages = Math.ceil(procedureHistory.length / HISTORY_PER_PAGE);
 
   const handleClientUpdated = () => {
     refetch();
@@ -535,33 +546,58 @@ export default function ClientDetailPage() {
             </HStack>
 
             {procedureHistory.length > 0 ? (
-              <Stack spacing={1}>
-                {procedureHistory.map(entry => (
-                  <HStack
-                    key={entry.id}
-                    py={2}
-                    px={3}
-                    bg="gray.50"
-                    borderRadius="md"
-                    justify="space-between"
-                  >
-                    <HStack spacing={3} flex={1}>
-                      <Text fontWeight="medium" fontSize="sm" minW="180px">
-                        {entry.procedure_label}
+              <>
+                <Stack spacing={1}>
+                  {paginatedHistory.map(entry => (
+                    <HStack
+                      key={entry.id}
+                      py={2}
+                      px={3}
+                      bg="gray.50"
+                      borderRadius="md"
+                      justify="space-between"
+                    >
+                      <HStack spacing={3} flex={1}>
+                        <Text fontWeight="medium" fontSize="sm" minW="180px">
+                          {entry.procedure_label}
+                        </Text>
+                        <Badge
+                          colorScheme={entry.status === 'FORMULAIRE_REMPLI' ? 'green' : entry.status.includes('RELANCE') ? 'orange' : 'blue'}
+                          fontSize="xs"
+                        >
+                          {statusLabels[entry.status]}
+                        </Badge>
+                      </HStack>
+                      <Text fontSize="xs" color="gray.500">
+                        {new Date(entry.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </Text>
-                      <Badge
-                        colorScheme={entry.status === 'FORMULAIRE_REMPLI' ? 'green' : entry.status.includes('RELANCE') ? 'orange' : 'blue'}
-                        fontSize="xs"
-                      >
-                        {statusLabels[entry.status]}
-                      </Badge>
                     </HStack>
-                    <Text fontSize="xs" color="gray.500">
-                      {new Date(entry.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  ))}
+                </Stack>
+                {totalHistoryPages > 1 && (
+                  <HStack justify="center" pt={3} spacing={2}>
+                    <IconButton
+                      aria-label="Page précédente"
+                      icon={<Icon as={FiChevronLeft} />}
+                      size="sm"
+                      variant="outline"
+                      isDisabled={historyPage === 1}
+                      onClick={() => setHistoryPage(p => p - 1)}
+                    />
+                    <Text fontSize="sm" color="gray.600">
+                      Page {historyPage} / {totalHistoryPages}
                     </Text>
+                    <IconButton
+                      aria-label="Page suivante"
+                      icon={<Icon as={FiChevronRight} />}
+                      size="sm"
+                      variant="outline"
+                      isDisabled={historyPage === totalHistoryPages}
+                      onClick={() => setHistoryPage(p => p + 1)}
+                    />
                   </HStack>
-                ))}
-              </Stack>
+                )}
+              </>
             ) : (
               <Box textAlign="center" py={6}>
                 <Text color="brand.400" mb={2}>
