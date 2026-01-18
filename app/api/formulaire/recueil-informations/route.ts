@@ -185,6 +185,12 @@ export async function POST(request: NextRequest) {
         .from('procedures')
         .update({ status: 'PDF_GENERATED', updated_at: new Date().toISOString() })
         .eq('id', procedure.id);
+
+      // Add status to history
+      await supabase.from('procedure_status_history').insert({
+        procedure_id: procedure.id,
+        status: 'FORMULAIRE_REMPLI',
+      });
     }
 
     // Log to audit

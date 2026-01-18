@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       kind,
       storage_path: path,
       uploaded_by: uploadedBy,
+      original_filename: file.name,
     });
 
     if (insertError) {

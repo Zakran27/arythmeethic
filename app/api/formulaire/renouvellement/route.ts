@@ -243,13 +243,32 @@ export async function POST(request: NextRequest) {
       .eq('code', 'SOUHAIT_RENOUVELLEMENT')
       .single();
 
+    let procedureId: string | null = null;
     if (procedureType) {
-      await supabase
+      // Find and update procedure
+      const { data: procedure } = await supabase
         .from('procedures')
-        .update({ status: 'SIGNED' })
+        .select('id')
         .eq('client_id', client.id)
         .eq('procedure_type_id', procedureType.id)
-        .eq('status', 'DRAFT');
+        .eq('status', 'DRAFT')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (procedure) {
+        procedureId = procedure.id;
+        await supabase
+          .from('procedures')
+          .update({ status: 'SIGNED', updated_at: new Date().toISOString() })
+          .eq('id', procedure.id);
+
+        // Add status to history
+        await supabase.from('procedure_status_history').insert({
+          procedure_id: procedure.id,
+          status: 'FORMULAIRE_REMPLI',
+        });
+      }
     }
 
     // Send Google review request email
@@ -258,12 +277,20 @@ export async function POST(request: NextRequest) {
 
     try {
       const emailHtml = generateGoogleReviewEmailHtml(recipientName);
-      await sendBrevoEmail({
+      const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
         subject: 'A Rythme Ethic - Votre avis compte !',
         htmlContent: emailHtml,
       });
+
+      // Add status to history if email sent and we have a procedure
+      if (emailResult.success && procedureId) {
+        await supabase.from('procedure_status_history').insert({
+          procedure_id: procedureId,
+          status: 'MAIL_AVIS_GOOGLE_ENVOYE',
+        });
+      }
     } catch (emailError) {
       console.error('Error sending Google review email:', emailError);
       // Don't fail the request if email fails

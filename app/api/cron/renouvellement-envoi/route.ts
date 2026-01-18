@@ -196,13 +196,21 @@ export async function GET(request: NextRequest) {
           })
           .eq('id', client.id);
 
-        // Create procedure
+        // Create procedure and add to status history
         if (procedureType) {
-          await supabase.from('procedures').insert({
+          const { data: newProcedure } = await supabase.from('procedures').insert({
             client_id: client.id,
             procedure_type_id: procedureType.id,
             status: 'DRAFT',
-          });
+          }).select('id').single();
+
+          // Add initial status to history
+          if (newProcedure) {
+            await supabase.from('procedure_status_history').insert({
+              procedure_id: newProcedure.id,
+              status: 'MAIL_ENVOYE',
+            });
+          }
         }
 
         // Send email
