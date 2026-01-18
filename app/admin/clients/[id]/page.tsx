@@ -396,6 +396,187 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
+      {/* ========== ÉTABLISSEMENT - Responsables ========== */}
+      {isEcole && (client.ecole_resp_modules_nom || client.ecole_resp_facturation_nom || client.ecole_resp_planning_nom) && (
+        <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={4}>
+          {/* Responsable modules */}
+          {client.ecole_resp_modules_nom && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <HStack justify="space-between">
+                    <Heading size="sm" color="brand.500" fontFamily="heading">Responsable modules</Heading>
+                    {client.ecole_resp_modules_peut_negocier && (
+                      <Badge colorScheme="green" fontSize="xs">Habilité prix</Badge>
+                    )}
+                  </HStack>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                    <Text fontWeight="medium">
+                      {client.ecole_resp_modules_prenom} {client.ecole_resp_modules_nom}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_modules_phone || '—'}</Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Email</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_modules_email || '—'}</Text>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Responsable autorisation prix */}
+          {client.ecole_resp_autorisation_nom && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable autorisation prix</Heading>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                    <Text fontWeight="medium">
+                      {client.ecole_resp_autorisation_prenom} {client.ecole_resp_autorisation_nom}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '—'}</Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Email</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_autorisation_email || '—'}</Text>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Responsable facturation */}
+          {client.ecole_resp_facturation_nom && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable facturation</Heading>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                    <Text fontWeight="medium">
+                      {client.ecole_resp_facturation_prenom} {client.ecole_resp_facturation_nom}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '—'}</Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Email</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_facturation_email || '—'}</Text>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Responsable planning */}
+          {client.ecole_resp_planning_nom && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable planning</Heading>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                    <Text fontWeight="medium">
+                      {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_planning_phone || '—'}</Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">Email</Text>
+                    <Text fontWeight="medium">{client.ecole_resp_planning_email || '—'}</Text>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
+        </Grid>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Informations structure ========== */}
+      {isEcole && (client.ecole_siret || client.ecole_nda) && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Informations structure</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">N° SIRET</Text>
+                  <Text fontWeight="medium">{client.ecole_siret || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">N° NDA</Text>
+                  <Text fontWeight="medium">{client.ecole_nda || '—'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Informations module ========== */}
+      {isEcole && client.ecole_module_nom && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Informations module</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Nom du module</Text>
+                  <Text fontWeight="medium">{client.ecole_module_nom}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Nombre d'heures</Text>
+                  <Text fontWeight="medium">{client.ecole_module_heures || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Type de formation</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_formation_type === 'initiale_en_alternance' ? 'Initiale / Alternance' :
+                     client.ecole_formation_type === 'continue' ? 'Continue' : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Classe(s)</Text>
+                  <Text fontWeight="medium">{client.ecole_classes_noms || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Taille du groupe</Text>
+                  <Text fontWeight="medium">{client.ecole_groupe_taille || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Évaluations min.</Text>
+                  <Text fontWeight="medium">{client.ecole_evaluation_nombre_min || '—'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Text fontSize="sm" color="gray.500">Période</Text>
+                  <Text fontWeight="medium">{client.ecole_module_periode || '—'}</Text>
+                </GridItem>
+              </Grid>
+              {client.ecole_evaluation_modalites && (
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Modalités d'évaluation</Text>
+                  <Text fontWeight="medium">{client.ecole_evaluation_modalites}</Text>
+                </Box>
+              )}
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Informations scolaires / Recueil - Particulier uniquement */}
       {isParticulier && (
         <Card bg="white" shadow="sm">
@@ -521,8 +702,8 @@ export default function ClientDetailPage() {
             <HStack spacing={3} flexWrap="wrap">
               {isEcole ? (
                 <>
-                  <Button colorScheme="accent" size="sm">
-                    Qualification
+                  <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
+                    Recueil des informations
                   </Button>
                   <Button colorScheme="accent" size="sm">
                     Contractualisation
@@ -765,25 +946,35 @@ export default function ClientDetailPage() {
                 value={selectedRecueilEmail}
                 onChange={(e) => setSelectedRecueilEmail(e.target.value)}
               >
-                {client?.email_parent1 && (
-                  <option value={client.email_parent1}>
-                    {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                {isEcole ? (
+                  // École: show main contact email
+                  <option value={client?.email}>
+                    {client?.first_name} {client?.last_name} &lt;{client?.email}&gt; (Contact principal)
                   </option>
-                )}
-                {client?.email_parent2 && (
-                  <option value={client.email_parent2}>
-                    {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
-                  </option>
-                )}
-                {client?.email_jeune && (
-                  <option value={client.email_jeune}>
-                    {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}&gt; (Jeune)
-                  </option>
-                )}
-                {client?.email && !client?.email_parent1 && !client?.email_parent2 && !client?.email_jeune && (
-                  <option value={client.email}>
-                    {client.first_name} {client.last_name} &lt;{client.email}&gt;
-                  </option>
+                ) : (
+                  // Particulier: show parent/jeune emails
+                  <>
+                    {client?.email_parent1 && (
+                      <option value={client.email_parent1}>
+                        {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                      </option>
+                    )}
+                    {client?.email_parent2 && (
+                      <option value={client.email_parent2}>
+                        {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
+                      </option>
+                    )}
+                    {client?.email_jeune && (
+                      <option value={client.email_jeune}>
+                        {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}&gt; (Jeune)
+                      </option>
+                    )}
+                    {client?.email && !client?.email_parent1 && !client?.email_parent2 && !client?.email_jeune && (
+                      <option value={client.email}>
+                        {client.first_name} {client.last_name} &lt;{client.email}&gt;
+                      </option>
+                    )}
+                  </>
                 )}
               </Select>
             </FormControl>
