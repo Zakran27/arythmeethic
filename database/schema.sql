@@ -47,8 +47,6 @@ CREATE TABLE public.clients (
   last_name text NOT NULL,
   email text NOT NULL,
   phone1 text,
-  phone2 text,
-  phone3 text,
   -- Client type
   type_client text CHECK (type_client IN ('Particulier', 'École')) DEFAULT 'Particulier',
   sub_type text CHECK (sub_type IN ('Jeune', 'Parent') OR sub_type IS NULL),
@@ -120,10 +118,6 @@ CREATE TABLE public.procedures (
   yousign_file_id text,
   deadline_at date,
   signed_at timestamptz,
-  owner text,
-  -- Upload token
-  upload_token text,
-  upload_token_expires_at timestamptz,
   -- Timestamps
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()

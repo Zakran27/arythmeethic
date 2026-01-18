@@ -30,8 +30,6 @@ export interface Client {
   last_name: string;
   email: string;
   phone1?: string;
-  phone2?: string;
-  phone3?: string;
   type_client: ClientType;
   sub_type?: ClientSubType;
   client_status: ClientStatus;
@@ -94,9 +92,6 @@ export interface Procedure {
   yousign_file_id?: string;
   deadline_at?: string;
   signed_at?: string;
-  owner?: string;
-  upload_token?: string;
-  upload_token_expires_at?: string;
   created_at: string;
   updated_at: string;
   client?: Client;
