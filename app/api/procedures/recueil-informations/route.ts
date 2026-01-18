@@ -195,12 +195,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build the form URL
+    // Build the form URL based on client type
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
-    const formUrl = `${baseUrl}/formulaire/recueil-informations?token=${formToken}`;
+    const isEcole = client.type_client === 'École';
+    const formUrl = isEcole
+      ? `${baseUrl}/formulaire/recueil-informations-ecole?token=${formToken}`
+      : `${baseUrl}/formulaire/recueil-informations?token=${formToken}`;
 
     // Determine the email to send to (use requested email if provided, otherwise fallback to priority)
-    const recipientEmail = requestedEmail || client.email_parent1 || client.email_jeune || client.email;
+    // For École clients, use client.email directly (main contact)
+    const recipientEmail = isEcole
+      ? (requestedEmail || client.email)
+      : (requestedEmail || client.email_parent1 || client.email_jeune || client.email);
 
     // Determine recipient name and phone based on the email used
     let recipientName = client.first_name;
