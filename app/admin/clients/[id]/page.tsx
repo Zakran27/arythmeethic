@@ -34,14 +34,13 @@ import { useParams } from 'next/navigation';
 import { useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
-import Link from 'next/link';
-import { StatusBadge } from '@/components/StatusBadge';
+import { statusLabels } from '@/types';
 import { EditClientModal } from './EditClientModal';
 
 export default function ClientDetailPage() {
   const params = useParams();
   const clientId = params.id as string;
-  const { client, procedures, documents, loading, error, refetch } = useClientDetail(clientId);
+  const { client, procedures, procedureHistory, documents, loading, error, refetch } = useClientDetail(clientId);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isRecueilOpen,
@@ -497,7 +496,7 @@ export default function ClientDetailPage() {
         <CardBody>
           <Stack spacing={4}>
             <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
-              Procédures ({procedures.length})
+              Historique des procédures ({procedureHistory.length})
             </Heading>
 
             {/* Procedure Buttons - Different for Particulier vs École */}
@@ -535,41 +534,40 @@ export default function ClientDetailPage() {
               )}
             </HStack>
 
-            {procedures.length > 0 ? (
-              <Stack spacing={3}>
-                {procedures.map(proc => {
-                  const isCompleted = proc.status !== 'DRAFT';
-                  const completedAt = isCompleted && proc.updated_at !== proc.created_at ? proc.updated_at : null;
-                  return (
-                    <Card key={proc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
-                      <CardBody>
-                        <Link href={`/admin/procedures/${proc.id}`}>
-                          <HStack justify="space-between">
-                            <Stack spacing={1}>
-                              <Text fontWeight="bold">{proc.procedure_type?.label}</Text>
-                              <Text fontSize="sm" color="gray.600">
-                                Lancée le : {new Date(proc.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                              </Text>
-                              {completedAt && (
-                                <Text fontSize="sm" color="green.600">
-                                  Complétée le : {new Date(completedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </Text>
-                              )}
-                            </Stack>
-                            <StatusBadge status={proc.status} />
-                          </HStack>
-                        </Link>
-                      </CardBody>
-                    </Card>
-                  );
-                })}
+            {procedureHistory.length > 0 ? (
+              <Stack spacing={1}>
+                {procedureHistory.map(entry => (
+                  <HStack
+                    key={entry.id}
+                    py={2}
+                    px={3}
+                    bg="gray.50"
+                    borderRadius="md"
+                    justify="space-between"
+                  >
+                    <HStack spacing={3} flex={1}>
+                      <Text fontWeight="medium" fontSize="sm" minW="180px">
+                        {entry.procedure_label}
+                      </Text>
+                      <Badge
+                        colorScheme={entry.status === 'FORMULAIRE_REMPLI' ? 'green' : entry.status.includes('RELANCE') ? 'orange' : 'blue'}
+                        fontSize="xs"
+                      >
+                        {statusLabels[entry.status]}
+                      </Badge>
+                    </HStack>
+                    <Text fontSize="xs" color="gray.500">
+                      {new Date(entry.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </HStack>
+                ))}
               </Stack>
             ) : (
-              <Box textAlign="center" py={8}>
-                <Text color="brand.400" mb={4}>
+              <Box textAlign="center" py={6}>
+                <Text color="brand.400" mb={2}>
                   Aucune procédure pour le moment
                 </Text>
-                <Text fontSize="sm" color="terracotta.400">
+                <Text fontSize="sm" color="gray.500">
                   Utilisez les boutons ci-dessus pour lancer une procédure
                 </Text>
               </Box>
@@ -587,69 +585,72 @@ export default function ClientDetailPage() {
               </Heading>
             </HStack>
             {documents.length > 0 ? (
-              <Stack spacing={3}>
+              <Stack spacing={2}>
                 {documents.map(doc => {
                   // Find the procedure for this document
                   const docProcedure = procedures.find(p => p.id === doc.procedure_id);
                   return (
-                    <Card key={doc.id} variant="outline" borderColor="grey.300" _hover={{ borderColor: 'accent.300', shadow: 'md' }} transition="all 0.2s">
-                      <CardBody py={3}>
-                        <HStack justify="space-between">
-                          <Stack spacing={0}>
-                            <HStack>
-                              <Text fontWeight="medium">{doc.title}</Text>
-                              <Badge size="sm" colorScheme={doc.uploaded_by === 'CLIENT' ? 'blue' : 'gray'}>
-                                {doc.uploaded_by === 'CLIENT' ? 'Client' : 'Admin'}
-                              </Badge>
-                            </HStack>
-                            <Text fontSize="xs" color="gray.500">
-                              {docProcedure?.procedure_type?.label || 'Document'} • {new Date(doc.created_at).toLocaleDateString('fr-FR')}
-                            </Text>
-                          </Stack>
-                          <HStack>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              colorScheme="accent"
-                              onClick={async () => {
-                                if (!doc.storage_path) return;
-                                const supabase = createClient();
-                                const { data } = await supabase.storage
-                                  .from('client-files')
-                                  .createSignedUrl(doc.storage_path, 60);
-                                if (data?.signedUrl) {
-                                  window.open(data.signedUrl, '_blank');
-                                }
-                              }}
-                            >
-                              Ouvrir
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              colorScheme="accent"
-                              onClick={async () => {
-                                if (!doc.storage_path) return;
-                                const supabase = createClient();
-                                const { data } = await supabase.storage
-                                  .from('client-files')
-                                  .download(doc.storage_path);
-                                if (data) {
-                                  const url = URL.createObjectURL(data);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = doc.title || 'document';
-                                  a.click();
-                                  URL.revokeObjectURL(url);
-                                }
-                              }}
-                            >
-                              Télécharger
-                            </Button>
-                          </HStack>
-                        </HStack>
-                      </CardBody>
-                    </Card>
+                    <HStack
+                      key={doc.id}
+                      py={2}
+                      px={3}
+                      bg="gray.50"
+                      borderRadius="md"
+                      justify="space-between"
+                    >
+                      <Stack spacing={0} flex={1}>
+                        <Text fontWeight="medium" fontSize="sm">{doc.title}</Text>
+                        <Text fontSize="xs" color="gray.500">
+                          De : {docProcedure?.procedure_type?.label || 'Document'} • {new Date(doc.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </Text>
+                        {doc.original_filename && (
+                          <Text fontSize="xs" color="gray.400" fontStyle="italic">
+                            {doc.original_filename}
+                          </Text>
+                        )}
+                      </Stack>
+                      <HStack>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          colorScheme="accent"
+                          onClick={async () => {
+                            if (!doc.storage_path) return;
+                            const supabase = createClient();
+                            const { data } = await supabase.storage
+                              .from('client-files')
+                              .createSignedUrl(doc.storage_path, 60);
+                            if (data?.signedUrl) {
+                              window.open(data.signedUrl, '_blank');
+                            }
+                          }}
+                        >
+                          Ouvrir
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          colorScheme="accent"
+                          onClick={async () => {
+                            if (!doc.storage_path) return;
+                            const supabase = createClient();
+                            const { data } = await supabase.storage
+                              .from('client-files')
+                              .download(doc.storage_path);
+                            if (data) {
+                              const url = URL.createObjectURL(data);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = doc.original_filename || doc.title || 'document';
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            }
+                          }}
+                        >
+                          Télécharger
+                        </Button>
+                      </HStack>
+                    </HStack>
                   );
                 })}
               </Stack>

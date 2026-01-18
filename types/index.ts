@@ -110,6 +110,7 @@ export interface Document {
   title: string;
   storage_path?: string;
   uploaded_by: UploadedBy;
+  original_filename?: string;
   hash_sha256?: string;
   created_at: string;
 }
@@ -121,3 +122,27 @@ export interface AuditLog {
   payload?: Record<string, unknown>;
   created_at: string;
 }
+
+// Status labels for procedure history (human-readable)
+export type ProcedureStatusLabel =
+  | 'MAIL_ENVOYE'
+  | 'FORMULAIRE_REMPLI'
+  | 'RELANCE_ENVOYEE'
+  | 'MAIL_AVIS_GOOGLE_ENVOYE';
+
+export interface ProcedureStatusHistory {
+  id: string;
+  procedure_id: string;
+  status: ProcedureStatusLabel;
+  created_at: string;
+  // Joined data
+  procedure?: Procedure;
+}
+
+// Helper to get French label for status
+export const statusLabels: Record<ProcedureStatusLabel, string> = {
+  'MAIL_ENVOYE': 'Mail envoyé',
+  'FORMULAIRE_REMPLI': 'Formulaire rempli',
+  'RELANCE_ENVOYEE': 'Relance envoyée',
+  'MAIL_AVIS_GOOGLE_ENVOYE': 'Mail avis Google envoyé',
+};

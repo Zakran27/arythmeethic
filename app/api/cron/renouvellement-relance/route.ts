@@ -151,6 +151,13 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceRoleClient();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
 
+    // Get procedure type for finding procedures
+    const { data: procedureType } = await supabase
+      .from('procedure_types')
+      .select('id')
+      .eq('code', 'SOUHAIT_RENOUVELLEMENT')
+      .single();
+
     // Calculate 7 days ago
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -207,6 +214,26 @@ export async function GET(request: NextRequest) {
             .from('clients')
             .update({ renouvellement_dernier_email_at: new Date().toISOString() })
             .eq('id', client.id);
+
+          // Add status to history
+          if (procedureType) {
+            const { data: procedure } = await supabase
+              .from('procedures')
+              .select('id')
+              .eq('client_id', client.id)
+              .eq('procedure_type_id', procedureType.id)
+              .eq('status', 'DRAFT')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+
+            if (procedure) {
+              await supabase.from('procedure_status_history').insert({
+                procedure_id: procedure.id,
+                status: 'RELANCE_ENVOYEE',
+              });
+            }
+          }
 
           successCount++;
         } else {

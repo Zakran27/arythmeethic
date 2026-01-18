@@ -178,13 +178,21 @@ export async function POST(request: NextRequest) {
       .eq('code', 'RECUEIL_INFORMATIONS')
       .single();
 
-    // Create a new procedure record
+    // Create a new procedure record and add to status history
     if (procedureType) {
-      await supabase.from('procedures').insert({
+      const { data: newProcedure } = await supabase.from('procedures').insert({
         client_id: clientId,
         procedure_type_id: procedureType.id,
         status: 'DRAFT',
-      });
+      }).select('id').single();
+
+      // Add initial status to history
+      if (newProcedure) {
+        await supabase.from('procedure_status_history').insert({
+          procedure_id: newProcedure.id,
+          status: 'MAIL_ENVOYE',
+        });
+      }
     }
 
     // Build the form URL

@@ -2,11 +2,22 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { Client, Procedure, Document } from '@/types';
+import { Client, Procedure, Document, ProcedureStatusHistory } from '@/types';
+
+// Combined type for displaying procedure history with procedure info
+export interface ProcedureHistoryEntry {
+  id: string;
+  procedure_id: string;
+  procedure_label: string;
+  procedure_code: string;
+  status: ProcedureStatusHistory['status'];
+  created_at: string;
+}
 
 export function useClientDetail(clientId: string) {
   const [client, setClient] = useState<Client | null>(null);
   const [procedures, setProcedures] = useState<Procedure[]>([]);
+  const [procedureHistory, setProcedureHistory] = useState<ProcedureHistoryEntry[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +47,34 @@ export function useClientDetail(clientId: string) {
       if (proceduresError) throw proceduresError;
       setProcedures(proceduresData || []);
 
-      // Fetch documents for all procedures of this client
+      // Fetch procedure status history for all procedures of this client
       if (proceduresData && proceduresData.length > 0) {
         const procedureIds = proceduresData.map(p => p.id);
+
+        // Fetch status history
+        const { data: historyData, error: historyError } = await supabase
+          .from('procedure_status_history')
+          .select('*')
+          .in('procedure_id', procedureIds)
+          .order('created_at', { ascending: false });
+
+        if (historyError) throw historyError;
+
+        // Combine history with procedure info
+        const historyEntries: ProcedureHistoryEntry[] = (historyData || []).map(h => {
+          const proc = proceduresData.find(p => p.id === h.procedure_id);
+          return {
+            id: h.id,
+            procedure_id: h.procedure_id,
+            procedure_label: proc?.procedure_type?.label || 'Procédure',
+            procedure_code: proc?.procedure_type?.code || '',
+            status: h.status,
+            created_at: h.created_at,
+          };
+        });
+        setProcedureHistory(historyEntries);
+
+        // Fetch documents
         const { data: documentsData, error: documentsError } = await supabase
           .from('documents')
           .select('*')
@@ -48,6 +84,7 @@ export function useClientDetail(clientId: string) {
         if (documentsError) throw documentsError;
         setDocuments(documentsData || []);
       } else {
+        setProcedureHistory([]);
         setDocuments([]);
       }
 
@@ -65,5 +102,5 @@ export function useClientDetail(clientId: string) {
     }
   }, [clientId, fetchData]);
 
-  return { client, procedures, documents, loading, error, refetch: fetchData };
+  return { client, procedures, procedureHistory, documents, loading, error, refetch: fetchData };
 }
