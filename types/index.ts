@@ -106,6 +106,10 @@ export interface Client {
   ecole_evaluation_modalites?: string;
   ecole_evaluation_nombre_min?: number;
   ecole_module_periode?: string;
+  // Enseignant
+  ecole_enseignant_nom?: string;
+  ecole_enseignant_prenom?: string;
+  ecole_enseignant_email?: string;
   created_at: string;
 }
 

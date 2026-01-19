@@ -29,10 +29,12 @@ import {
   Select,
   Icon,
   IconButton,
+  Input,
+  VStack,
 } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import { useState, useCallback, useMemo } from 'react';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
@@ -58,8 +60,15 @@ export default function ClientDetailPage() {
     onOpen: onRenouvellementOpen,
     onClose: onRenouvellementClose
   } = useDisclosure();
+  const {
+    isOpen: isCvCasierOpen,
+    onOpen: onCvCasierOpen,
+    onClose: onCvCasierClose
+  } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
+  const [selectedCvCasierEmail, setSelectedCvCasierEmail] = useState('');
+  const [cvCasierFiles, setCvCasierFiles] = useState<File[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -190,6 +199,104 @@ export default function ClientDetailPage() {
       });
 
       onRenouvellementClose();
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleCvCasierFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setCvCasierFiles(prev => [...prev, ...Array.from(files)]);
+    }
+    // Reset input to allow selecting the same file again
+    e.target.value = '';
+  };
+
+  const removeCvCasierFile = (index: number) => {
+    setCvCasierFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleLaunchCvCasierProcedure = async () => {
+    if (!selectedCvCasierEmail) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un destinataire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (cvCasierFiles.length === 0) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez ajouter au moins un fichier.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsLaunchingProcedure(true);
+    try {
+      // First, create the procedure
+      const response = await fetch('/api/procedures/envoi-cv-casier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, email: selectedCvCasierEmail }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du lancement de la procédure');
+      }
+
+      const data = await response.json();
+
+      // Then, upload the files
+      for (const file of cvCasierFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('procedureId', data.procedureId);
+        formData.append('title', file.name);
+        formData.append('kind', 'SUPPORTING_DOC');
+        formData.append('uploadedBy', 'ADMIN');
+
+        await fetch('/api/storage/upload', {
+          method: 'POST',
+          body: formData,
+        });
+      }
+
+      // Finally, send the email with download link
+      await fetch('/api/procedures/envoi-cv-casier/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ procedureId: data.procedureId }),
+      });
+
+      toast({
+        title: 'Procédure lancée',
+        description: `Un email avec le lien de téléchargement a été envoyé à ${selectedCvCasierEmail}.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onCvCasierClose();
+      setSelectedCvCasierEmail('');
+      setCvCasierFiles([]);
       refetch();
     } catch (err) {
       toast({
@@ -397,117 +504,117 @@ export default function ClientDetailPage() {
       )}
 
       {/* ========== ÉTABLISSEMENT - Responsables ========== */}
-      {isEcole && (client.ecole_resp_modules_nom || client.ecole_resp_facturation_nom || client.ecole_resp_planning_nom) && (
+      {isEcole && (
         <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={4}>
           {/* Responsable modules */}
-          {client.ecole_resp_modules_nom && (
-            <Card bg="white" shadow="sm">
-              <CardBody>
-                <Stack spacing={3}>
-                  <HStack justify="space-between">
-                    <Heading size="sm" color="brand.500" fontFamily="heading">Responsable modules</Heading>
-                    {client.ecole_resp_modules_peut_negocier && (
-                      <Badge colorScheme="green" fontSize="xs">Habilité prix</Badge>
-                    )}
-                  </HStack>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
-                    <Text fontWeight="medium">
-                      {client.ecole_resp_modules_prenom} {client.ecole_resp_modules_nom}
-                    </Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_modules_phone || '—'}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Email</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_modules_email || '—'}</Text>
-                  </Box>
-                </Stack>
-              </CardBody>
-            </Card>
-          )}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <HStack justify="space-between">
+                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable modules</Heading>
+                  {client.ecole_resp_modules_peut_negocier && (
+                    <Badge colorScheme="green" fontSize="xs">Habilité prix</Badge>
+                  )}
+                </HStack>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_resp_modules_prenom || client.ecole_resp_modules_nom
+                      ? `${client.ecole_resp_modules_prenom || ''} ${client.ecole_resp_modules_nom || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_modules_phone || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_modules_email || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
 
           {/* Responsable autorisation prix */}
-          {client.ecole_resp_autorisation_nom && (
-            <Card bg="white" shadow="sm">
-              <CardBody>
-                <Stack spacing={3}>
-                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable autorisation prix</Heading>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
-                    <Text fontWeight="medium">
-                      {client.ecole_resp_autorisation_prenom} {client.ecole_resp_autorisation_nom}
-                    </Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '—'}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Email</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_autorisation_email || '—'}</Text>
-                  </Box>
-                </Stack>
-              </CardBody>
-            </Card>
-          )}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Responsable autorisation prix</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_resp_autorisation_prenom || client.ecole_resp_autorisation_nom
+                      ? `${client.ecole_resp_autorisation_prenom || ''} ${client.ecole_resp_autorisation_nom || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_autorisation_email || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
 
           {/* Responsable facturation */}
-          {client.ecole_resp_facturation_nom && (
-            <Card bg="white" shadow="sm">
-              <CardBody>
-                <Stack spacing={3}>
-                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable facturation</Heading>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
-                    <Text fontWeight="medium">
-                      {client.ecole_resp_facturation_prenom} {client.ecole_resp_facturation_nom}
-                    </Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '—'}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Email</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_facturation_email || '—'}</Text>
-                  </Box>
-                </Stack>
-              </CardBody>
-            </Card>
-          )}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Responsable facturation</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_resp_facturation_prenom || client.ecole_resp_facturation_nom
+                      ? `${client.ecole_resp_facturation_prenom || ''} ${client.ecole_resp_facturation_nom || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_facturation_email || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
 
           {/* Responsable planning */}
-          {client.ecole_resp_planning_nom && (
-            <Card bg="white" shadow="sm">
-              <CardBody>
-                <Stack spacing={3}>
-                  <Heading size="sm" color="brand.500" fontFamily="heading">Responsable planning</Heading>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Nom complet</Text>
-                    <Text fontWeight="medium">
-                      {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom}
-                    </Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Téléphone</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_planning_phone || '—'}</Text>
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" color="gray.500">Email</Text>
-                    <Text fontWeight="medium">{client.ecole_resp_planning_email || '—'}</Text>
-                  </Box>
-                </Stack>
-              </CardBody>
-            </Card>
-          )}
+          <Card bg="white" shadow="sm">
+            <CardBody>
+              <Stack spacing={3}>
+                <Heading size="sm" color="brand.500" fontFamily="heading">Responsable planning</Heading>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_resp_planning_prenom || client.ecole_resp_planning_nom
+                      ? `${client.ecole_resp_planning_prenom || ''} ${client.ecole_resp_planning_nom || ''}`.trim()
+                      : '—'}
+                  </Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_planning_phone || '—'}</Text>
+                </Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_planning_email || '—'}</Text>
+                </Box>
+              </Stack>
+            </CardBody>
+          </Card>
         </Grid>
       )}
 
       {/* ========== ÉTABLISSEMENT - Informations structure ========== */}
-      {isEcole && (client.ecole_siret || client.ecole_nda) && (
+      {isEcole && (
         <Card bg="white" shadow="sm">
           <CardBody>
             <Stack spacing={4}>
@@ -528,7 +635,7 @@ export default function ClientDetailPage() {
       )}
 
       {/* ========== ÉTABLISSEMENT - Informations module ========== */}
-      {isEcole && client.ecole_module_nom && (
+      {isEcole && (
         <Card bg="white" shadow="sm">
           <CardBody>
             <Stack spacing={4}>
@@ -536,7 +643,7 @@ export default function ClientDetailPage() {
               <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Nom du module</Text>
-                  <Text fontWeight="medium">{client.ecole_module_nom}</Text>
+                  <Text fontWeight="medium">{client.ecole_module_nom || '—'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Nombre d'heures</Text>
@@ -566,12 +673,35 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">{client.ecole_module_periode || '—'}</Text>
                 </GridItem>
               </Grid>
-              {client.ecole_evaluation_modalites && (
-                <Box>
-                  <Text fontSize="sm" color="gray.500">Modalités d'évaluation</Text>
-                  <Text fontWeight="medium">{client.ecole_evaluation_modalites}</Text>
-                </Box>
-              )}
+              <Box>
+                <Text fontSize="sm" color="gray.500">Modalités d'évaluation</Text>
+                <Text fontWeight="medium">{client.ecole_evaluation_modalites || '—'}</Text>
+              </Box>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Enseignant ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Enseignant du contenu de la matière</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Prénom</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_prenom || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Nom</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_nom || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Email</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_email || '—'}</Text>
+                </GridItem>
+              </Grid>
             </Stack>
           </CardBody>
         </Card>
@@ -707,6 +837,9 @@ export default function ClientDetailPage() {
                   </Button>
                   <Button colorScheme="accent" size="sm">
                     Contractualisation
+                  </Button>
+                  <Button colorScheme="accent" size="sm" onClick={onCvCasierOpen}>
+                    Envoyer CV/Casier
                   </Button>
                 </>
               ) : (
@@ -947,10 +1080,32 @@ export default function ClientDetailPage() {
                 onChange={(e) => setSelectedRecueilEmail(e.target.value)}
               >
                 {isEcole ? (
-                  // École: show main contact email
-                  <option value={client?.email}>
-                    {client?.first_name} {client?.last_name} &lt;{client?.email}&gt; (Contact principal)
-                  </option>
+                  // École: show all contact emails
+                  <>
+                    <option value={client?.email}>
+                      {client?.first_name} {client?.last_name} &lt;{client?.email}&gt; (Contact principal)
+                    </option>
+                    {client?.ecole_resp_modules_email && (
+                      <option value={client.ecole_resp_modules_email}>
+                        {client.ecole_resp_modules_prenom} {client.ecole_resp_modules_nom} &lt;{client.ecole_resp_modules_email}&gt; (Resp. modules)
+                      </option>
+                    )}
+                    {client?.ecole_resp_autorisation_email && (
+                      <option value={client.ecole_resp_autorisation_email}>
+                        {client.ecole_resp_autorisation_prenom} {client.ecole_resp_autorisation_nom} &lt;{client.ecole_resp_autorisation_email}&gt; (Resp. autorisation prix)
+                      </option>
+                    )}
+                    {client?.ecole_resp_facturation_email && (
+                      <option value={client.ecole_resp_facturation_email}>
+                        {client.ecole_resp_facturation_prenom} {client.ecole_resp_facturation_nom} &lt;{client.ecole_resp_facturation_email}&gt; (Resp. facturation)
+                      </option>
+                    )}
+                    {client?.ecole_resp_planning_email && (
+                      <option value={client.ecole_resp_planning_email}>
+                        {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
+                      </option>
+                    )}
+                  </>
                 ) : (
                   // Particulier: show parent/jeune emails
                   <>
@@ -1063,6 +1218,139 @@ export default function ClientDetailPage() {
               loadingText="Envoi en cours..."
             >
               Confirmer et envoyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal - Envoi CV/Casier judiciaire */}
+      <Modal isOpen={isCvCasierOpen} onClose={onCvCasierClose} isCentered size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Envoyer CV actualisé / Casier judiciaire
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text fontSize="sm" color="gray.600">
+                Sélectionnez le destinataire et ajoutez les fichiers à envoyer. Un lien sécurisé (valable 14 jours) sera envoyé par email pour télécharger les documents.
+              </Text>
+
+              <FormControl isRequired>
+                <FormLabel>Destinataire</FormLabel>
+                <Select
+                  placeholder="Sélectionner un destinataire"
+                  value={selectedCvCasierEmail}
+                  onChange={(e) => setSelectedCvCasierEmail(e.target.value)}
+                >
+                  <option value={client?.email}>
+                    {client?.first_name} {client?.last_name} &lt;{client?.email}&gt; (Contact principal)
+                  </option>
+                  {client?.ecole_resp_modules_email && (
+                    <option value={client.ecole_resp_modules_email}>
+                      {client.ecole_resp_modules_prenom} {client.ecole_resp_modules_nom} &lt;{client.ecole_resp_modules_email}&gt; (Resp. modules)
+                    </option>
+                  )}
+                  {client?.ecole_resp_autorisation_email && (
+                    <option value={client.ecole_resp_autorisation_email}>
+                      {client.ecole_resp_autorisation_prenom} {client.ecole_resp_autorisation_nom} &lt;{client.ecole_resp_autorisation_email}&gt; (Resp. autorisation prix)
+                    </option>
+                  )}
+                  {client?.ecole_resp_facturation_email && (
+                    <option value={client.ecole_resp_facturation_email}>
+                      {client.ecole_resp_facturation_prenom} {client.ecole_resp_facturation_nom} &lt;{client.ecole_resp_facturation_email}&gt; (Resp. facturation)
+                    </option>
+                  )}
+                  {client?.ecole_resp_planning_email && (
+                    <option value={client.ecole_resp_planning_email}>
+                      {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
+                    </option>
+                  )}
+                </Select>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel>Documents à envoyer</FormLabel>
+                <Box
+                  as="label"
+                  htmlFor="cv-casier-files"
+                  display="flex"
+                  flexDirection="column"
+                  alignItems="center"
+                  justifyContent="center"
+                  p={6}
+                  border="2px dashed"
+                  borderColor="gray.300"
+                  borderRadius="lg"
+                  cursor="pointer"
+                  _hover={{ borderColor: 'accent.500', bg: 'gray.50' }}
+                  transition="all 0.2s"
+                >
+                  <Icon as={FiUpload} boxSize={8} color="gray.400" mb={2} />
+                  <Text color="gray.500" fontSize="sm">
+                    Cliquez pour sélectionner des fichiers
+                  </Text>
+                  <Text color="gray.400" fontSize="xs">
+                    PDF, images, Word, etc.
+                  </Text>
+                  <Input
+                    id="cv-casier-files"
+                    type="file"
+                    multiple
+                    accept="*/*"
+                    onChange={handleCvCasierFileChange}
+                    display="none"
+                  />
+                </Box>
+
+                {cvCasierFiles.length > 0 && (
+                  <VStack mt={3} spacing={2} align="stretch">
+                    {cvCasierFiles.map((file, index) => (
+                      <Box
+                        key={index}
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        p={2}
+                        bg="green.50"
+                        border="1px solid"
+                        borderColor="green.200"
+                        borderRadius="md"
+                      >
+                        <HStack spacing={2}>
+                          <Icon as={FiFile} color="green.500" />
+                          <Text fontSize="sm" color="green.700" noOfLines={1}>
+                            {file.name}
+                          </Text>
+                        </HStack>
+                        <IconButton
+                          aria-label="Supprimer"
+                          icon={<Icon as={FiX} />}
+                          size="xs"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => removeCvCasierFile(index)}
+                        />
+                      </Box>
+                    ))}
+                  </VStack>
+                )}
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={onCvCasierClose}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchCvCasierProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+              isDisabled={!selectedCvCasierEmail || cvCasierFiles.length === 0}
+            >
+              Envoyer
             </Button>
           </ModalFooter>
         </ModalContent>

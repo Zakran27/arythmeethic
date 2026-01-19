@@ -77,6 +77,38 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     moyenne_generale: client.moyenne_generale || '',
     adresse_cours: client.adresse_cours || '',
     jours_disponibles: client.jours_disponibles || [] as string[],
+    // École-specific fields
+    ecole_siret: client.ecole_siret || '',
+    ecole_nda: client.ecole_nda || '',
+    ecole_resp_modules_nom: client.ecole_resp_modules_nom || '',
+    ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || '',
+    ecole_resp_modules_email: client.ecole_resp_modules_email || '',
+    ecole_resp_modules_phone: client.ecole_resp_modules_phone || '',
+    ecole_resp_modules_peut_negocier: client.ecole_resp_modules_peut_negocier || false,
+    ecole_resp_autorisation_nom: client.ecole_resp_autorisation_nom || '',
+    ecole_resp_autorisation_prenom: client.ecole_resp_autorisation_prenom || '',
+    ecole_resp_autorisation_email: client.ecole_resp_autorisation_email || '',
+    ecole_resp_autorisation_phone: client.ecole_resp_autorisation_phone || '',
+    ecole_resp_facturation_nom: client.ecole_resp_facturation_nom || '',
+    ecole_resp_facturation_prenom: client.ecole_resp_facturation_prenom || '',
+    ecole_resp_facturation_email: client.ecole_resp_facturation_email || '',
+    ecole_resp_facturation_phone: client.ecole_resp_facturation_phone || '',
+    ecole_resp_planning_nom: client.ecole_resp_planning_nom || '',
+    ecole_resp_planning_prenom: client.ecole_resp_planning_prenom || '',
+    ecole_resp_planning_email: client.ecole_resp_planning_email || '',
+    ecole_resp_planning_phone: client.ecole_resp_planning_phone || '',
+    ecole_module_nom: client.ecole_module_nom || '',
+    ecole_module_heures: client.ecole_module_heures?.toString() || '',
+    ecole_formation_type: client.ecole_formation_type || '',
+    ecole_classes_noms: client.ecole_classes_noms || '',
+    ecole_groupe_taille: client.ecole_groupe_taille?.toString() || '',
+    ecole_evaluation_modalites: client.ecole_evaluation_modalites || '',
+    ecole_evaluation_nombre_min: client.ecole_evaluation_nombre_min?.toString() || '',
+    ecole_module_periode: client.ecole_module_periode || '',
+    // Enseignant
+    ecole_enseignant_nom: client.ecole_enseignant_nom || '',
+    ecole_enseignant_prenom: client.ecole_enseignant_prenom || '',
+    ecole_enseignant_email: client.ecole_enseignant_email || '',
   });
 
   useEffect(() => {
@@ -115,6 +147,38 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       moyenne_generale: client.moyenne_generale || '',
       adresse_cours: client.adresse_cours || '',
       jours_disponibles: client.jours_disponibles || [],
+      // École-specific fields
+      ecole_siret: client.ecole_siret || '',
+      ecole_nda: client.ecole_nda || '',
+      ecole_resp_modules_nom: client.ecole_resp_modules_nom || '',
+      ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || '',
+      ecole_resp_modules_email: client.ecole_resp_modules_email || '',
+      ecole_resp_modules_phone: client.ecole_resp_modules_phone || '',
+      ecole_resp_modules_peut_negocier: client.ecole_resp_modules_peut_negocier || false,
+      ecole_resp_autorisation_nom: client.ecole_resp_autorisation_nom || '',
+      ecole_resp_autorisation_prenom: client.ecole_resp_autorisation_prenom || '',
+      ecole_resp_autorisation_email: client.ecole_resp_autorisation_email || '',
+      ecole_resp_autorisation_phone: client.ecole_resp_autorisation_phone || '',
+      ecole_resp_facturation_nom: client.ecole_resp_facturation_nom || '',
+      ecole_resp_facturation_prenom: client.ecole_resp_facturation_prenom || '',
+      ecole_resp_facturation_email: client.ecole_resp_facturation_email || '',
+      ecole_resp_facturation_phone: client.ecole_resp_facturation_phone || '',
+      ecole_resp_planning_nom: client.ecole_resp_planning_nom || '',
+      ecole_resp_planning_prenom: client.ecole_resp_planning_prenom || '',
+      ecole_resp_planning_email: client.ecole_resp_planning_email || '',
+      ecole_resp_planning_phone: client.ecole_resp_planning_phone || '',
+      ecole_module_nom: client.ecole_module_nom || '',
+      ecole_module_heures: client.ecole_module_heures?.toString() || '',
+      ecole_formation_type: client.ecole_formation_type || '',
+      ecole_classes_noms: client.ecole_classes_noms || '',
+      ecole_groupe_taille: client.ecole_groupe_taille?.toString() || '',
+      ecole_evaluation_modalites: client.ecole_evaluation_modalites || '',
+      ecole_evaluation_nombre_min: client.ecole_evaluation_nombre_min?.toString() || '',
+      ecole_module_periode: client.ecole_module_periode || '',
+      // Enseignant
+      ecole_enseignant_nom: client.ecole_enseignant_nom || '',
+      ecole_enseignant_prenom: client.ecole_enseignant_prenom || '',
+      ecole_enseignant_email: client.ecole_enseignant_email || '',
     });
   }, [client]);
 
@@ -180,6 +244,38 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           moyenne_generale: formData.moyenne_generale || null,
           adresse_cours: formData.adresse_cours || null,
           jours_disponibles: formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
+          // École-specific fields
+          ecole_siret: formData.ecole_siret || null,
+          ecole_nda: formData.ecole_nda || null,
+          ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
+          ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,
+          ecole_resp_modules_email: formData.ecole_resp_modules_email || null,
+          ecole_resp_modules_phone: formData.ecole_resp_modules_phone || null,
+          ecole_resp_modules_peut_negocier: formData.ecole_resp_modules_peut_negocier || null,
+          ecole_resp_autorisation_nom: formData.ecole_resp_autorisation_nom || null,
+          ecole_resp_autorisation_prenom: formData.ecole_resp_autorisation_prenom || null,
+          ecole_resp_autorisation_email: formData.ecole_resp_autorisation_email || null,
+          ecole_resp_autorisation_phone: formData.ecole_resp_autorisation_phone || null,
+          ecole_resp_facturation_nom: formData.ecole_resp_facturation_nom || null,
+          ecole_resp_facturation_prenom: formData.ecole_resp_facturation_prenom || null,
+          ecole_resp_facturation_email: formData.ecole_resp_facturation_email || null,
+          ecole_resp_facturation_phone: formData.ecole_resp_facturation_phone || null,
+          ecole_resp_planning_nom: formData.ecole_resp_planning_nom || null,
+          ecole_resp_planning_prenom: formData.ecole_resp_planning_prenom || null,
+          ecole_resp_planning_email: formData.ecole_resp_planning_email || null,
+          ecole_resp_planning_phone: formData.ecole_resp_planning_phone || null,
+          ecole_module_nom: formData.ecole_module_nom || null,
+          ecole_module_heures: formData.ecole_module_heures ? parseInt(formData.ecole_module_heures, 10) : null,
+          ecole_formation_type: formData.ecole_formation_type || null,
+          ecole_classes_noms: formData.ecole_classes_noms || null,
+          ecole_groupe_taille: formData.ecole_groupe_taille ? parseInt(formData.ecole_groupe_taille, 10) : null,
+          ecole_evaluation_modalites: formData.ecole_evaluation_modalites || null,
+          ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min ? parseInt(formData.ecole_evaluation_nombre_min, 10) : null,
+          ecole_module_periode: formData.ecole_module_periode || null,
+          // Enseignant
+          ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
+          ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
+          ecole_enseignant_email: formData.ecole_enseignant_email || null,
         })
         .eq('id', client.id);
 
@@ -576,6 +672,333 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                           type="email"
                           value={formData.email}
                           onChange={e => handleChange('email', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Responsable modules */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Responsable modules</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_modules_prenom}
+                          onChange={e => handleChange('ecole_resp_modules_prenom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_modules_nom}
+                          onChange={e => handleChange('ecole_resp_modules_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Téléphone</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_modules_phone}
+                          onChange={e => handleChange('ecole_resp_modules_phone', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.ecole_resp_modules_email}
+                          onChange={e => handleChange('ecole_resp_modules_email', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+                  <Checkbox
+                    isChecked={formData.ecole_resp_modules_peut_negocier}
+                    onChange={e => setFormData(prev => ({ ...prev, ecole_resp_modules_peut_negocier: e.target.checked }))}
+                    colorScheme="accent"
+                  >
+                    Habilité(e) à négocier les prix
+                  </Checkbox>
+
+                  {/* Responsable autorisation prix */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Responsable autorisation prix</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_autorisation_prenom}
+                          onChange={e => handleChange('ecole_resp_autorisation_prenom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_autorisation_nom}
+                          onChange={e => handleChange('ecole_resp_autorisation_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Téléphone</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_autorisation_phone}
+                          onChange={e => handleChange('ecole_resp_autorisation_phone', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.ecole_resp_autorisation_email}
+                          onChange={e => handleChange('ecole_resp_autorisation_email', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Responsable facturation */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Responsable facturation</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_facturation_prenom}
+                          onChange={e => handleChange('ecole_resp_facturation_prenom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_facturation_nom}
+                          onChange={e => handleChange('ecole_resp_facturation_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Téléphone</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_facturation_phone}
+                          onChange={e => handleChange('ecole_resp_facturation_phone', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.ecole_resp_facturation_email}
+                          onChange={e => handleChange('ecole_resp_facturation_email', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Responsable planning */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Responsable planning</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_planning_prenom}
+                          onChange={e => handleChange('ecole_resp_planning_prenom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_planning_nom}
+                          onChange={e => handleChange('ecole_resp_planning_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Téléphone</FormLabel>
+                        <Input
+                          value={formData.ecole_resp_planning_phone}
+                          onChange={e => handleChange('ecole_resp_planning_phone', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.ecole_resp_planning_email}
+                          onChange={e => handleChange('ecole_resp_planning_email', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Informations structure */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Informations structure</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>N° SIRET</FormLabel>
+                        <Input
+                          value={formData.ecole_siret}
+                          onChange={e => handleChange('ecole_siret', e.target.value)}
+                          placeholder="14 chiffres"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>N° NDA</FormLabel>
+                        <Input
+                          value={formData.ecole_nda}
+                          onChange={e => handleChange('ecole_nda', e.target.value)}
+                          placeholder="Numéro de déclaration d'activité"
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Informations module */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Informations module</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom du module</FormLabel>
+                        <Input
+                          value={formData.ecole_module_nom}
+                          onChange={e => handleChange('ecole_module_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nombre d'heures</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_module_heures}
+                          onChange={e => handleChange('ecole_module_heures', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Type de formation</FormLabel>
+                        <Select
+                          value={formData.ecole_formation_type}
+                          onChange={e => handleChange('ecole_formation_type', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="initiale_en_alternance">Formation initiale / en alternance</option>
+                          <option value="continue">Formation continue</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom de la/des classe(s)</FormLabel>
+                        <Input
+                          value={formData.ecole_classes_noms}
+                          onChange={e => handleChange('ecole_classes_noms', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Taille du groupe</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_groupe_taille}
+                          onChange={e => handleChange('ecole_groupe_taille', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nb évaluations min.</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_evaluation_nombre_min}
+                          onChange={e => handleChange('ecole_evaluation_nombre_min', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Période du module</FormLabel>
+                        <Input
+                          value={formData.ecole_module_periode}
+                          onChange={e => handleChange('ecole_module_periode', e.target.value)}
+                          placeholder="Ex: Septembre 2026 - Janvier 2027"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Modalités d'évaluation</FormLabel>
+                        <Textarea
+                          value={formData.ecole_evaluation_modalites}
+                          onChange={e => handleChange('ecole_evaluation_modalites', e.target.value)}
+                          rows={2}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Enseignant */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Enseignant du contenu de la matière</Text>
+                  <Text fontSize="sm" color="gray.500">Facultatif</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Prénom</FormLabel>
+                        <Input
+                          value={formData.ecole_enseignant_prenom}
+                          onChange={e => handleChange('ecole_enseignant_prenom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom</FormLabel>
+                        <Input
+                          value={formData.ecole_enseignant_nom}
+                          onChange={e => handleChange('ecole_enseignant_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Email</FormLabel>
+                        <Input
+                          type="email"
+                          value={formData.ecole_enseignant_email}
+                          onChange={e => handleChange('ecole_enseignant_email', e.target.value)}
                         />
                       </FormControl>
                     </GridItem>
