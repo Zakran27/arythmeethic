@@ -41,6 +41,7 @@ function RecueilEcoleFormContent() {
   const [error, setError] = useState<string | null>(null);
   const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
   const [coursExempleFile, setCoursExempleFile] = useState<File | null>(null);
+  const [autoriseContactEnseignant, setAutoriseContactEnseignant] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -292,7 +293,7 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Responsable des modules (proposition)
+                      Personne en charge des modules
                     </Heading>
                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                       <FormControl isRequired>
@@ -354,11 +355,8 @@ function RecueilEcoleFormContent() {
                   <CardBody>
                     <Stack spacing={4}>
                       <Heading size="sm" color="brand.500" fontFamily="heading">
-                        Responsable autorisation prix
+                        Personne habilitée à valider les prix
                       </Heading>
-                      <Text fontSize="sm" color="gray.500">
-                        Personne habilitée à valider les prix proposés
-                      </Text>
                       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                         <FormControl isRequired>
                           <FormLabel color="brand.600">Nom</FormLabel>
@@ -409,7 +407,7 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Responsable facturation
+                      Personne en charge de la facturation
                     </Heading>
                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                       <FormControl isRequired>
@@ -460,7 +458,7 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Responsable planning
+                      Personne en charge du planning
                     </Heading>
                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                       <FormControl isRequired>
@@ -511,7 +509,7 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Informations structure
+                      Informations sur votre établissement
                     </Heading>
                     <FormControl isRequired>
                       <FormLabel color="brand.600">Nom de la structure</FormLabel>
@@ -578,7 +576,7 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Informations module
+                      Informations sur le module
                     </Heading>
                     <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
                       <FormControl isRequired>
@@ -668,46 +666,54 @@ function RecueilEcoleFormContent() {
                 </CardBody>
               </Card>
 
-              {/* Enseignant */}
+              {/* Enseignant précédent */}
               <Card bg="white" shadow="sm">
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Enseignant du contenu de la matière
+                      Contact du précédent enseignant
                     </Heading>
-                    <Text fontSize="sm" color="gray.500">
-                      Ces informations sont facultatives. Si vous avez déjà un enseignant attitré pour le contenu de la matière, vous pouvez renseigner ses coordonnées.
-                    </Text>
-                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                      <FormControl>
-                        <FormLabel color="brand.600">Prénom (facultatif)</FormLabel>
-                        <Input
-                          name="ecole_enseignant_prenom"
-                          value={formData.ecole_enseignant_prenom}
-                          onChange={handleChange}
-                          placeholder="Prénom"
-                        />
-                      </FormControl>
-                      <FormControl>
-                        <FormLabel color="brand.600">Nom (facultatif)</FormLabel>
-                        <Input
-                          name="ecole_enseignant_nom"
-                          value={formData.ecole_enseignant_nom}
-                          onChange={handleChange}
-                          placeholder="Nom"
-                        />
-                      </FormControl>
-                      <FormControl>
-                        <FormLabel color="brand.600">Email (facultatif)</FormLabel>
-                        <Input
-                          name="ecole_enseignant_email"
-                          type="email"
-                          value={formData.ecole_enseignant_email}
-                          onChange={handleChange}
-                          placeholder="email@exemple.com"
-                        />
-                      </FormControl>
-                    </SimpleGrid>
+                    <FormControl>
+                      <Checkbox
+                        isChecked={autoriseContactEnseignant}
+                        onChange={(e) => setAutoriseContactEnseignant(e.target.checked)}
+                        colorScheme="cyan"
+                      >
+                        J'accepte de transmettre les coordonnées du précédent enseignant de la matière
+                      </Checkbox>
+                    </FormControl>
+                    {autoriseContactEnseignant && (
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                        <FormControl isRequired>
+                          <FormLabel color="brand.600">Prénom</FormLabel>
+                          <Input
+                            name="ecole_enseignant_prenom"
+                            value={formData.ecole_enseignant_prenom}
+                            onChange={handleChange}
+                            placeholder="Prénom"
+                          />
+                        </FormControl>
+                        <FormControl isRequired>
+                          <FormLabel color="brand.600">Nom</FormLabel>
+                          <Input
+                            name="ecole_enseignant_nom"
+                            value={formData.ecole_enseignant_nom}
+                            onChange={handleChange}
+                            placeholder="Nom"
+                          />
+                        </FormControl>
+                        <FormControl isRequired>
+                          <FormLabel color="brand.600">Email</FormLabel>
+                          <Input
+                            name="ecole_enseignant_email"
+                            type="email"
+                            value={formData.ecole_enseignant_email}
+                            onChange={handleChange}
+                            placeholder="email@exemple.com"
+                          />
+                        </FormControl>
+                      </SimpleGrid>
+                    )}
                   </Stack>
                 </CardBody>
               </Card>
@@ -717,10 +723,10 @@ function RecueilEcoleFormContent() {
                 <CardBody>
                   <Stack spacing={4}>
                     <Heading size="sm" color="brand.500" fontFamily="heading">
-                      Documents (facultatif)
+                      Documents complémentaires
                     </Heading>
                     <Text fontSize="sm" color="gray.500">
-                      Ces documents nous aideront à mieux préparer les interventions. Ils ne sont pas obligatoires.
+                      Ces documents nous aideront à mieux préparer les interventions.
                     </Text>
 
                     {/* Syllabus */}
