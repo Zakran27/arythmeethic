@@ -80,11 +80,13 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const client = procedure.client as { organisation?: string; first_name: string; last_name: string };
+    // Supabase returns joined relations as arrays, get the first element
+    const clientData = procedure.client as unknown as { organisation?: string; first_name: string; last_name: string } | { organisation?: string; first_name: string; last_name: string }[];
+    const client = Array.isArray(clientData) ? clientData[0] : clientData;
 
     return NextResponse.json({
       success: true,
-      clientName: client.organisation || `${client.first_name} ${client.last_name}`,
+      clientName: client?.organisation || `${client?.first_name || ''} ${client?.last_name || ''}`.trim() || 'Client',
       expiresAt: procedure.download_token_expires_at,
       documents: documentsWithUrls,
     });
