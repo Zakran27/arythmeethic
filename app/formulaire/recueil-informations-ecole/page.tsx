@@ -20,7 +20,9 @@ import {
   Image,
   Select,
   Textarea,
+  Icon,
 } from '@chakra-ui/react';
+import { FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 
@@ -37,6 +39,8 @@ function RecueilEcoleFormContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
+  const [coursExempleFile, setCoursExempleFile] = useState<File | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -77,6 +81,10 @@ function RecueilEcoleFormContent() {
     ecole_evaluation_modalites: '',
     ecole_evaluation_nombre_min: '',
     ecole_module_periode: '',
+    // Enseignant
+    ecole_enseignant_nom: '',
+    ecole_enseignant_prenom: '',
+    ecole_enseignant_email: '',
   });
 
   useEffect(() => {
@@ -136,6 +144,10 @@ function RecueilEcoleFormContent() {
           ecole_evaluation_modalites: data.client.ecole_evaluation_modalites || '',
           ecole_evaluation_nombre_min: data.client.ecole_evaluation_nombre_min?.toString() || '',
           ecole_module_periode: data.client.ecole_module_periode || '',
+          // Enseignant
+          ecole_enseignant_nom: data.client.ecole_enseignant_nom || '',
+          ecole_enseignant_prenom: data.client.ecole_enseignant_prenom || '',
+          ecole_enseignant_email: data.client.ecole_enseignant_email || '',
         });
         setLoading(false);
       } catch (err) {
@@ -182,6 +194,44 @@ function RecueilEcoleFormContent() {
         setError(data.error || 'Erreur lors de l\'envoi du formulaire');
         setSubmitting(false);
         return;
+      }
+
+      // Upload syllabus file if provided
+      if (syllabusFile && data.procedureId) {
+        const fileFormData = new FormData();
+        fileFormData.append('file', syllabusFile);
+        fileFormData.append('procedureId', data.procedureId);
+        fileFormData.append('title', 'Syllabus / Contenu de la matière');
+        fileFormData.append('kind', 'SUPPORTING_DOC');
+        fileFormData.append('uploadedBy', 'CLIENT');
+
+        const uploadResponse = await fetch('/api/storage/upload', {
+          method: 'POST',
+          body: fileFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          console.error('Failed to upload syllabus:', await uploadResponse.text());
+        }
+      }
+
+      // Upload cours exemple file if provided
+      if (coursExempleFile && data.procedureId) {
+        const fileFormData = new FormData();
+        fileFormData.append('file', coursExempleFile);
+        fileFormData.append('procedureId', data.procedureId);
+        fileFormData.append('title', 'Exemple de cours passés');
+        fileFormData.append('kind', 'SUPPORTING_DOC');
+        fileFormData.append('uploadedBy', 'CLIENT');
+
+        const uploadResponse = await fetch('/api/storage/upload', {
+          method: 'POST',
+          body: fileFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          console.error('Failed to upload cours exemple:', await uploadResponse.text());
+        }
       }
 
       // Redirect to confirmation page
@@ -613,6 +663,198 @@ function RecueilEcoleFormContent() {
                         onChange={handleChange}
                         placeholder="Ex: Septembre 2026 - Janvier 2027"
                       />
+                    </FormControl>
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {/* Enseignant */}
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Heading size="sm" color="brand.500" fontFamily="heading">
+                      Enseignant du contenu de la matière
+                    </Heading>
+                    <Text fontSize="sm" color="gray.500">
+                      Ces informations sont facultatives. Si vous avez déjà un enseignant attitré pour le contenu de la matière, vous pouvez renseigner ses coordonnées.
+                    </Text>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <FormControl>
+                        <FormLabel color="brand.600">Prénom (facultatif)</FormLabel>
+                        <Input
+                          name="ecole_enseignant_prenom"
+                          value={formData.ecole_enseignant_prenom}
+                          onChange={handleChange}
+                          placeholder="Prénom"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="brand.600">Nom (facultatif)</FormLabel>
+                        <Input
+                          name="ecole_enseignant_nom"
+                          value={formData.ecole_enseignant_nom}
+                          onChange={handleChange}
+                          placeholder="Nom"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="brand.600">Email (facultatif)</FormLabel>
+                        <Input
+                          name="ecole_enseignant_email"
+                          type="email"
+                          value={formData.ecole_enseignant_email}
+                          onChange={handleChange}
+                          placeholder="email@exemple.com"
+                        />
+                      </FormControl>
+                    </SimpleGrid>
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {/* Documents */}
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Heading size="sm" color="brand.500" fontFamily="heading">
+                      Documents (facultatif)
+                    </Heading>
+                    <Text fontSize="sm" color="gray.500">
+                      Ces documents nous aideront à mieux préparer les interventions. Ils ne sont pas obligatoires.
+                    </Text>
+
+                    {/* Syllabus */}
+                    <FormControl>
+                      <FormLabel color="brand.600">Syllabus ou contenu de la matière</FormLabel>
+                      <Text fontSize="sm" color="gray.500" mb={2}>
+                        Image ou PDF décrivant le programme du module
+                      </Text>
+                      {!syllabusFile ? (
+                        <Box
+                          as="label"
+                          htmlFor="syllabus-file"
+                          display="flex"
+                          flexDirection="column"
+                          alignItems="center"
+                          justifyContent="center"
+                          p={6}
+                          border="2px dashed"
+                          borderColor="gray.300"
+                          borderRadius="lg"
+                          cursor="pointer"
+                          _hover={{ borderColor: 'accent.500', bg: 'gray.50' }}
+                          transition="all 0.2s"
+                        >
+                          <Icon as={FiUpload} boxSize={8} color="gray.400" mb={2} />
+                          <Text color="gray.500" fontSize="sm">
+                            Cliquez pour sélectionner un fichier
+                          </Text>
+                          <Input
+                            id="syllabus-file"
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setSyllabusFile(file);
+                            }}
+                            display="none"
+                          />
+                        </Box>
+                      ) : (
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          p={3}
+                          bg="green.50"
+                          border="1px solid"
+                          borderColor="green.200"
+                          borderRadius="lg"
+                        >
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Icon as={FiFile} color="green.500" />
+                            <Text fontSize="sm" color="green.700" noOfLines={1}>
+                              {syllabusFile.name}
+                            </Text>
+                          </Box>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => setSyllabusFile(null)}
+                            leftIcon={<Icon as={FiX} />}
+                          >
+                            Supprimer
+                          </Button>
+                        </Box>
+                      )}
+                    </FormControl>
+
+                    {/* Exemple de cours */}
+                    <FormControl>
+                      <FormLabel color="brand.600">Exemple de cours passés</FormLabel>
+                      <Text fontSize="sm" color="gray.500" mb={2}>
+                        Image, PDF, Word ou PowerPoint d'un cours précédent
+                      </Text>
+                      {!coursExempleFile ? (
+                        <Box
+                          as="label"
+                          htmlFor="cours-exemple-file"
+                          display="flex"
+                          flexDirection="column"
+                          alignItems="center"
+                          justifyContent="center"
+                          p={6}
+                          border="2px dashed"
+                          borderColor="gray.300"
+                          borderRadius="lg"
+                          cursor="pointer"
+                          _hover={{ borderColor: 'accent.500', bg: 'gray.50' }}
+                          transition="all 0.2s"
+                        >
+                          <Icon as={FiUpload} boxSize={8} color="gray.400" mb={2} />
+                          <Text color="gray.500" fontSize="sm">
+                            Cliquez pour sélectionner un fichier
+                          </Text>
+                          <Input
+                            id="cours-exemple-file"
+                            type="file"
+                            accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setCoursExempleFile(file);
+                            }}
+                            display="none"
+                          />
+                        </Box>
+                      ) : (
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          p={3}
+                          bg="green.50"
+                          border="1px solid"
+                          borderColor="green.200"
+                          borderRadius="lg"
+                        >
+                          <Box display="flex" alignItems="center" gap={2}>
+                            <Icon as={FiFile} color="green.500" />
+                            <Text fontSize="sm" color="green.700" noOfLines={1}>
+                              {coursExempleFile.name}
+                            </Text>
+                          </Box>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => setCoursExempleFile(null)}
+                            leftIcon={<Icon as={FiX} />}
+                          >
+                            Supprimer
+                          </Button>
+                        </Box>
+                      )}
                     </FormControl>
                   </Stack>
                 </CardBody>

@@ -83,6 +83,10 @@ export async function GET(request: NextRequest) {
         ecole_evaluation_modalites: client.ecole_evaluation_modalites,
         ecole_evaluation_nombre_min: client.ecole_evaluation_nombre_min,
         ecole_module_periode: client.ecole_module_periode,
+        // Enseignant
+        ecole_enseignant_nom: client.ecole_enseignant_nom,
+        ecole_enseignant_prenom: client.ecole_enseignant_prenom,
+        ecole_enseignant_email: client.ecole_enseignant_email,
       },
     });
   } catch (error) {
@@ -173,6 +177,10 @@ export async function POST(request: NextRequest) {
       ecole_evaluation_modalites: formData.ecole_evaluation_modalites || null,
       ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min || null,
       ecole_module_periode: formData.ecole_module_periode || null,
+      // Enseignant
+      ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
+      ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
+      ecole_enseignant_email: formData.ecole_enseignant_email || null,
       // Clear the token after successful submission
       form_token: null,
       form_token_expires_at: null,
