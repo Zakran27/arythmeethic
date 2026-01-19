@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = procedure.client as {
+    type ClientData = {
       id: string;
       first_name: string;
       last_name: string;
@@ -115,6 +115,17 @@ export async function POST(request: NextRequest) {
       ecole_resp_autorisation_prenom?: string;
       ecole_resp_autorisation_nom?: string;
     };
+
+    // Supabase returns joined relations as arrays
+    const clientData = procedure.client as unknown as ClientData | ClientData[];
+    const client = Array.isArray(clientData) ? clientData[0] : clientData;
+
+    if (!client) {
+      return NextResponse.json(
+        { success: false, error: 'Client non trouvé' },
+        { status: 404 }
+      );
+    }
 
     // Determine the recipient name based on email
     let recipientName = client.first_name;
