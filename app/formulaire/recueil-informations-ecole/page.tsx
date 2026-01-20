@@ -31,6 +31,27 @@ const FORMATION_TYPES = [
   { value: 'continue', label: 'Formation continue' },
 ];
 
+const REGIONS_FRANCE = [
+  'Auvergne-Rhône-Alpes',
+  'Bourgogne-Franche-Comté',
+  'Bretagne',
+  'Centre-Val de Loire',
+  'Corse',
+  'Grand Est',
+  'Guadeloupe',
+  'Guyane',
+  'Hauts-de-France',
+  'Île-de-France',
+  'La Réunion',
+  'Martinique',
+  'Mayotte',
+  'Normandie',
+  'Nouvelle-Aquitaine',
+  'Occitanie',
+  'Pays de la Loire',
+  'Provence-Alpes-Côte d\'Azur',
+];
+
 function RecueilEcoleFormContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -73,6 +94,12 @@ function RecueilEcoleFormContent() {
     city: '',
     ecole_siret: '',
     ecole_nda: '',
+    ecole_nda_region: '',
+    // Frais pris en charge par l'établissement
+    ecole_frais_midi_montant: '',
+    ecole_frais_midi_conditions: '',
+    ecole_frais_deplacement_rembourse: false,
+    ecole_frais_km_prix: '',
     // Module info
     ecole_module_nom: '',
     ecole_module_heures: '',
@@ -136,6 +163,12 @@ function RecueilEcoleFormContent() {
           city: data.client.city || '',
           ecole_siret: data.client.ecole_siret || '',
           ecole_nda: data.client.ecole_nda || '',
+          ecole_nda_region: data.client.ecole_nda_region || '',
+          // Frais pris en charge par l'établissement
+          ecole_frais_midi_montant: data.client.ecole_frais_midi_montant?.toString() || '',
+          ecole_frais_midi_conditions: data.client.ecole_frais_midi_conditions || '',
+          ecole_frais_deplacement_rembourse: data.client.ecole_frais_deplacement_rembourse || false,
+          ecole_frais_km_prix: data.client.ecole_frais_km_prix?.toString() || '',
           // Module info
           ecole_module_nom: data.client.ecole_module_nom || '',
           ecole_module_heures: data.client.ecole_module_heures?.toString() || '',
@@ -181,6 +214,8 @@ function RecueilEcoleFormContent() {
         ecole_module_heures: formData.ecole_module_heures ? parseInt(formData.ecole_module_heures, 10) : null,
         ecole_groupe_taille: formData.ecole_groupe_taille ? parseInt(formData.ecole_groupe_taille, 10) : null,
         ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min ? parseInt(formData.ecole_evaluation_nombre_min, 10) : null,
+        ecole_frais_midi_montant: formData.ecole_frais_midi_montant ? parseFloat(formData.ecole_frais_midi_montant) : null,
+        ecole_frais_km_prix: formData.ecole_frais_km_prix ? parseFloat(formData.ecole_frais_km_prix) : null,
       };
 
       const response = await fetch('/api/formulaire/recueil-informations-ecole', {
@@ -548,7 +583,7 @@ function RecueilEcoleFormContent() {
                           placeholder="Ville"
                         />
                       </FormControl>
-                      <FormControl>
+                      <FormControl isRequired>
                         <FormLabel color="brand.600">N° SIRET</FormLabel>
                         <Input
                           name="ecole_siret"
@@ -565,6 +600,21 @@ function RecueilEcoleFormContent() {
                           onChange={handleChange}
                           placeholder="Numéro de déclaration d'activité"
                         />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="brand.600">Région d'obtention du NDA</FormLabel>
+                        <Select
+                          name="ecole_nda_region"
+                          value={formData.ecole_nda_region}
+                          onChange={handleChange}
+                          placeholder="Sélectionner une région..."
+                        >
+                          {REGIONS_FRANCE.map(region => (
+                            <option key={region} value={region}>
+                              {region}
+                            </option>
+                          ))}
+                        </Select>
                       </FormControl>
                     </SimpleGrid>
                   </Stack>
@@ -662,6 +712,62 @@ function RecueilEcoleFormContent() {
                         placeholder="Ex: Septembre 2026 - Janvier 2027"
                       />
                     </FormControl>
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {/* Frais pris en charge par l'établissement */}
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Heading size="sm" color="brand.500" fontFamily="heading">
+                      Frais pris en charge par l'établissement
+                    </Heading>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <FormControl>
+                        <FormLabel color="brand.600">Frais du midi (montant autorisé)</FormLabel>
+                        <Input
+                          name="ecole_frais_midi_montant"
+                          type="number"
+                          step="0.01"
+                          value={formData.ecole_frais_midi_montant}
+                          onChange={handleChange}
+                          placeholder="Ex: 15.00"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="brand.600">Conditions</FormLabel>
+                        <Input
+                          name="ecole_frais_midi_conditions"
+                          value={formData.ecole_frais_midi_conditions}
+                          onChange={handleChange}
+                          placeholder="Ex: Journée complète de cours"
+                        />
+                      </FormControl>
+                    </SimpleGrid>
+                    <FormControl>
+                      <Checkbox
+                        name="ecole_frais_deplacement_rembourse"
+                        isChecked={formData.ecole_frais_deplacement_rembourse}
+                        onChange={handleChange}
+                        colorScheme="cyan"
+                      >
+                        Remboursement des frais de déplacement
+                      </Checkbox>
+                    </FormControl>
+                    {formData.ecole_frais_deplacement_rembourse && (
+                      <FormControl>
+                        <FormLabel color="brand.600">Prix au kilomètre (€)</FormLabel>
+                        <Input
+                          name="ecole_frais_km_prix"
+                          type="number"
+                          step="0.01"
+                          value={formData.ecole_frais_km_prix}
+                          onChange={handleChange}
+                          placeholder="Ex: 0.50"
+                        />
+                      </FormControl>
+                    )}
                   </Stack>
                 </CardBody>
               </Card>

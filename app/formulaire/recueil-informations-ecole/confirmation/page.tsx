@@ -47,7 +47,7 @@ export default function ConfirmationEcolePage() {
                   Vos informations ont bien été enregistrées.
                 </Text>
                 <Text color="brand.600">
-                  Florence reviendra vers vous très prochainement pour vous
+                  Je reviendrai vers vous très prochainement pour vous
                   transmettre une proposition tarifaire et organiser la suite.
                 </Text>
                 <Box pt={4}>

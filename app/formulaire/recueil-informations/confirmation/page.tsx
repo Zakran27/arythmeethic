@@ -47,7 +47,7 @@ export default function ConfirmationPage() {
                   Vos informations ont bien été enregistrées.
                 </Text>
                 <Text color="brand.600">
-                  Florence reviendra vers vous très prochainement pour organiser
+                  Je reviendrai vers vous très prochainement pour organiser
                   le premier rendez-vous.
                 </Text>
                 <Box pt={4}>

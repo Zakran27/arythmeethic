@@ -53,6 +53,12 @@ export async function GET(request: NextRequest) {
         city: client.city,
         ecole_siret: client.ecole_siret,
         ecole_nda: client.ecole_nda,
+        ecole_nda_region: client.ecole_nda_region,
+        // Frais pris en charge par l'établissement
+        ecole_frais_midi_montant: client.ecole_frais_midi_montant,
+        ecole_frais_midi_conditions: client.ecole_frais_midi_conditions,
+        ecole_frais_deplacement_rembourse: client.ecole_frais_deplacement_rembourse,
+        ecole_frais_km_prix: client.ecole_frais_km_prix,
         // Responsable modules (pre-fill with first_name/last_name/email/phone1)
         ecole_resp_modules_nom: client.ecole_resp_modules_nom || client.last_name,
         ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || client.first_name,
@@ -147,6 +153,12 @@ export async function POST(request: NextRequest) {
       city: formData.city || null,
       ecole_siret: formData.ecole_siret || null,
       ecole_nda: formData.ecole_nda || null,
+      ecole_nda_region: formData.ecole_nda_region || null,
+      // Frais pris en charge par l'établissement
+      ecole_frais_midi_montant: formData.ecole_frais_midi_montant || null,
+      ecole_frais_midi_conditions: formData.ecole_frais_midi_conditions || null,
+      ecole_frais_deplacement_rembourse: formData.ecole_frais_deplacement_rembourse ?? null,
+      ecole_frais_km_prix: formData.ecole_frais_km_prix || null,
       // Responsable modules
       ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
       ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,

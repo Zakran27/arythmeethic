@@ -76,6 +76,12 @@ export interface Client {
   // École-specific fields for "Recueil des informations"
   ecole_siret?: string;
   ecole_nda?: string;
+  ecole_nda_region?: string;
+  // Frais pris en charge par l'établissement
+  ecole_frais_midi_montant?: number;
+  ecole_frais_midi_conditions?: string;
+  ecole_frais_deplacement_rembourse?: boolean;
+  ecole_frais_km_prix?: number;
   // Responsable modules
   ecole_resp_modules_nom?: string;
   ecole_resp_modules_prenom?: string;
