@@ -98,6 +98,12 @@ CREATE TABLE public.clients (
   -- École-specific fields for "Recueil des informations"
   ecole_siret text,
   ecole_nda text,
+  ecole_nda_region text,
+  -- Frais pris en charge par l'établissement
+  ecole_frais_midi_montant numeric(10,2),
+  ecole_frais_midi_conditions text,
+  ecole_frais_deplacement_rembourse boolean,
+  ecole_frais_km_prix numeric(10,2),
   -- Responsable modules
   ecole_resp_modules_nom text,
   ecole_resp_modules_prenom text,

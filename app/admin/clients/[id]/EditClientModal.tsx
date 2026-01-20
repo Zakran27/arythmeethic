@@ -27,6 +27,27 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { Client, ClientType, ClientSubType, ClientStatus } from '@/types';
 
+const REGIONS_FRANCE = [
+  'Auvergne-Rhône-Alpes',
+  'Bourgogne-Franche-Comté',
+  'Bretagne',
+  'Centre-Val de Loire',
+  'Corse',
+  'Grand Est',
+  'Guadeloupe',
+  'Guyane',
+  'Hauts-de-France',
+  'Île-de-France',
+  'La Réunion',
+  'Martinique',
+  'Mayotte',
+  'Normandie',
+  'Nouvelle-Aquitaine',
+  'Occitanie',
+  'Pays de la Loire',
+  'Provence-Alpes-Côte d\'Azur',
+];
+
 interface EditClientModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -80,6 +101,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     // École-specific fields
     ecole_siret: client.ecole_siret || '',
     ecole_nda: client.ecole_nda || '',
+    ecole_nda_region: client.ecole_nda_region || '',
+    // Frais pris en charge par l'établissement
+    ecole_frais_midi_montant: client.ecole_frais_midi_montant?.toString() || '',
+    ecole_frais_midi_conditions: client.ecole_frais_midi_conditions || '',
+    ecole_frais_deplacement_rembourse: client.ecole_frais_deplacement_rembourse || false,
+    ecole_frais_km_prix: client.ecole_frais_km_prix?.toString() || '',
     ecole_resp_modules_nom: client.ecole_resp_modules_nom || '',
     ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || '',
     ecole_resp_modules_email: client.ecole_resp_modules_email || '',
@@ -150,6 +177,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       // École-specific fields
       ecole_siret: client.ecole_siret || '',
       ecole_nda: client.ecole_nda || '',
+      ecole_nda_region: client.ecole_nda_region || '',
+      // Frais pris en charge par l'établissement
+      ecole_frais_midi_montant: client.ecole_frais_midi_montant?.toString() || '',
+      ecole_frais_midi_conditions: client.ecole_frais_midi_conditions || '',
+      ecole_frais_deplacement_rembourse: client.ecole_frais_deplacement_rembourse || false,
+      ecole_frais_km_prix: client.ecole_frais_km_prix?.toString() || '',
       ecole_resp_modules_nom: client.ecole_resp_modules_nom || '',
       ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || '',
       ecole_resp_modules_email: client.ecole_resp_modules_email || '',
@@ -247,6 +280,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           // École-specific fields
           ecole_siret: formData.ecole_siret || null,
           ecole_nda: formData.ecole_nda || null,
+          ecole_nda_region: formData.ecole_nda_region || null,
+          // Frais pris en charge par l'établissement
+          ecole_frais_midi_montant: formData.ecole_frais_midi_montant ? parseFloat(formData.ecole_frais_midi_montant) : null,
+          ecole_frais_midi_conditions: formData.ecole_frais_midi_conditions || null,
+          ecole_frais_deplacement_rembourse: formData.ecole_frais_deplacement_rembourse ?? null,
+          ecole_frais_km_prix: formData.ecole_frais_km_prix ? parseFloat(formData.ecole_frais_km_prix) : null,
           ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
           ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,
           ecole_resp_modules_email: formData.ecole_resp_modules_email || null,
@@ -880,6 +919,73 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         />
                       </FormControl>
                     </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Région d'obtention du NDA</FormLabel>
+                        <Select
+                          value={formData.ecole_nda_region}
+                          onChange={e => handleChange('ecole_nda_region', e.target.value)}
+                          placeholder="Sélectionner une région..."
+                        >
+                          {REGIONS_FRANCE.map(region => (
+                            <option key={region} value={region}>
+                              {region}
+                            </option>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  {/* Frais pris en charge par l'établissement */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Frais pris en charge par l'établissement</Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Frais du midi (montant autorisé)</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.ecole_frais_midi_montant}
+                          onChange={e => handleChange('ecole_frais_midi_montant', e.target.value)}
+                          placeholder="Ex: 15.00"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Conditions</FormLabel>
+                        <Input
+                          value={formData.ecole_frais_midi_conditions}
+                          onChange={e => handleChange('ecole_frais_midi_conditions', e.target.value)}
+                          placeholder="Ex: Journée complète de cours"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <Checkbox
+                        isChecked={formData.ecole_frais_deplacement_rembourse}
+                        onChange={e => setFormData(prev => ({ ...prev, ecole_frais_deplacement_rembourse: e.target.checked }))}
+                        colorScheme="accent"
+                      >
+                        Remboursement des frais de déplacement
+                      </Checkbox>
+                    </GridItem>
+                    {formData.ecole_frais_deplacement_rembourse && (
+                      <GridItem colSpan={2}>
+                        <FormControl>
+                          <FormLabel>Prix au kilomètre (€)</FormLabel>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.ecole_frais_km_prix}
+                            onChange={e => handleChange('ecole_frais_km_prix', e.target.value)}
+                            placeholder="Ex: 0.50"
+                          />
+                        </FormControl>
+                      </GridItem>
+                    )}
                   </Grid>
 
                   {/* Informations module */}

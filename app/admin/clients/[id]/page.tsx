@@ -31,9 +31,15 @@ import {
   IconButton,
   Input,
   VStack,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
 } from '@chakra-ui/react';
-import { useParams } from 'next/navigation';
-import { useState, useCallback, useMemo } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
@@ -42,9 +48,17 @@ import { EditClientModal } from './EditClientModal';
 
 export default function ClientDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const clientId = params.id as string;
   const { client, procedures, procedureHistory, documents, loading, error, refetch } = useClientDetail(clientId);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose
+  } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const {
     isOpen: isRecueilOpen,
     onOpen: onRecueilOpen,
@@ -91,6 +105,40 @@ export default function ClientDetailPage() {
   const handleClientUpdated = () => {
     refetch();
     onClose();
+  };
+
+  const handleDeleteClient = async () => {
+    setIsDeleting(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Client supprimé',
+        description: 'Le client a été supprimé avec succès.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      router.push('/admin/clients');
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la suppression.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleting(false);
+      onDeleteClose();
+    }
   };
 
   const handleLaunchRecueilProcedure = async () => {
@@ -352,9 +400,14 @@ export default function ClientDetailPage() {
         <Heading color="brand.500" fontFamily="heading">
           {getDisplayName()}
         </Heading>
-        <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
-          Modifier
-        </Button>
+        <HStack spacing={3}>
+          <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
+            Modifier
+          </Button>
+          <Button variant="outline" colorScheme="red" onClick={onDeleteOpen}>
+            Supprimer
+          </Button>
+        </HStack>
       </HStack>
 
       {/* Informations générales */}
@@ -619,7 +672,7 @@ export default function ClientDetailPage() {
           <CardBody>
             <Stack spacing={4}>
               <Heading size="sm" color="brand.500" fontFamily="heading">Informations structure</Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">N° SIRET</Text>
                   <Text fontWeight="medium">{client.ecole_siret || '—'}</Text>
@@ -627,6 +680,48 @@ export default function ClientDetailPage() {
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">N° NDA</Text>
                   <Text fontWeight="medium">{client.ecole_nda || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Région d'obtention NDA</Text>
+                  <Text fontWeight="medium">{client.ecole_nda_region || '—'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Frais pris en charge ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Frais pris en charge par l'établissement</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Frais du midi</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_frais_midi_montant ? `${client.ecole_frais_midi_montant} €` : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Conditions</Text>
+                  <Text fontWeight="medium">{client.ecole_frais_midi_conditions || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Remboursement déplacement</Text>
+                  <Badge
+                    colorScheme={client.ecole_frais_deplacement_rembourse ? 'green' : 'gray'}
+                    mt={1}
+                  >
+                    {client.ecole_frais_deplacement_rembourse ? 'Oui' : 'Non'}
+                  </Badge>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Prix au kilomètre</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_frais_km_prix ? `${client.ecole_frais_km_prix} €/km` : '—'}
+                  </Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1355,6 +1450,41 @@ export default function ClientDetailPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Modal de confirmation de suppression */}
+      <AlertDialog
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onDeleteClose}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="brand.500">
+              Supprimer le client
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible et supprimera également toutes les procédures et documents associés.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onDeleteClose}>
+                Annuler
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteClient}
+                ml={3}
+                isLoading={isDeleting}
+                loadingText="Suppression..."
+              >
+                Supprimer
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Stack>
   );
 }
