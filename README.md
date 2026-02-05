@@ -10,5 +10,4 @@ Website for a friend offering private math tutoring and school interventions.
 - **TypeScript** - Type safety
 - **Chakra UI** - Component library
 - **Supabase** - Authentication & database
-- **n8n** - Workflow automation
 - **Vercel** - Hosting & deployment

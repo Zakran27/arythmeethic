@@ -87,8 +87,14 @@ export default function ClientDetailPage() {
     onOpen: onCvCasierOpen,
     onClose: onCvCasierClose
   } = useDisclosure();
+  const {
+    isOpen: isContractualisationOpen,
+    onOpen: onContractualisationOpen,
+    onClose: onContractualisationClose
+  } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
+  const [selectedContractualisationSigner, setSelectedContractualisationSigner] = useState('');
   const [selectedCvCasierEmail, setSelectedCvCasierEmail] = useState('');
   const [cvCasierFiles, setCvCasierFiles] = useState<File[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
@@ -358,6 +364,66 @@ export default function ClientDetailPage() {
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleLaunchContractualisationProcedure = async () => {
+    if (!selectedContractualisationSigner || !client) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un signataire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Parse the selected signer to get name and email
+    // Format: "email|firstName|lastName|phone"
+    const [signerEmail, signerFirstName, signerLastName, signerPhone] = selectedContractualisationSigner.split('|');
+
+    setIsLaunchingProcedure(true);
+    try {
+      const response = await fetch('/api/procedures/contractualisation-ecole', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          signerEmail,
+          signerFirstName,
+          signerLastName,
+          signerPhone: signerPhone || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du lancement de la procédure');
+      }
+
+      toast({
+        title: 'Procédure lancée',
+        description: `Une demande de signature a été envoyée à ${signerEmail}.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onContractualisationClose();
+      setSelectedContractualisationSigner('');
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Une erreur est survenue lors du lancement de la procédure.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -988,7 +1054,7 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
                     Recueil des informations
                   </Button>
-                  <Button colorScheme="accent" size="sm">
+                  <Button colorScheme="accent" size="sm" onClick={onContractualisationOpen}>
                     Contractualisation
                   </Button>
                   <Button colorScheme="accent" size="sm" onClick={onCvCasierOpen}>
@@ -1515,6 +1581,83 @@ export default function ClientDetailPage() {
               isDisabled={!selectedCvCasierEmail || cvCasierFiles.length === 0}
             >
               Envoyer
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal - Contractualisation (signature électronique) */}
+      <Modal isOpen={isContractualisationOpen} onClose={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); }} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Contractualisation
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>
+              Vous êtes sur le point de lancer la procédure de <strong>Contractualisation</strong>.
+            </Text>
+            <Text mt={3} mb={4}>
+              Une demande de signature électronique sera envoyée au signataire sélectionné via Yousign.
+            </Text>
+
+            <FormControl isRequired>
+              <FormLabel color="brand.600">Signataire</FormLabel>
+              <Select
+                placeholder="Sélectionner un signataire"
+                value={selectedContractualisationSigner}
+                onChange={(e) => setSelectedContractualisationSigner(e.target.value)}
+              >
+                {/* Contact principal */}
+                {client?.email && (
+                  <option value={`${client.email}|${client.first_name}|${client.last_name}|${client.phone1 || ''}`}>
+                    {client.first_name} {client.last_name} &lt;{client.email}&gt; (Contact principal)
+                  </option>
+                )}
+                {/* Responsable modules */}
+                {client?.ecole_resp_modules_email && (
+                  <option value={`${client.ecole_resp_modules_email}|${client.ecole_resp_modules_prenom}|${client.ecole_resp_modules_nom}|${client.ecole_resp_modules_phone || ''}`}>
+                    {client.ecole_resp_modules_prenom} {client.ecole_resp_modules_nom} &lt;{client.ecole_resp_modules_email}&gt; (Resp. modules)
+                  </option>
+                )}
+                {/* Responsable autorisation prix */}
+                {client?.ecole_resp_autorisation_email && (
+                  <option value={`${client.ecole_resp_autorisation_email}|${client.ecole_resp_autorisation_prenom}|${client.ecole_resp_autorisation_nom}|${client.ecole_resp_autorisation_phone || ''}`}>
+                    {client.ecole_resp_autorisation_prenom} {client.ecole_resp_autorisation_nom} &lt;{client.ecole_resp_autorisation_email}&gt; (Resp. autorisation prix)
+                  </option>
+                )}
+                {/* Responsable facturation */}
+                {client?.ecole_resp_facturation_email && (
+                  <option value={`${client.ecole_resp_facturation_email}|${client.ecole_resp_facturation_prenom}|${client.ecole_resp_facturation_nom}|${client.ecole_resp_facturation_phone || ''}`}>
+                    {client.ecole_resp_facturation_prenom} {client.ecole_resp_facturation_nom} &lt;{client.ecole_resp_facturation_email}&gt; (Resp. facturation)
+                  </option>
+                )}
+                {/* Responsable planning */}
+                {client?.ecole_resp_planning_email && (
+                  <option value={`${client.ecole_resp_planning_email}|${client.ecole_resp_planning_prenom}|${client.ecole_resp_planning_nom}|${client.ecole_resp_planning_phone || ''}`}>
+                    {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
+                  </option>
+                )}
+              </Select>
+            </FormControl>
+
+            <Text mt={4} fontSize="sm" color="gray.600">
+              Le signataire recevra un email de Yousign avec un lien sécurisé pour signer le document.
+            </Text>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); }}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchContractualisationProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+              isDisabled={!selectedContractualisationSigner}
+            >
+              Envoyer la demande de signature
             </Button>
           </ModalFooter>
         </ModalContent>

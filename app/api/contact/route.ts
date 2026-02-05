@@ -151,10 +151,6 @@ Message:
 ${message}
     `.trim();
 
-    // TODO: Implement actual email sending
-    // For now, we'll use a simple fetch to a hypothetical email service
-    // You can integrate with SendGrid, Resend, or n8n webhook
-
     console.log('Contact form submission:', {
       clientType,
       firstName,
@@ -169,20 +165,6 @@ ${message}
       referrerName,
       message,
     });
-
-    // Simulate sending to Florence's email
-    // In production, integrate with your email service or n8n
-    const emailTo = 'Florence.LOUAZEL@arythmeethic.onmicrosoft.com';
-
-    // If using n8n, you could POST to a webhook:
-    // const n8nWebhook = process.env.N8N_WEBHOOK_CONTACT;
-    // if (n8nWebhook) {
-    //   await fetch(n8nWebhook, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ to: emailTo, subject: 'Nouveau contact A Rythme Ethic', content: emailContent }),
-    //   });
-    // }
 
     return NextResponse.json({
       success: true,
