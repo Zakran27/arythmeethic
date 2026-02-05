@@ -132,7 +132,6 @@ export interface Procedure {
   procedure_type_id: string;
   status: ProcStatus;
   yousign_procedure_id?: string;
-  yousign_file_id?: string;
   deadline_at?: string;
   signed_at?: string;
   created_at: string;
@@ -166,7 +165,10 @@ export type ProcedureStatusLabel =
   | 'MAIL_ENVOYE'
   | 'FORMULAIRE_REMPLI'
   | 'RELANCE_ENVOYEE'
-  | 'MAIL_AVIS_GOOGLE_ENVOYE';
+  | 'MAIL_AVIS_GOOGLE_ENVOYE'
+  | 'SIGNATURE_DEMANDEE'
+  | 'SIGNATURE_EFFECTUEE'
+  | 'SIGNATURE_REFUSEE';
 
 export interface ProcedureStatusHistory {
   id: string;
@@ -183,4 +185,7 @@ export const statusLabels: Record<ProcedureStatusLabel, string> = {
   'FORMULAIRE_REMPLI': 'Formulaire rempli',
   'RELANCE_ENVOYEE': 'Relance envoyée',
   'MAIL_AVIS_GOOGLE_ENVOYE': 'Mail avis Google envoyé',
+  'SIGNATURE_DEMANDEE': 'Signature demandée',
+  'SIGNATURE_EFFECTUEE': 'Signature effectuée',
+  'SIGNATURE_REFUSEE': 'Signature refusée',
 };
