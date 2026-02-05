@@ -40,7 +40,7 @@ import {
 } from '@chakra-ui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useMemo, useRef } from 'react';
-import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX, FiTrash2 } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
@@ -58,7 +58,15 @@ export default function ClientDetailPage() {
     onClose: onDeleteClose
   } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const cancelDocRef = useRef<HTMLButtonElement>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingDoc, setIsDeletingDoc] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<{ id: string; storage_path?: string | null; title?: string } | null>(null);
+  const {
+    isOpen: isDeleteDocOpen,
+    onOpen: onDeleteDocOpen,
+    onClose: onDeleteDocClose
+  } = useDisclosure();
   const {
     isOpen: isRecueilOpen,
     onOpen: onRecueilOpen,
@@ -356,6 +364,56 @@ export default function ClientDetailPage() {
       });
     } finally {
       setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    if (!docToDelete) return;
+
+    setIsDeletingDoc(true);
+    try {
+      const supabase = createClient();
+
+      // Delete from storage if path exists
+      if (docToDelete.storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from('client-files')
+          .remove([docToDelete.storage_path]);
+
+        if (storageError) {
+          console.error('Storage delete error:', storageError);
+        }
+      }
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', docToDelete.id);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Document supprimé',
+        description: 'Le document a été supprimé avec succès.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: 'Une erreur est survenue lors de la suppression du document.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeletingDoc(false);
+      setDocToDelete(null);
+      onDeleteDocClose();
     }
   };
 
@@ -1102,6 +1160,17 @@ export default function ClientDetailPage() {
                           >
                             Télécharger
                           </Button>
+                          <IconButton
+                            aria-label="Supprimer le document"
+                            icon={<Icon as={FiTrash2} />}
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => {
+                              setDocToDelete({ id: doc.id, storage_path: doc.storage_path, title: doc.title });
+                              onDeleteDocOpen();
+                            }}
+                          />
                         </HStack>
                       </HStack>
                     );
@@ -1477,6 +1546,41 @@ export default function ClientDetailPage() {
                 onClick={handleDeleteClient}
                 ml={3}
                 isLoading={isDeleting}
+                loadingText="Suppression..."
+              >
+                Supprimer
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
+      {/* Modal de confirmation de suppression de document */}
+      <AlertDialog
+        isOpen={isDeleteDocOpen}
+        leastDestructiveRef={cancelDocRef}
+        onClose={onDeleteDocClose}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="brand.500">
+              Supprimer le document
+            </AlertDialogHeader>
+
+            <AlertDialogBody>
+              Êtes-vous sûr de vouloir supprimer le document <strong>{docToDelete?.title}</strong> ? Cette action est irréversible.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelDocRef} onClick={onDeleteDocClose}>
+                Annuler
+              </Button>
+              <Button
+                colorScheme="red"
+                onClick={handleDeleteDocument}
+                ml={3}
+                isLoading={isDeletingDoc}
                 loadingText="Suppression..."
               >
                 Supprimer
