@@ -14,6 +14,32 @@ const SIGNATURE_FIELD = {
   y: 660,
 };
 
+// Format phone number to E.164 international format for Yousign
+function formatPhoneNumber(phone: string | undefined): string | undefined {
+  if (!phone) return undefined;
+
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+
+  // French number starting with 0 (e.g., 0612345678 -> +33612345678)
+  if (digits.startsWith('0') && digits.length === 10) {
+    return '+33' + digits.substring(1);
+  }
+
+  // Already has country code 33 without + (e.g., 33612345678 -> +33612345678)
+  if (digits.startsWith('33') && digits.length === 11) {
+    return '+' + digits;
+  }
+
+  // Already in correct format with + (unlikely after removing non-digits, but handle it)
+  if (digits.length === 11 && digits.startsWith('33')) {
+    return '+' + digits;
+  }
+
+  // Return undefined if format not recognized (Yousign will work without phone)
+  return undefined;
+}
+
 interface SignerInfo {
   firstName: string;
   lastName: string;
@@ -236,7 +262,7 @@ export async function POST(request: NextRequest) {
         firstName: signerFirstName,
         lastName: signerLastName,
         email: signerEmail,
-        phone: signerPhone,
+        phone: formatPhoneNumber(signerPhone),
       });
       console.log('Signer added:', signer.id);
 
