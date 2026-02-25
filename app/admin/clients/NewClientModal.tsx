@@ -62,6 +62,16 @@ const initialFormData = {
   last_name_parent2: '',
   email_parent2: '',
   phone_parent2: '',
+  // École - Facturation fields
+  ecole_facturation_date_max_paiement: '',
+  ecole_facturation_type: '',
+  ecole_facturation_moment_paiement: '',
+  // École - Responsable notes fields
+  ecole_notes_saisies_par: '',
+  ecole_resp_notes_nom: '',
+  ecole_resp_notes_prenom: '',
+  ecole_resp_notes_email: '',
+  ecole_resp_notes_phone: '',
 };
 
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
@@ -124,6 +134,16 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           last_name_parent2: formData.sub_type === 'Jeune' ? (formData.last_name_parent2 || null) : null,
           email_parent2: formData.sub_type === 'Jeune' ? (formData.email_parent2 || null) : null,
           phone_parent2: formData.sub_type === 'Jeune' ? (formData.phone_parent2 || null) : null,
+          // École - Facturation fields
+          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement ? parseInt(formData.ecole_facturation_date_max_paiement, 10) : null,
+          ecole_facturation_type: formData.ecole_facturation_type || null,
+          ecole_facturation_moment_paiement: formData.ecole_facturation_moment_paiement || null,
+          // École - Responsable notes fields
+          ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
+          ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
+          ecole_resp_notes_prenom: formData.ecole_resp_notes_prenom || null,
+          ecole_resp_notes_email: formData.ecole_resp_notes_email || null,
+          ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
         },
       ]);
 
@@ -533,6 +553,109 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                   </Grid>
+
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Facturation</Text>
+                  <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Date max de paiement (jour du mois)</FormLabel>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={formData.ecole_facturation_date_max_paiement}
+                          onChange={e => handleChange('ecole_facturation_date_max_paiement', e.target.value)}
+                          placeholder="Ex: 15"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Type de facturation</FormLabel>
+                        <Select
+                          value={formData.ecole_facturation_type}
+                          onChange={e => handleChange('ecole_facturation_type', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="recurrente">Récurrente</option>
+                          <option value="ponctuelle">Ponctuelle</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Moment du paiement</FormLabel>
+                        <Select
+                          value={formData.ecole_facturation_moment_paiement}
+                          onChange={e => handleChange('ecole_facturation_moment_paiement', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="fin_mois_courant">Fin du mois en cours</option>
+                          <option value="mois_suivant">Mois suivant</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">Saisie des notes élèves</Text>
+                  <FormControl>
+                    <FormLabel>Notes élèves saisies par</FormLabel>
+                    <Select
+                      value={formData.ecole_notes_saisies_par}
+                      onChange={e => handleChange('ecole_notes_saisies_par', e.target.value)}
+                      placeholder="Sélectionnez..."
+                    >
+                      <option value="A Rythme Ethic">A Rythme Ethic</option>
+                      <option value="Personne tierce">Personne tierce</option>
+                    </Select>
+                  </FormControl>
+
+                  {formData.ecole_notes_saisies_par === 'Personne tierce' && (
+                    <>
+                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">Responsable Notes</Text>
+                      <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Prénom</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_prenom}
+                              onChange={e => handleChange('ecole_resp_notes_prenom', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Nom</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_nom}
+                              onChange={e => handleChange('ecole_resp_notes_nom', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Téléphone</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_phone}
+                              onChange={e => handleChange('ecole_resp_notes_phone', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Email</FormLabel>
+                            <Input
+                              type="email"
+                              value={formData.ecole_resp_notes_email}
+                              onChange={e => handleChange('ecole_resp_notes_email', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                      </Grid>
+                    </>
+                  )}
                 </>
               )}
 

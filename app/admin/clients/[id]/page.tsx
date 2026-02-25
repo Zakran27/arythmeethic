@@ -926,6 +926,80 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
+      {/* ========== ÉTABLISSEMENT - Facturation ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Facturation</Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Date max de paiement</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_facturation_date_max_paiement
+                      ? `Le ${client.ecole_facturation_date_max_paiement} du mois`
+                      : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Type de facturation</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_facturation_type === 'recurrente' ? 'Récurrente' :
+                     client.ecole_facturation_type === 'ponctuelle' ? 'Ponctuelle' : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Moment du paiement</Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_facturation_moment_paiement === 'fin_mois_courant' ? 'Fin du mois en cours' :
+                     client.ecole_facturation_moment_paiement === 'mois_suivant' ? 'Mois suivant' : '—'}
+                  </Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Saisie des notes élèves ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">Saisie des notes élèves</Heading>
+              <Box>
+                <Text fontSize="sm" color="gray.500">Notes élèves saisies par</Text>
+                <Text fontWeight="medium">{client.ecole_notes_saisies_par || '—'}</Text>
+              </Box>
+
+              {client.ecole_notes_saisies_par === 'Personne tierce' && (
+                <>
+                  <Text fontWeight="bold" color="brand.500" fontSize="sm" mt={2}>Responsable Notes</Text>
+                  <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                    <GridItem>
+                      <Text fontSize="sm" color="gray.500">Nom complet</Text>
+                      <Text fontWeight="medium">
+                        {client.ecole_resp_notes_prenom || client.ecole_resp_notes_nom
+                          ? `${client.ecole_resp_notes_prenom || ''} ${client.ecole_resp_notes_nom || ''}`.trim()
+                          : '—'}
+                      </Text>
+                    </GridItem>
+                    <GridItem>
+                      <Text fontSize="sm" color="gray.500">Téléphone</Text>
+                      <Text fontWeight="medium">{client.ecole_resp_notes_phone || '—'}</Text>
+                    </GridItem>
+                    <GridItem colSpan={{ base: 1, md: 2 }}>
+                      <Text fontSize="sm" color="gray.500">Email</Text>
+                      <Text fontWeight="medium">{client.ecole_resp_notes_email || '—'}</Text>
+                    </GridItem>
+                  </Grid>
+                </>
+              )}
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Informations scolaires / Recueil - Particulier uniquement */}
       {isParticulier && (
         <Card bg="white" shadow="sm">
