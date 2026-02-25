@@ -4,11 +4,11 @@
 
 - [ ] Ajouter champs facturation :
   - Date max de paiement (jour du mois)
-  - Type de facturation : récurrente ou ponctuelle
-  - Moment du paiement : fin du mois en cours ou mois suivant
-- [ ] Ajouter champ "Notes élèves saisies par" :
+  - Type de facturation : récurrente ou ponctuelle (picklist)
+  - Moment du paiement : fin du mois en cours ou mois suivant (picklist)
+- [ ] Ajouter champ "Notes élèves saisies par" avec les valuers suivantes :
   - A Rythme Ethic
-  - Ou contact à ajouter (nouveau champ contact)
+  - Ou 'Personne tierce' (si meilleur nom n'hésite pas) et là on doit avoir de nouveaux champs de contact (peutêtre dans une nouvelle section "Responsable Notes" ?)
 
 ## Yousign - Templates documents
 

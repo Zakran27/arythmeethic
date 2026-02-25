@@ -116,6 +116,16 @@ export interface Client {
   ecole_enseignant_nom?: string;
   ecole_enseignant_prenom?: string;
   ecole_enseignant_email?: string;
+  // Facturation
+  ecole_facturation_date_max_paiement?: number;
+  ecole_facturation_type?: 'recurrente' | 'ponctuelle';
+  ecole_facturation_moment_paiement?: 'fin_mois_courant' | 'mois_suivant';
+  // Responsable notes
+  ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
+  ecole_resp_notes_nom?: string;
+  ecole_resp_notes_prenom?: string;
+  ecole_resp_notes_email?: string;
+  ecole_resp_notes_phone?: string;
   created_at: string;
 }
 
