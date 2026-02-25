@@ -1409,6 +1409,11 @@ export default function ClientDetailPage() {
                         {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
                       </option>
                     )}
+                    {client?.ecole_resp_notes_email && (
+                      <option value={client.ecole_resp_notes_email}>
+                        {client.ecole_resp_notes_prenom} {client.ecole_resp_notes_nom} &lt;{client.ecole_resp_notes_email}&gt; (Resp. notes)
+                      </option>
+                    )}
                   </>
                 ) : (
                   // Particulier: show parent/jeune emails
@@ -1571,6 +1576,11 @@ export default function ClientDetailPage() {
                       {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
                     </option>
                   )}
+                  {client?.ecole_resp_notes_email && (
+                    <option value={client.ecole_resp_notes_email}>
+                      {client.ecole_resp_notes_prenom} {client.ecole_resp_notes_nom} &lt;{client.ecole_resp_notes_email}&gt; (Resp. notes)
+                    </option>
+                  )}
                 </Select>
               </FormControl>
 
@@ -1711,6 +1721,12 @@ export default function ClientDetailPage() {
                 {client?.ecole_resp_planning_email && (
                   <option value={`${client.ecole_resp_planning_email}|${client.ecole_resp_planning_prenom}|${client.ecole_resp_planning_nom}|${client.ecole_resp_planning_phone || ''}`}>
                     {client.ecole_resp_planning_prenom} {client.ecole_resp_planning_nom} &lt;{client.ecole_resp_planning_email}&gt; (Resp. planning)
+                  </option>
+                )}
+                {/* Responsable notes */}
+                {client?.ecole_resp_notes_email && (
+                  <option value={`${client.ecole_resp_notes_email}|${client.ecole_resp_notes_prenom}|${client.ecole_resp_notes_nom}|${client.ecole_resp_notes_phone || ''}`}>
+                    {client.ecole_resp_notes_prenom} {client.ecole_resp_notes_nom} &lt;{client.ecole_resp_notes_email}&gt; (Resp. notes)
                   </option>
                 )}
               </Select>
