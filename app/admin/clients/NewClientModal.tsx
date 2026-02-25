@@ -72,6 +72,8 @@ const initialFormData = {
   ecole_resp_notes_prenom: '',
   ecole_resp_notes_email: '',
   ecole_resp_notes_phone: '',
+  // École - Statut juridique
+  ecole_statut_juridique: '',
 };
 
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
@@ -144,6 +146,8 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           ecole_resp_notes_prenom: formData.ecole_resp_notes_prenom || null,
           ecole_resp_notes_email: formData.ecole_resp_notes_email || null,
           ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
+          // École - Statut juridique
+          ecole_statut_juridique: formData.ecole_statut_juridique || null,
         },
       ]);
 
@@ -511,6 +515,25 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       value={formData.organisation}
                       onChange={e => handleChange('organisation', e.target.value)}
                     />
+                  </FormControl>
+
+                  <FormControl>
+                    <FormLabel>Statut juridique</FormLabel>
+                    <Select
+                      value={formData.ecole_statut_juridique}
+                      onChange={e => handleChange('ecole_statut_juridique', e.target.value)}
+                      placeholder="Sélectionnez..."
+                    >
+                      <option value="Association loi 1901">Association loi 1901</option>
+                      <option value="SARL">SARL</option>
+                      <option value="SAS">SAS</option>
+                      <option value="SASU">SASU</option>
+                      <option value="EURL">EURL</option>
+                      <option value="SA">SA</option>
+                      <option value="Établissement public">Établissement public</option>
+                      <option value="GIE">GIE</option>
+                      <option value="Autre">Autre</option>
+                    </Select>
                   </FormControl>
 
                   <Text fontWeight="bold" color="brand.500" mt={2}>Contact de l'établissement</Text>

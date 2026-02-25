@@ -796,7 +796,7 @@ export default function ClientDetailPage() {
           <CardBody>
             <Stack spacing={4}>
               <Heading size="sm" color="brand.500" fontFamily="heading">Informations structure</Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">N° SIRET</Text>
                   <Text fontWeight="medium">{client.ecole_siret || '—'}</Text>
@@ -808,6 +808,10 @@ export default function ClientDetailPage() {
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">Région d'obtention NDA</Text>
                   <Text fontWeight="medium">{client.ecole_nda_region || '—'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">Statut juridique</Text>
+                  <Text fontWeight="medium">{client.ecole_statut_juridique || '—'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
