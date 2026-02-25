@@ -77,6 +77,7 @@ export interface Client {
   ecole_siret?: string;
   ecole_nda?: string;
   ecole_nda_region?: string;
+  ecole_statut_juridique?: 'Association loi 1901' | 'SARL' | 'SAS' | 'SASU' | 'EURL' | 'SA' | 'Établissement public' | 'GIE' | 'Autre';
   // Frais pris en charge par l'établissement
   ecole_frais_midi_montant?: number;
   ecole_frais_midi_conditions?: string;
