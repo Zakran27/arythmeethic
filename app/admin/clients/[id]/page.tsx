@@ -95,12 +95,37 @@ export default function ClientDetailPage() {
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const [selectedContractualisationSigner, setSelectedContractualisationSigner] = useState('');
+  const [selectedAnneeScolaire, setSelectedAnneeScolaire] = useState('');
   const [selectedCvCasierEmail, setSelectedCvCasierEmail] = useState('');
   const [cvCasierFiles, setCvCasierFiles] = useState<File[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
   const toast = useToast();
+
+  // Calculate school year options (current and next)
+  const getSchoolYearOptions = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+
+    // School year starts in September (month 9)
+    // If we're before September, current school year is (year-1)-(year)
+    // If we're after September, current school year is (year)-(year+1)
+    let currentSchoolYearStart: number;
+    if (currentMonth >= 9) {
+      currentSchoolYearStart = currentYear;
+    } else {
+      currentSchoolYearStart = currentYear - 1;
+    }
+
+    const currentSchoolYear = `${currentSchoolYearStart}-${currentSchoolYearStart + 1}`;
+    const nextSchoolYear = `${currentSchoolYearStart + 1}-${currentSchoolYearStart + 2}`;
+
+    return [currentSchoolYear, nextSchoolYear];
+  };
+
+  const schoolYearOptions = getSchoolYearOptions();
 
   // Pagination for procedure history
   const paginatedHistory = useMemo(() => {
@@ -385,6 +410,17 @@ export default function ClientDetailPage() {
       return;
     }
 
+    if (!selectedAnneeScolaire) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner une année scolaire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     // Parse the selected signer to get name and email
     // Format: "email|firstName|lastName|phone"
     const [signerEmail, signerFirstName, signerLastName, signerPhone] = selectedContractualisationSigner.split('|');
@@ -400,6 +436,7 @@ export default function ClientDetailPage() {
           signerFirstName,
           signerLastName,
           signerPhone: signerPhone || undefined,
+          anneeScolaire: selectedAnneeScolaire,
         }),
       });
 
@@ -419,6 +456,7 @@ export default function ClientDetailPage() {
 
       onContractualisationClose();
       setSelectedContractualisationSigner('');
+      setSelectedAnneeScolaire('');
       refetch();
     } catch (err) {
       toast({
@@ -1675,7 +1713,7 @@ export default function ClientDetailPage() {
       </Modal>
 
       {/* Modal - Contractualisation (signature électronique) */}
-      <Modal isOpen={isContractualisationOpen} onClose={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); }} isCentered>
+      <Modal isOpen={isContractualisationOpen} onClose={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); setSelectedAnneeScolaire(''); }} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader color="brand.500" fontFamily="heading">
@@ -1689,6 +1727,21 @@ export default function ClientDetailPage() {
             <Text mt={3} mb={4}>
               Une demande de signature électronique sera envoyée au signataire sélectionné via Yousign.
             </Text>
+
+            <FormControl isRequired mb={4}>
+              <FormLabel color="brand.600">Année scolaire</FormLabel>
+              <Select
+                placeholder="Sélectionner une année scolaire"
+                value={selectedAnneeScolaire}
+                onChange={(e) => setSelectedAnneeScolaire(e.target.value)}
+              >
+                {schoolYearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
 
             <FormControl isRequired>
               <FormLabel color="brand.600">Signataire</FormLabel>
@@ -1741,7 +1794,7 @@ export default function ClientDetailPage() {
             </Text>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); }}>
+            <Button variant="ghost" mr={3} onClick={() => { onContractualisationClose(); setSelectedContractualisationSigner(''); setSelectedAnneeScolaire(''); }}>
               Annuler
             </Button>
             <Button
@@ -1749,7 +1802,7 @@ export default function ClientDetailPage() {
               onClick={handleLaunchContractualisationProcedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
-              isDisabled={!selectedContractualisationSigner}
+              isDisabled={!selectedContractualisationSigner || !selectedAnneeScolaire}
             >
               Envoyer la demande de signature
             </Button>

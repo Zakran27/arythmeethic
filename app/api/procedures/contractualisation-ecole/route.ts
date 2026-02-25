@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { generateContractPDF } from '@/lib/pdf-contract-generator';
 
 // Yousign API configuration
 const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || 'https://api-sandbox.yousign.app/v3';
@@ -163,9 +162,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { clientId, signerEmail, signerFirstName, signerLastName, signerPhone } = body;
+    const { clientId, signerEmail, signerFirstName, signerLastName, signerPhone, anneeScolaire } = body;
 
-    if (!clientId || !signerEmail || !signerFirstName || !signerLastName) {
+    if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire) {
       return NextResponse.json(
         { success: false, error: 'Paramètres requis manquants' },
         { status: 400 }
@@ -210,15 +209,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Read the PDF file
+    // Generate the contract PDF
     let pdfBuffer: Buffer;
     try {
-      const pdfPath = join(process.cwd(), 'example.pdf');
-      pdfBuffer = readFileSync(pdfPath);
+      pdfBuffer = await generateContractPDF({
+        client,
+        anneeScolaire,
+      });
     } catch (err) {
-      console.error('Error reading PDF:', err);
+      console.error('Error generating contract PDF:', err);
       return NextResponse.json(
-        { success: false, error: 'Document de contractualisation non trouvé' },
+        { success: false, error: 'Erreur lors de la génération du document de contractualisation' },
         { status: 500 }
       );
     }
