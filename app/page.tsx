@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   Flex,
-  Grid,
   Image,
   HStack,
   useDisclosure,
@@ -231,13 +230,11 @@ export default function HomePage() {
               >
                 <Box h="220px" overflow="hidden">
                   <Image
-                    src="/DSC08828.JPG"
+                    src="/DSC08964.JPG"
                     alt="Cours particuliers"
                     w="100%"
                     h="100%"
                     objectFit="cover"
-                    transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(1.05)' }}
                   />
                 </Box>
                 <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
@@ -330,8 +327,6 @@ export default function HomePage() {
                     w="100%"
                     h="100%"
                     objectFit="cover"
-                    transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(1.05)' }}
                   />
                 </Box>
                 <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
@@ -497,32 +492,6 @@ export default function HomePage() {
               </Stack>
             </SlideIn>
           </Flex>
-        </Container>
-      </Box>
-
-      {/* ── GALERIE ── */}
-      <Box bg="white" py={{ base: 10, md: 14 }}>
-        <Container maxW="container.xl">
-          <FadeUp>
-            <Grid
-              templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
-              gap={3}
-            >
-              {['/DSC08928.JPG', '/DSC08956.JPG', '/DSC08964.JPG', '/DSC08812.JPG'].map((src, i) => (
-                <Box key={i} overflow="hidden" h={{ base: '140px', md: '200px' }} borderRadius="xl">
-                  <Image
-                    src={src}
-                    alt={`A Rythme Ethic ${i + 1}`}
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(1.07)' }}
-                  />
-                </Box>
-              ))}
-            </Grid>
-          </FadeUp>
         </Container>
       </Box>
 
