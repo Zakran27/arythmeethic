@@ -235,6 +235,9 @@ export default function HomePage() {
                     w="100%"
                     h="100%"
                     objectFit="cover"
+                    objectPosition="center top"
+                    transition="transform 0.5s ease"
+                    _hover={{ transform: 'scale(1.05)' }}
                   />
                 </Box>
                 <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
@@ -327,6 +330,8 @@ export default function HomePage() {
                     w="100%"
                     h="100%"
                     objectFit="cover"
+                    transition="transform 0.5s ease"
+                    _hover={{ transform: 'scale(1.05)' }}
                   />
                 </Box>
                 <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
