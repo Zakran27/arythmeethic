@@ -6,13 +6,6 @@ import { generateContractPDF } from '@/lib/pdf-contract-generator';
 const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || 'https://api-sandbox.yousign.app/v3';
 const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY;
 
-// Signature field position (configured for dynamically generated contract PDF)
-const SIGNATURE_FIELD = {
-  page: 1,
-  x: 490,
-  y: 660,
-};
-
 // Format phone number to E.164 international format for Yousign
 function formatPhoneNumber(phone: string | undefined): string | undefined {
   if (!phone) return undefined;
@@ -96,7 +89,8 @@ async function uploadDocument(signatureRequestId: string, pdfBuffer: Buffer, fil
 async function addSigner(
   signatureRequestId: string,
   documentId: string,
-  signer: SignerInfo
+  signer: SignerInfo,
+  signatureField: { page: number; x: number; y: number }
 ): Promise<{ id: string }> {
   const response = await fetch(`${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`, {
     method: 'POST',
@@ -118,9 +112,9 @@ async function addSigner(
         {
           type: 'signature',
           document_id: documentId,
-          page: SIGNATURE_FIELD.page,
-          x: SIGNATURE_FIELD.x,
-          y: SIGNATURE_FIELD.y,
+          page: signatureField.page,
+          x: signatureField.x,
+          y: signatureField.y,
         },
       ],
     }),
@@ -211,11 +205,15 @@ export async function POST(request: NextRequest) {
 
     // Generate the contract PDF
     let pdfBuffer: Buffer;
+    let signaturePage: number;
+    let signatureX: number;
+    let signatureY: number;
     try {
-      pdfBuffer = await generateContractPDF({
-        client,
-        anneeScolaire,
-      });
+      const result = await generateContractPDF({ client, anneeScolaire });
+      pdfBuffer = result.buffer;
+      signaturePage = result.signaturePage;
+      signatureX = result.signatureX;
+      signatureY = result.signatureY;
     } catch (err) {
       console.error('Error generating contract PDF:', err);
       return NextResponse.json(
@@ -259,12 +257,17 @@ export async function POST(request: NextRequest) {
       console.log('Document uploaded:', document.id);
 
       // 3. Add signer with signature field
-      const signer = await addSigner(signatureRequest.id, document.id, {
-        firstName: signerFirstName,
-        lastName: signerLastName,
-        email: signerEmail,
-        phone: formatPhoneNumber(signerPhone),
-      });
+      const signer = await addSigner(
+        signatureRequest.id,
+        document.id,
+        {
+          firstName: signerFirstName,
+          lastName: signerLastName,
+          email: signerEmail,
+          phone: formatPhoneNumber(signerPhone),
+        },
+        { page: signaturePage, x: signatureX, y: signatureY }
+      );
       console.log('Signer added:', signer.id);
 
       // 4. Activate the signature request
