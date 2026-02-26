@@ -55,7 +55,11 @@ async function sendBrevoEmail({
 }
 
 // Generate the renewal email HTML
-function generateRenewalEmailHtml(recipientName: string, jeuneName: string, formUrl: string): string {
+function generateRenewalEmailHtml(
+  recipientName: string,
+  jeuneName: string,
+  formUrl: string
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -208,11 +212,15 @@ export async function GET(request: NextRequest) {
 
         // Create procedure and add to status history
         if (procedureType) {
-          const { data: newProcedure } = await supabase.from('procedures').insert({
-            client_id: client.id,
-            procedure_type_id: procedureType.id,
-            status: 'DRAFT',
-          }).select('id').single();
+          const { data: newProcedure } = await supabase
+            .from('procedures')
+            .insert({
+              client_id: client.id,
+              procedure_type_id: procedureType.id,
+              status: 'DRAFT',
+            })
+            .select('id')
+            .single();
 
           // Add initial status to history
           if (newProcedure) {
@@ -226,7 +234,8 @@ export async function GET(request: NextRequest) {
         // Send email
         const formUrl = `${baseUrl}/formulaire/renouvellement?token=${renewalToken}`;
         const recipientEmail = client.email_parent1 || client.email_jeune || client.email;
-        const recipientName = client.first_name_parent1 || client.first_name_jeune || client.first_name;
+        const recipientName =
+          client.first_name_parent1 || client.first_name_jeune || client.first_name;
         const jeuneName = client.first_name_jeune
           ? `${client.first_name_jeune}${client.last_name_jeune ? ' ' + client.last_name_jeune : ''}`
           : 'votre enfant';

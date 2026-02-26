@@ -9,12 +9,17 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
       <Container maxW="container.xl">
         <Flex h={16} alignItems="center" justifyContent="space-between">
           <Link href="/">
-            <HStack spacing={3} cursor="pointer" _hover={{ opacity: 0.8 }} transition="opacity 0.2s">
+            <HStack
+              spacing={3}
+              cursor="pointer"
+              _hover={{ opacity: 0.8 }}
+              transition="opacity 0.2s"
+            >
               <Image src="/logo.jpg" alt="A Rythme Ethic" h="40px" borderRadius="md" />
-              <Text 
-                fontSize="xl" 
-                fontWeight="600" 
-                color="brand.500" 
+              <Text
+                fontSize="xl"
+                fontWeight="600"
+                color="brand.500"
                 display={{ base: 'none', md: 'block' }}
                 fontFamily="heading"
               >
@@ -26,7 +31,9 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
             {isAdmin ? (
               <>
                 <Link href="/admin/clients">
-                  <Button variant="ghost" color="brand.600">Contacts</Button>
+                  <Button variant="ghost" color="brand.600">
+                    Contacts
+                  </Button>
                 </Link>
               </>
             ) : (

@@ -48,7 +48,9 @@ async function sendBrevoEmail({
 
 // Generate the Google review request email HTML
 function generateGoogleReviewEmailHtml(recipientName: string): string {
-  const googleReviewUrl = process.env.GOOGLE_REVIEW_URL || 'https://www.google.com/search?client=opera-gx&hs=6VG&sca_esv=35cc2770783c4fd6&sxsrf=ANbL-n6bYbkzt6xGvHh1_otCAXk20Au6KQ:1768676583605&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOS6yz36kfP72E4isVy8v8-pFookA6FMMRDADc8El-4xFDUMXGbnFcfunlKbeZg9huqxDGg5poe5Dz1Nsz59GQE2_MvgA&q=A+Rythme+Ethic+Avis&sa=X&ved=2ahUKEwib5_PboZOSAxVVU6QEHQrTNJkQ0bkNegQIRxAF&cshid=1768676643833155&biw=2132&bih=1064&dpr=0.9&aic=0#lrd=0x4805e5f079b17ced:0xd6262e0deee7ceb8,3,,,,';
+  const googleReviewUrl =
+    process.env.GOOGLE_REVIEW_URL ||
+    'https://www.google.com/search?client=opera-gx&hs=6VG&sca_esv=35cc2770783c4fd6&sxsrf=ANbL-n6bYbkzt6xGvHh1_otCAXk20Au6KQ:1768676583605&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOS6yz36kfP72E4isVy8v8-pFookA6FMMRDADc8El-4xFDUMXGbnFcfunlKbeZg9huqxDGg5poe5Dz1Nsz59GQE2_MvgA&q=A+Rythme+Ethic+Avis&sa=X&ved=2ahUKEwib5_PboZOSAxVVU6QEHQrTNJkQ0bkNegQIRxAF&cshid=1768676643833155&biw=2132&bih=1064&dpr=0.9&aic=0#lrd=0x4805e5f079b17ced:0xd6262e0deee7ceb8,3,,,,';
 
   return `
 <!DOCTYPE html>
@@ -152,12 +154,17 @@ export async function GET(request: NextRequest) {
     // Find client by renewal token
     const { data: client, error } = await supabase
       .from('clients')
-      .select('first_name, first_name_jeune, last_name_jeune, first_name_parent1, renouvellement_token_expires_at, renouvellement_date_reponse')
+      .select(
+        'first_name, first_name_jeune, last_name_jeune, first_name_parent1, renouvellement_token_expires_at, renouvellement_date_reponse'
+      )
       .eq('renouvellement_token', token)
       .single();
 
     if (error || !client) {
-      return NextResponse.json({ success: false, error: 'Lien invalide ou expiré' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: 'Lien invalide ou expiré' },
+        { status: 404 }
+      );
     }
 
     // Check if token is expired
@@ -170,7 +177,10 @@ export async function GET(request: NextRequest) {
 
     // Check if already responded
     if (client.renouvellement_date_reponse) {
-      return NextResponse.json({ success: false, error: 'Vous avez déjà répondu à ce formulaire' }, { status: 410 });
+      return NextResponse.json(
+        { success: false, error: 'Vous avez déjà répondu à ce formulaire' },
+        { status: 410 }
+      );
     }
 
     return NextResponse.json({
@@ -225,7 +235,10 @@ export async function POST(request: NextRequest) {
 
     // Check if already responded
     if (client.renouvellement_date_reponse) {
-      return NextResponse.json({ success: false, error: 'Vous avez déjà répondu' }, { status: 410 });
+      return NextResponse.json(
+        { success: false, error: 'Vous avez déjà répondu' },
+        { status: 410 }
+      );
     }
 
     // Update client with response
@@ -243,7 +256,10 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating client:', updateError);
-      return NextResponse.json({ success: false, error: 'Erreur lors de l\'enregistrement' }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: "Erreur lors de l'enregistrement" },
+        { status: 500 }
+      );
     }
 
     // Update procedure status to SIGNED (completed)

@@ -24,10 +24,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Client non trouvé' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Client non trouvé' }, { status: 404 });
     }
 
     // Get procedure type for ENVOI_CV_CASIER

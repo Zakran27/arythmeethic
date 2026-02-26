@@ -23,7 +23,7 @@ async function sendBrevoEmail({
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
-      'accept': 'application/json',
+      accept: 'application/json',
       'api-key': apiKey,
       'content-type': 'application/json',
     },
@@ -69,13 +69,7 @@ function formatPhoneNumber(phone: string): string | null {
 }
 
 // Send SMS via Brevo API
-async function sendBrevoSMS({
-  recipient,
-  content,
-}: {
-  recipient: string;
-  content: string;
-}) {
+async function sendBrevoSMS({ recipient, content }: { recipient: string; content: string }) {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
     console.warn('BREVO_API_KEY not configured, skipping SMS');
@@ -102,7 +96,7 @@ async function sendBrevoSMS({
   const response = await fetch('https://api.brevo.com/v3/transactionalSMS/send', {
     method: 'POST',
     headers: {
-      'accept': 'application/json',
+      accept: 'application/json',
       'api-key': apiKey,
       'content-type': 'application/json',
     },
@@ -127,10 +121,7 @@ export async function POST(request: NextRequest) {
     const { clientId, email: requestedEmail } = body;
 
     if (!clientId) {
-      return NextResponse.json(
-        { success: false, error: 'Client ID requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Client ID requis' }, { status: 400 });
     }
 
     const supabase = createServiceRoleClient();
@@ -143,10 +134,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Client non trouvé' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Client non trouvé' }, { status: 404 });
     }
 
     // Generate a secure token for the form
@@ -180,11 +168,15 @@ export async function POST(request: NextRequest) {
 
     // Create a new procedure record and add to status history
     if (procedureType) {
-      const { data: newProcedure } = await supabase.from('procedures').insert({
-        client_id: clientId,
-        procedure_type_id: procedureType.id,
-        status: 'DRAFT',
-      }).select('id').single();
+      const { data: newProcedure } = await supabase
+        .from('procedures')
+        .insert({
+          client_id: clientId,
+          procedure_type_id: procedureType.id,
+          status: 'DRAFT',
+        })
+        .select('id')
+        .single();
 
       // Add initial status to history
       if (newProcedure) {
@@ -205,8 +197,8 @@ export async function POST(request: NextRequest) {
     // Determine the email to send to (use requested email if provided, otherwise fallback to priority)
     // For École clients, use client.email directly (main contact)
     const recipientEmail = isEcole
-      ? (requestedEmail || client.email)
-      : (requestedEmail || client.email_parent1 || client.email_jeune || client.email);
+      ? requestedEmail || client.email
+      : requestedEmail || client.email_parent1 || client.email_jeune || client.email;
 
     // Determine recipient name and phone based on the email used
     let recipientName = client.first_name;

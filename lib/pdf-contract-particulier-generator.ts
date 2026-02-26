@@ -82,7 +82,9 @@ export async function generateContractParticulierPDF(
     });
   };
 
-  const br = (space = 8) => { y -= space; };
+  const br = (space = 8) => {
+    y -= space;
+  };
 
   // ===== TITRE =====
   write('Contrat de travail a duree determinee (CDD)', 14, true);
@@ -118,8 +120,14 @@ export async function generateContractParticulierPDF(
   br(6);
 
   write('Convention collective', 10, true);
-  write('Ce contrat est regi par les dispositions de la Convention collective nationale de la branche du', 9);
-  write("secteur des particuliers employeurs et de l'emploi a domicile. Le salarie est informe de la", 9);
+  write(
+    'Ce contrat est regi par les dispositions de la Convention collective nationale de la branche du',
+    9
+  );
+  write(
+    "secteur des particuliers employeurs et de l'emploi a domicile. Le salarie est informe de la",
+    9
+  );
   write('possibilite de consulter le texte sur le site www.legifrance.gouv.fr.', 9);
   br(8);
 
@@ -127,7 +135,10 @@ export async function generateContractParticulierPDF(
   write('Les institutions competentes en matiere de retraite et de prevoyance sont :', 9);
   write('  Ircem AGIRC/ARRCO', 9);
   write('  Ircem prevoyance', 9);
-  write('  Toutes deux domiciliees : 261 avenue des Nations-Unies - BP 593 - 59 060 ROUBAIX Cedex.', 9);
+  write(
+    '  Toutes deux domiciliees : 261 avenue des Nations-Unies - BP 593 - 59 060 ROUBAIX Cedex.',
+    9
+  );
   br(14);
 
   // ===== SECTION 2 : DATE D'EFFET =====
@@ -140,15 +151,24 @@ export async function generateContractParticulierPDF(
   br(8);
 
   write('Duree du contrat', 10, true);
-  write(`Le contrat est conclu a partir du ${formatDate(dateDebut)} jusqu'au ${formatDate(dateFin)}.`, 9);
+  write(
+    `Le contrat est conclu a partir du ${formatDate(dateDebut)} jusqu'au ${formatDate(dateFin)}.`,
+    9
+  );
   br(8);
 
   write("Periode d'essai", 10, true);
   write(`Duree de la periode d'essai : ${dureePeriodeEssai}`, 9);
   write("La duree maximale de la periode d'essai depend de la duree du contrat :", 9);
-  write('  Pour un CDD inferieur ou egal a 6 mois : 1 jour par semaine, dans la limite de 2 semaines.', 9);
+  write(
+    '  Pour un CDD inferieur ou egal a 6 mois : 1 jour par semaine, dans la limite de 2 semaines.',
+    9
+  );
   write("  Pour un CDD superieur a 6 mois : 1 jour par semaine, dans la limite d'1 mois.", 9);
-  write('Ces durees sont applicables que le salarie soit embauche a temps plein ou a temps partiel.', 9);
+  write(
+    'Ces durees sont applicables que le salarie soit embauche a temps plein ou a temps partiel.',
+    9
+  );
   br(14);
 
   // ===== SECTION 3 : LIEU DE TRAVAIL =====
@@ -168,18 +188,39 @@ export async function generateContractParticulierPDF(
   // ===== SECTION 5 : DUREE ET HORAIRES =====
   write('5. Duree et horaires de travail', 12, true);
   br(6);
-  write("La duree de travail est dite irreguliere au sens de l'article 132 de la Convention collective", 9);
-  write("nationale de la branche du secteur des particuliers employeurs et de l'emploi a domicile.", 9);
+  write(
+    "La duree de travail est dite irreguliere au sens de l'article 132 de la Convention collective",
+    9
+  );
+  write(
+    "nationale de la branche du secteur des particuliers employeurs et de l'emploi a domicile.",
+    9
+  );
   write('La duree est comprise entre 0 heure et 48 heures maximum par semaine.', 9);
-  write("Le particulier employeur informe par ecrit dans le respect d'un delai de prevenance de", 9);
-  write('5 jours calendaires des jours et des horaires de travail. Le planning est remis au salarie par sms.', 9);
-  write("Lorsque le salarie a plusieurs particuliers employeurs, il s'engage a ne pas exceder la duree", 9);
+  write(
+    "Le particulier employeur informe par ecrit dans le respect d'un delai de prevenance de",
+    9
+  );
+  write(
+    '5 jours calendaires des jours et des horaires de travail. Le planning est remis au salarie par sms.',
+    9
+  );
+  write(
+    "Lorsque le salarie a plusieurs particuliers employeurs, il s'engage a ne pas exceder la duree",
+    9
+  );
   write('maximale de travail hebdomadaire prevue par la Convention collective.', 9);
   br(10);
 
   write('Repos hebdomadaire', 10, true);
-  write("La periode de repos hebdomadaire est fixee au dimanche, auquel s'ajoute le repos quotidien de 11 heures.", 9);
-  write("Le travail lors de la periode de repos hebdomadaire est remunere au taux horaire du, majore de 25 %.", 9);
+  write(
+    "La periode de repos hebdomadaire est fixee au dimanche, auquel s'ajoute le repos quotidien de 11 heures.",
+    9
+  );
+  write(
+    'Le travail lors de la periode de repos hebdomadaire est remunere au taux horaire du, majore de 25 %.',
+    9
+  );
   br(14);
 
   // ===== SECTION 6 : JOURS FERIES =====
@@ -187,11 +228,23 @@ export async function generateContractParticulierPDF(
   br(6);
   write('Le 1er mai est chome.', 9);
   br(4);
-  write('Les jours feries ordinaires suivants sont chomes : 1er janvier, Lundi de Paques, 8 mai,', 9);
-  write("Jeudi de l'Ascension, Lundi de Pentecote, 14 juillet, 15 aout, 1er novembre, 11 novembre, 25 decembre.", 9);
+  write(
+    'Les jours feries ordinaires suivants sont chomes : 1er janvier, Lundi de Paques, 8 mai,',
+    9
+  );
+  write(
+    "Jeudi de l'Ascension, Lundi de Pentecote, 14 juillet, 15 aout, 1er novembre, 11 novembre, 25 decembre.",
+    9
+  );
   br(4);
-  write('Le jour ferie chome qui tombe un jour habituellement travaille par le salarie est remunere.', 9);
-  write("En contrepartie du travail un jour ferie ordinaire, le salarie percoit une remuneration majoree de 10 %", 9);
+  write(
+    'Le jour ferie chome qui tombe un jour habituellement travaille par le salarie est remunere.',
+    9
+  );
+  write(
+    'En contrepartie du travail un jour ferie ordinaire, le salarie percoit une remuneration majoree de 10 %',
+    9
+  );
   write('calculee sur la base du salaire habituel fixe au present contrat.', 9);
   br(14);
 
@@ -205,21 +258,36 @@ export async function generateContractParticulierPDF(
   br(8);
 
   write('Remuneration ou recuperation des heures supplementaires', 10, true);
-  write("Les heures de travail excedant une duree hebdomadaire de 40 heures sont remunerees au taux horaire", 9);
+  write(
+    'Les heures de travail excedant une duree hebdomadaire de 40 heures sont remunerees au taux horaire',
+    9
+  );
   write("normal majore de 25 % au-dela de la 40e heure et jusqu'a la 48e heure incluse,", 9);
   write('et de 50 % pour la 49e heure et la 50e heure de travail.', 9);
   br(8);
 
   write('Indemnites kilometriques', 10, true);
-  write("Si le salarie est amene a utiliser son vehicule personnel pour les besoins de son activite", 9);
-  write("professionnelle, il beneficie d'une indemnite kilometrique sur la base suivante : 0,636 EUR/km.", 9);
+  write(
+    'Si le salarie est amene a utiliser son vehicule personnel pour les besoins de son activite',
+    9
+  );
+  write(
+    "professionnelle, il beneficie d'une indemnite kilometrique sur la base suivante : 0,636 EUR/km.",
+    9
+  );
   br(14);
 
   // ===== SECTION 8 : CONFIDENTIALITE =====
   write('8. Confidentialite', 12, true);
   br(6);
-  write("Les parties s'engagent a conserver confidentielles les informations personnelles transmises entre elles", 9);
-  write("dans le cadre de l'execution du present contrat. Elles prennent les mesures necessaires pour garantir", 9);
+  write(
+    "Les parties s'engagent a conserver confidentielles les informations personnelles transmises entre elles",
+    9
+  );
+  write(
+    "dans le cadre de l'execution du present contrat. Elles prennent les mesures necessaires pour garantir",
+    9
+  );
   write('cette confidentialite.', 9);
   br(24);
 

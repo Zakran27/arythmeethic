@@ -34,12 +34,7 @@ export default function ConfirmationPage() {
           <Card bg="white" shadow="sm">
             <CardBody>
               <Stack spacing={6} textAlign="center" py={8}>
-                <Icon
-                  as={FiCheckCircle}
-                  boxSize={16}
-                  color="green.500"
-                  mx="auto"
-                />
+                <Icon as={FiCheckCircle} boxSize={16} color="green.500" mx="auto" />
                 <Heading as="h1" size="xl" color="brand.500" fontFamily="heading">
                   Merci !
                 </Heading>
@@ -47,8 +42,7 @@ export default function ConfirmationPage() {
                   Vos informations ont bien été enregistrées.
                 </Text>
                 <Text color="brand.600">
-                  Je reviendrai vers vous très prochainement pour organiser
-                  le premier rendez-vous.
+                  Je reviendrai vers vous très prochainement pour organiser le premier rendez-vous.
                 </Text>
                 <Box pt={4}>
                   <Text fontSize="sm" color="gray.500">

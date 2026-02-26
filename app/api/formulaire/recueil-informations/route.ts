@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token');
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Token requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
     }
 
     const supabase = createServiceRoleClient();
@@ -84,10 +81,7 @@ export async function POST(request: NextRequest) {
     const { token, ...formData } = body;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Token requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
     }
 
     const supabase = createServiceRoleClient();
@@ -208,7 +202,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error updating client from form:', error);
     return NextResponse.json(
-      { success: false, error: 'Erreur lors de l\'envoi du formulaire' },
+      { success: false, error: "Erreur lors de l'envoi du formulaire" },
       { status: 500 }
     );
   }

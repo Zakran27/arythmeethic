@@ -125,7 +125,9 @@ export function AdvancedFilters({ fields, filters, onFiltersChange }: AdvancedFi
             <PopoverBody>
               <VStack spacing={3} align="stretch">
                 <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">Champ</Text>
+                  <Text fontSize="sm" mb={1} color="gray.600">
+                    Champ
+                  </Text>
                   <Select
                     value={newFilter.field}
                     onChange={e => setNewFilter({ ...newFilter, field: e.target.value, value: '' })}
@@ -140,10 +142,17 @@ export function AdvancedFilters({ fields, filters, onFiltersChange }: AdvancedFi
                 </Box>
 
                 <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">Condition</Text>
+                  <Text fontSize="sm" mb={1} color="gray.600">
+                    Condition
+                  </Text>
                   <Select
                     value={newFilter.operator}
-                    onChange={e => setNewFilter({ ...newFilter, operator: e.target.value as FilterCondition['operator'] })}
+                    onChange={e =>
+                      setNewFilter({
+                        ...newFilter,
+                        operator: e.target.value as FilterCondition['operator'],
+                      })
+                    }
                     size="sm"
                   >
                     {selectedField?.type === 'select' ? (
@@ -163,7 +172,9 @@ export function AdvancedFilters({ fields, filters, onFiltersChange }: AdvancedFi
                 </Box>
 
                 <Box>
-                  <Text fontSize="sm" mb={1} color="gray.600">Valeur</Text>
+                  <Text fontSize="sm" mb={1} color="gray.600">
+                    Valeur
+                  </Text>
                   {selectedField?.type === 'select' && selectedField.options ? (
                     <Select
                       value={newFilter.value}
@@ -218,15 +229,10 @@ export function AdvancedFilters({ fields, filters, onFiltersChange }: AdvancedFi
         <Wrap spacing={2} mt={3}>
           {filters.map(filter => (
             <WrapItem key={filter.id}>
-              <Tag
-                size="md"
-                borderRadius="full"
-                variant="solid"
-                bg="accent.100"
-                color="accent.800"
-              >
+              <Tag size="md" borderRadius="full" variant="solid" bg="accent.100" color="accent.800">
                 <TagLabel>
-                  {getFieldLabel(filter.field)} {operatorLabels[filter.operator]} "{getValueLabel(filter.field, filter.value)}"
+                  {getFieldLabel(filter.field)} {operatorLabels[filter.operator]} "
+                  {getValueLabel(filter.field, filter.value)}"
                 </TagLabel>
                 <TagCloseButton onClick={() => removeFilter(filter.id)} />
               </Tag>
@@ -239,10 +245,7 @@ export function AdvancedFilters({ fields, filters, onFiltersChange }: AdvancedFi
 }
 
 // Helper function to apply filters to a dataset
-export function applyFilters<T>(
-  data: T[],
-  filters: FilterCondition[]
-): T[] {
+export function applyFilters<T>(data: T[], filters: FilterCondition[]): T[] {
   if (filters.length === 0) return data;
 
   return data.filter(item => {

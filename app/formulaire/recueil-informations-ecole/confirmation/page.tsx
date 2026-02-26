@@ -34,12 +34,7 @@ export default function ConfirmationEcolePage() {
           <Card bg="white" shadow="sm">
             <CardBody>
               <Stack spacing={6} textAlign="center" py={8}>
-                <Icon
-                  as={FiCheckCircle}
-                  boxSize={16}
-                  color="green.500"
-                  mx="auto"
-                />
+                <Icon as={FiCheckCircle} boxSize={16} color="green.500" mx="auto" />
                 <Heading as="h1" size="xl" color="brand.500" fontFamily="heading">
                   Merci !
                 </Heading>
@@ -47,8 +42,8 @@ export default function ConfirmationEcolePage() {
                   Vos informations ont bien été enregistrées.
                 </Text>
                 <Text color="brand.600">
-                  Je reviendrai vers vous très prochainement pour vous
-                  transmettre une proposition tarifaire et organiser la suite.
+                  Je reviendrai vers vous très prochainement pour vous transmettre une proposition
+                  tarifaire et organiser la suite.
                 </Text>
                 <Box pt={4}>
                   <Text fontSize="sm" color="gray.500">

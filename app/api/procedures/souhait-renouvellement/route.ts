@@ -48,7 +48,11 @@ async function sendBrevoEmail({
 }
 
 // Generate the renewal email HTML
-function generateRenewalEmailHtml(recipientName: string, jeuneName: string, formUrl: string): string {
+function generateRenewalEmailHtml(
+  recipientName: string,
+  jeuneName: string,
+  formUrl: string
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -197,11 +201,15 @@ export async function POST(request: NextRequest) {
 
     // Create a new procedure record and add to status history
     if (procedureType) {
-      const { data: newProcedure } = await supabase.from('procedures').insert({
-        client_id: clientId,
-        procedure_type_id: procedureType.id,
-        status: 'DRAFT',
-      }).select('id').single();
+      const { data: newProcedure } = await supabase
+        .from('procedures')
+        .insert({
+          client_id: clientId,
+          procedure_type_id: procedureType.id,
+          status: 'DRAFT',
+        })
+        .select('id')
+        .single();
 
       // Add initial status to history
       if (newProcedure) {
@@ -230,7 +238,7 @@ export async function POST(request: NextRequest) {
       const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
-        subject: 'A Rythme Ethic - Souhaitez-vous poursuivre l\'accompagnement ?',
+        subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
         htmlContent: emailHtml,
       });
 
