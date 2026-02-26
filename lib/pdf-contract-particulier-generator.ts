@@ -53,7 +53,7 @@ export async function generateContractParticulierPDF(
   const BOTTOM_LIMIT = 80;
 
   let currentPage: PDFPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
-  let y = PAGE_H - MARGIN; // 792
+  let y = PAGE_H - MARGIN;
 
   const newPage = () => {
     currentPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
@@ -72,13 +72,12 @@ export async function generateContractParticulierPDF(
     y -= size + 4;
   };
 
-  const writeRight = (text: string, size: number, bold = false, atY?: number) => {
-    const targetY = atY !== undefined ? atY : y;
+  const writeRight = (text: string, size: number, atY: number) => {
     currentPage.drawText(text, {
       x: MARGIN + 250,
-      y: targetY,
+      y: atY,
       size,
-      font: bold ? fontBold : font,
+      font,
       color: rgb(0, 0, 0),
     });
   };
@@ -120,8 +119,8 @@ export async function generateContractParticulierPDF(
 
   write('Convention collective', 10, true);
   write('Ce contrat est regi par les dispositions de la Convention collective nationale de la branche du', 9);
-  write("secteur des particuliers employeurs et de l'emploi a domicile. Le salarie est informe de la possibilite", 9);
-  write('de consulter le texte de la convention collective sur le site www.legifrance.gouv.fr.', 9);
+  write("secteur des particuliers employeurs et de l'emploi a domicile. Le salarie est informe de la", 9);
+  write('possibilite de consulter le texte sur le site www.legifrance.gouv.fr.', 9);
   br(8);
 
   write('Retraite complementaire et prevoyance', 10, true);
@@ -152,7 +151,7 @@ export async function generateContractParticulierPDF(
   write('Ces durees sont applicables que le salarie soit embauche a temps plein ou a temps partiel.', 9);
   br(14);
 
-  // ===== SECTION 3 : LIEU HABITUEL DE TRAVAIL =====
+  // ===== SECTION 3 : LIEU DE TRAVAIL =====
   write('3. Lieu habituel de travail', 12, true);
   br(6);
   write("Domicile de l'employeur", 10, true);
@@ -166,27 +165,21 @@ export async function generateContractParticulierPDF(
   write("Le salarie occupe un emploi d'enseignante a domicile en mathematiques.", 9);
   br(14);
 
-  // ===== SECTION 5 : DUREE ET HORAIRES DE TRAVAIL =====
+  // ===== SECTION 5 : DUREE ET HORAIRES =====
   write('5. Duree et horaires de travail', 12, true);
   br(6);
   write("La duree de travail est dite irreguliere au sens de l'article 132 de la Convention collective", 9);
   write("nationale de la branche du secteur des particuliers employeurs et de l'emploi a domicile.", 9);
   write('La duree est comprise entre 0 heure et 48 heures maximum par semaine.', 9);
-  write("Le particulier employeur informe par ecrit dans le respect d'un delai de prevenance de 5 jours", 9);
-  write('calendaires des jours et des horaires de travail. Le planning est remis au salarie par sms.', 9);
+  write("Le particulier employeur informe par ecrit dans le respect d'un delai de prevenance de", 9);
+  write('5 jours calendaires des jours et des horaires de travail. Le planning est remis au salarie par sms.', 9);
   write("Lorsque le salarie a plusieurs particuliers employeurs, il s'engage a ne pas exceder la duree", 9);
   write('maximale de travail hebdomadaire prevue par la Convention collective.', 9);
   br(10);
 
   write('Repos hebdomadaire', 10, true);
-  write(
-    "La periode de repos hebdomadaire est fixee au dimanche, auquel s'ajoute le repos quotidien de 11 heures.",
-    9
-  );
-  write(
-    'Le travail lors de la periode de repos hebdomadaire est remunere au taux horaire du, majore de 25 %.',
-    9
-  );
+  write("La periode de repos hebdomadaire est fixee au dimanche, auquel s'ajoute le repos quotidien de 11 heures.", 9);
+  write("Le travail lors de la periode de repos hebdomadaire est remunere au taux horaire du, majore de 25 %.", 9);
   br(14);
 
   // ===== SECTION 6 : JOURS FERIES =====
@@ -194,23 +187,11 @@ export async function generateContractParticulierPDF(
   br(6);
   write('Le 1er mai est chome.', 9);
   br(4);
-  write(
-    'Les jours feries ordinaires suivants sont chomes : 1er janvier, Lundi de Paques, 8 mai,',
-    9
-  );
-  write(
-    "Jeudi de l'Ascension, Lundi de Pentecote, 14 juillet, 15 aout, 1er novembre, 11 novembre, 25 decembre.",
-    9
-  );
+  write('Les jours feries ordinaires suivants sont chomes : 1er janvier, Lundi de Paques, 8 mai,', 9);
+  write("Jeudi de l'Ascension, Lundi de Pentecote, 14 juillet, 15 aout, 1er novembre, 11 novembre, 25 decembre.", 9);
   br(4);
-  write(
-    'Le jour ferie chome qui tombe un jour habituellement travaille par le salarie est remunere.',
-    9
-  );
-  write(
-    "En contrepartie du travail un jour ferie ordinaire, le salarie percoit une remuneration majoree de 10 %",
-    9
-  );
+  write('Le jour ferie chome qui tombe un jour habituellement travaille par le salarie est remunere.', 9);
+  write("En contrepartie du travail un jour ferie ordinaire, le salarie percoit une remuneration majoree de 10 %", 9);
   write('calculee sur la base du salaire habituel fixe au present contrat.', 9);
   br(14);
 
@@ -224,41 +205,25 @@ export async function generateContractParticulierPDF(
   br(8);
 
   write('Remuneration ou recuperation des heures supplementaires', 10, true);
-  write(
-    "Les heures de travail excedant une duree hebdomadaire de 40 heures sont remuneres au taux horaire normal",
-    9
-  );
-  write(
-    "majore de 25 % au-dela de la 40e heure et jusqu'a la 48e heure incluse,",
-    9
-  );
+  write("Les heures de travail excedant une duree hebdomadaire de 40 heures sont remunerees au taux horaire", 9);
+  write("normal majore de 25 % au-dela de la 40e heure et jusqu'a la 48e heure incluse,", 9);
   write('et de 50 % pour la 49e heure et la 50e heure de travail.', 9);
   br(8);
 
   write('Indemnites kilometriques', 10, true);
-  write(
-    "Si le salarie est amene a utiliser son vehicule personnel pour les besoins de son activite professionnelle,",
-    9
-  );
-  write("il beneficie d'une indemnite kilometrique calculee sur la base suivante : 0,636 EUR/km.", 9);
+  write("Si le salarie est amene a utiliser son vehicule personnel pour les besoins de son activite", 9);
+  write("professionnelle, il beneficie d'une indemnite kilometrique sur la base suivante : 0,636 EUR/km.", 9);
   br(14);
 
   // ===== SECTION 8 : CONFIDENTIALITE =====
   write('8. Confidentialite', 12, true);
   br(6);
-  write(
-    "Les parties s'engagent a conserver confidentielles les informations personnelles transmises entre elles",
-    9
-  );
-  write(
-    "dans le cadre de l'execution du present contrat. Elles prennent les mesures necessaires pour garantir",
-    9
-  );
+  write("Les parties s'engagent a conserver confidentielles les informations personnelles transmises entre elles", 9);
+  write("dans le cadre de l'execution du present contrat. Elles prennent les mesures necessaires pour garantir", 9);
   write('cette confidentialite.', 9);
   br(24);
 
   // ===== SIGNATURES =====
-  // Ensure enough room for the full signature block (~130px)
   if (y < 160) newPage();
 
   const today = new Date().toLocaleDateString('fr-FR');
@@ -266,15 +231,14 @@ export async function generateContractParticulierPDF(
   write('Fait a Thouare-sur-Loire', 9);
   br(28);
 
-  // "Signature salarie :" on the left, "Signature employeur :" on the right — same line
   const sigLabelY = y;
-  write('Signature salarie :', 9); // moves y down
-  writeRight('Signature employeur :', 9, false, sigLabelY);
+  write('Signature salarie :', 9);
+  writeRight('Signature employeur :', 9, sigLabelY);
 
-  // Record position for Yousign: below "Signature employeur :" label, right column
-  const signaturePage = pdfDoc.getPageCount(); // 1-indexed
-  const signatureX = MARGIN + 250; // 300 — aligns with "Signature employeur :"
-  const signatureY = sigLabelY - 55; // ~55px below the label
+  // Yousign field under "Signature employeur :" (right column)
+  const signaturePage = pdfDoc.getPageCount();
+  const signatureX = MARGIN + 250; // 300
+  const signatureY = sigLabelY - 55;
 
   const pdfBytes = await pdfDoc.save();
   return {
