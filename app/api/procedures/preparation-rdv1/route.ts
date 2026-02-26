@@ -49,7 +49,7 @@ async function sendBrevoEmail({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId } = body;
+    const { clientId, recipientEmail: overrideEmail, recipientName: overrideName } = body;
 
     if (!clientId) {
       return NextResponse.json({ success: false, error: 'Client ID requis' }, { status: 400 });
@@ -96,9 +96,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine the email to send to (priority: parent1 > jeune > main email)
-    const recipientEmail = client.email_parent1 || client.email_jeune || client.email;
-    const recipientName = client.first_name_parent1 || client.first_name_jeune || client.first_name;
+    // Determine the email to send to (use override if provided, else: parent1 > jeune > main email)
+    const recipientEmail =
+      overrideEmail || client.email_parent1 || client.email_jeune || client.email;
+    const recipientName =
+      overrideName || client.first_name_parent1 || client.first_name_jeune || client.first_name;
     const jeuneName = client.first_name_jeune
       ? `${client.first_name_jeune}${client.last_name_jeune ? ' ' + client.last_name_jeune : ''}`
       : 'votre enfant';

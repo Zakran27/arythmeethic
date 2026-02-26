@@ -153,6 +153,8 @@ export default function ClientDetailPage() {
     selectedContractualisationParticulierSigner,
     setSelectedContractualisationParticulierSigner,
   ] = useState('');
+  const [selectedRdv1Email, setSelectedRdv1Email] = useState('');
+  const [selectedRenouvellementEmail, setSelectedRenouvellementEmail] = useState('');
   const [contractDateDebut, setContractDateDebut] = useState('');
   const [contractDateFin, setContractDateFin] = useState('');
   const [contractDureePeriodeEssai, setContractDureePeriodeEssai] = useState('');
@@ -287,10 +289,15 @@ export default function ClientDetailPage() {
   const handleLaunchRdv1Procedure = async () => {
     setIsLaunchingProcedure(true);
     try {
+      const [rdv1Email, rdv1First, rdv1Last] = selectedRdv1Email.split('|');
       const response = await fetch('/api/procedures/preparation-rdv1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId }),
+        body: JSON.stringify({
+          clientId,
+          recipientEmail: rdv1Email || undefined,
+          recipientName: rdv1First ? `${rdv1First}${rdv1Last ? ' ' + rdv1Last : ''}` : undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -306,6 +313,7 @@ export default function ClientDetailPage() {
       });
 
       onRdv1Close();
+      setSelectedRdv1Email('');
       refetch();
     } catch (err) {
       toast({
@@ -323,10 +331,17 @@ export default function ClientDetailPage() {
   const handleLaunchRenouvellementProcedure = async () => {
     setIsLaunchingProcedure(true);
     try {
+      const [renouvEmail, renouvFirst, renouvLast] = selectedRenouvellementEmail.split('|');
       const response = await fetch('/api/procedures/souhait-renouvellement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId }),
+        body: JSON.stringify({
+          clientId,
+          recipientEmail: renouvEmail || undefined,
+          recipientName: renouvFirst
+            ? `${renouvFirst}${renouvLast ? ' ' + renouvLast : ''}`
+            : undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -342,6 +357,7 @@ export default function ClientDetailPage() {
       });
 
       onRenouvellementClose();
+      setSelectedRenouvellementEmail('');
       refetch();
     } catch (err) {
       toast({
@@ -2012,23 +2028,59 @@ export default function ClientDetailPage() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text>
-              Vous êtes sur le point de lancer la procédure{' '}
-              <strong>Préparation du premier rendez-vous</strong>.
-            </Text>
-            <Text mt={3}>
-              Un email sera envoyé à{' '}
-              <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> pour
-              demander de préparer :
-            </Text>
-            <Box as="ul" pl={5} mt={3} color="brand.600">
-              <li>Les 3 derniers bulletins de notes</li>
-              <li>Les 2 dernières évaluations de mathématiques</li>
-              <li>Le(s) cahier(s) ou classeur de mathématiques</li>
-            </Box>
+            <Stack spacing={4}>
+              <Text>
+                Vous êtes sur le point de lancer la procédure{' '}
+                <strong>Préparation du premier rendez-vous</strong>.
+              </Text>
+              <Text fontSize="sm" color="brand.600">
+                Un email sera envoyé pour demander de préparer les 3 derniers bulletins de notes,
+                les 2 dernières évaluations de maths et le(s) cahier(s) de maths.
+              </Text>
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Destinataire</FormLabel>
+                <Select
+                  placeholder="Sélectionner un destinataire"
+                  value={selectedRdv1Email}
+                  onChange={e => setSelectedRdv1Email(e.target.value)}
+                >
+                  {client?.email_parent1 && (
+                    <option
+                      value={`${client.email_parent1}|${client.first_name_parent1 || ''}|${client.last_name_parent1 || ''}`}
+                    >
+                      {client.first_name_parent1} {client.last_name_parent1} &lt;
+                      {client.email_parent1}&gt; (Parent 1)
+                    </option>
+                  )}
+                  {client?.email_parent2 && (
+                    <option
+                      value={`${client.email_parent2}|${client.first_name_parent2 || ''}|${client.last_name_parent2 || ''}`}
+                    >
+                      {client.first_name_parent2} {client.last_name_parent2} &lt;
+                      {client.email_parent2}&gt; (Parent 2)
+                    </option>
+                  )}
+                  {client?.email_jeune && (
+                    <option
+                      value={`${client.email_jeune}|${client.first_name_jeune || ''}|${client.last_name_jeune || ''}`}
+                    >
+                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}
+                      &gt; (Jeune)
+                    </option>
+                  )}
+                </Select>
+              </FormControl>
+            </Stack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onRdv1Close}>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={() => {
+                onRdv1Close();
+                setSelectedRdv1Email('');
+              }}
+            >
               Annuler
             </Button>
             <Button
@@ -2036,6 +2088,7 @@ export default function ClientDetailPage() {
               onClick={handleLaunchRdv1Procedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
+              isDisabled={!selectedRdv1Email}
             >
               Confirmer et envoyer
             </Button>
@@ -2052,22 +2105,59 @@ export default function ClientDetailPage() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text>
-              Vous êtes sur le point de lancer la procédure{' '}
-              <strong>Souhait de renouvellement</strong>.
-            </Text>
-            <Text mt={3}>
-              Un email sera envoyé à{' '}
-              <strong>{client?.email_parent1 || client?.email_jeune || client?.email}</strong> pour
-              demander s'il souhaite poursuivre l'accompagnement l'année prochaine.
-            </Text>
-            <Text mt={3} fontSize="sm" color="gray.600">
-              Le client pourra répondre via un formulaire sécurisé (lien valable 30 jours). Une
-              relance automatique sera envoyée chaque vendredi si pas de réponse.
-            </Text>
+            <Stack spacing={4}>
+              <Text>
+                Vous êtes sur le point de lancer la procédure{' '}
+                <strong>Souhait de renouvellement</strong>.
+              </Text>
+              <Text fontSize="sm" color="brand.600">
+                Un email sera envoyé avec un lien sécurisé (valable 30 jours) pour demander si
+                l'accompagnement est souhaité l'année prochaine.
+              </Text>
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Destinataire</FormLabel>
+                <Select
+                  placeholder="Sélectionner un destinataire"
+                  value={selectedRenouvellementEmail}
+                  onChange={e => setSelectedRenouvellementEmail(e.target.value)}
+                >
+                  {client?.email_parent1 && (
+                    <option
+                      value={`${client.email_parent1}|${client.first_name_parent1 || ''}|${client.last_name_parent1 || ''}`}
+                    >
+                      {client.first_name_parent1} {client.last_name_parent1} &lt;
+                      {client.email_parent1}&gt; (Parent 1)
+                    </option>
+                  )}
+                  {client?.email_parent2 && (
+                    <option
+                      value={`${client.email_parent2}|${client.first_name_parent2 || ''}|${client.last_name_parent2 || ''}`}
+                    >
+                      {client.first_name_parent2} {client.last_name_parent2} &lt;
+                      {client.email_parent2}&gt; (Parent 2)
+                    </option>
+                  )}
+                  {client?.email_jeune && (
+                    <option
+                      value={`${client.email_jeune}|${client.first_name_jeune || ''}|${client.last_name_jeune || ''}`}
+                    >
+                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}
+                      &gt; (Jeune)
+                    </option>
+                  )}
+                </Select>
+              </FormControl>
+            </Stack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onRenouvellementClose}>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={() => {
+                onRenouvellementClose();
+                setSelectedRenouvellementEmail('');
+              }}
+            >
               Annuler
             </Button>
             <Button
@@ -2075,6 +2165,7 @@ export default function ClientDetailPage() {
               onClick={handleLaunchRenouvellementProcedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
+              isDisabled={!selectedRenouvellementEmail}
             >
               Confirmer et envoyer
             </Button>
@@ -2470,6 +2561,15 @@ export default function ClientDetailPage() {
                     >
                       {client.first_name_parent2} {client.last_name_parent2} &lt;
                       {client.email_parent2}&gt; (Parent 2)
+                    </option>
+                  )}
+                  {/* Jeune */}
+                  {client?.email_jeune && (
+                    <option
+                      value={`${client.email_jeune}|${client.first_name_jeune || ''}|${client.last_name_jeune || ''}|${client.phone_jeune || ''}`}
+                    >
+                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}
+                      &gt; (Jeune)
                     </option>
                   )}
                 </Select>
