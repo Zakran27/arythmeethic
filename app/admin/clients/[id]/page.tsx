@@ -92,12 +92,22 @@ export default function ClientDetailPage() {
     onOpen: onContractualisationOpen,
     onClose: onContractualisationClose
   } = useDisclosure();
+  const {
+    isOpen: isContractualisationParticulierOpen,
+    onOpen: onContractualisationParticulierOpen,
+    onClose: onContractualisationParticulierClose
+  } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const [selectedContractualisationSigner, setSelectedContractualisationSigner] = useState('');
   const [selectedAnneeScolaire, setSelectedAnneeScolaire] = useState('');
   const [selectedCvCasierEmail, setSelectedCvCasierEmail] = useState('');
   const [cvCasierFiles, setCvCasierFiles] = useState<File[]>([]);
+  const [selectedContractualisationParticulierSigner, setSelectedContractualisationParticulierSigner] = useState('');
+  const [contractDateDebut, setContractDateDebut] = useState('');
+  const [contractDateFin, setContractDateFin] = useState('');
+  const [contractDureePeriodeEssai, setContractDureePeriodeEssai] = useState('');
+  const [contractSalaireHoraireNet, setContractSalaireHoraireNet] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -457,6 +467,98 @@ export default function ClientDetailPage() {
       onContractualisationClose();
       setSelectedContractualisationSigner('');
       setSelectedAnneeScolaire('');
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleLaunchContractualisationParticulierProcedure = async () => {
+    if (!selectedContractualisationParticulierSigner || !client) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner un signataire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!selectedAnneeScolaire) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner une année scolaire.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!contractDateDebut || !contractDateFin || !contractDureePeriodeEssai || !contractSalaireHoraireNet) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez remplir tous les champs requis.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Parse the selected signer to get name and email
+    // Format: "email|firstName|lastName|phone"
+    const [signerEmail, signerFirstName, signerLastName, signerPhone] = selectedContractualisationParticulierSigner.split('|');
+
+    setIsLaunchingProcedure(true);
+    try {
+      const response = await fetch('/api/procedures/contractualisation-particulier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          signerEmail,
+          signerFirstName,
+          signerLastName,
+          signerPhone: signerPhone || undefined,
+          anneeScolaire: selectedAnneeScolaire,
+          dateDebut: contractDateDebut,
+          dateFin: contractDateFin,
+          dureePeriodeEssai: contractDureePeriodeEssai,
+          salaireHoraireNet: parseFloat(contractSalaireHoraireNet),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors du lancement de la procédure');
+      }
+
+      toast({
+        title: 'Procédure lancée',
+        description: `Une demande de signature a été envoyée à ${signerEmail}.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+
+      onContractualisationParticulierClose();
+      setSelectedContractualisationParticulierSigner('');
+      setSelectedAnneeScolaire('');
+      setContractDateDebut('');
+      setContractDateFin('');
+      setContractDureePeriodeEssai('');
+      setContractSalaireHoraireNet('');
       refetch();
     } catch (err) {
       toast({
@@ -1185,7 +1287,7 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRdv1Open}>
                     Préparation RDV 1
                   </Button>
-                  <Button colorScheme="accent" size="sm">
+                  <Button colorScheme="accent" size="sm" onClick={onContractualisationParticulierOpen}>
                     Contractualisation
                   </Button>
                   <Button colorScheme="accent" size="sm">
@@ -1803,6 +1905,121 @@ export default function ClientDetailPage() {
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
               isDisabled={!selectedContractualisationSigner || !selectedAnneeScolaire}
+            >
+              Envoyer la demande de signature
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal - Contractualisation Particulier (signature électronique CDD) */}
+      <Modal isOpen={isContractualisationParticulierOpen} onClose={() => { onContractualisationParticulierClose(); setSelectedContractualisationParticulierSigner(''); setSelectedAnneeScolaire(''); setContractDateDebut(''); setContractDateFin(''); setContractDureePeriodeEssai(''); setContractSalaireHoraireNet(''); }} isCentered size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Contractualisation - CDD Particulier
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4} align="stretch">
+              <Text>
+                Vous êtes sur le point de lancer la procédure de <strong>Contractualisation (CDD)</strong>.
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                Une demande de signature électronique sera envoyée au signataire sélectionné via Yousign.
+              </Text>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Année scolaire</FormLabel>
+                <Select
+                  placeholder="Sélectionner une année scolaire"
+                  value={selectedAnneeScolaire}
+                  onChange={(e) => setSelectedAnneeScolaire(e.target.value)}
+                >
+                  {schoolYearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Date de début du contrat</FormLabel>
+                <Input
+                  type="date"
+                  value={contractDateDebut}
+                  onChange={(e) => setContractDateDebut(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Date de fin du contrat</FormLabel>
+                <Input
+                  type="date"
+                  value={contractDateFin}
+                  onChange={(e) => setContractDateFin(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Durée de la période d'essai</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Ex: 2 semaines"
+                  value={contractDureePeriodeEssai}
+                  onChange={(e) => setContractDureePeriodeEssai(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Salaire horaire net (€)</FormLabel>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Ex: 35.00"
+                  value={contractSalaireHoraireNet}
+                  onChange={(e) => setContractSalaireHoraireNet(e.target.value)}
+                />
+              </FormControl>
+
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Signataire (employeur)</FormLabel>
+                <Select
+                  placeholder="Sélectionner un signataire"
+                  value={selectedContractualisationParticulierSigner}
+                  onChange={(e) => setSelectedContractualisationParticulierSigner(e.target.value)}
+                >
+                  {/* Parent 1 */}
+                  {client?.email_parent1 && (
+                    <option value={`${client.email_parent1}|${client.first_name_parent1}|${client.last_name_parent1}|${client.phone_parent1 || ''}`}>
+                      {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                    </option>
+                  )}
+                  {/* Parent 2 */}
+                  {client?.email_parent2 && (
+                    <option value={`${client.email_parent2}|${client.first_name_parent2}|${client.last_name_parent2}|${client.phone_parent2 || ''}`}>
+                      {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
+                    </option>
+                  )}
+                </Select>
+              </FormControl>
+
+              <Text fontSize="sm" color="gray.600">
+                Le signataire recevra un email de Yousign avec un lien sécurisé pour signer le contrat de travail CDD.
+              </Text>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" mr={3} onClick={() => { onContractualisationParticulierClose(); setSelectedContractualisationParticulierSigner(''); setSelectedAnneeScolaire(''); setContractDateDebut(''); setContractDateFin(''); setContractDureePeriodeEssai(''); setContractSalaireHoraireNet(''); }}>
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchContractualisationParticulierProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+              isDisabled={!selectedContractualisationParticulierSigner || !selectedAnneeScolaire || !contractDateDebut || !contractDateFin || !contractDureePeriodeEssai || !contractSalaireHoraireNet}
             >
               Envoyer la demande de signature
             </Button>
