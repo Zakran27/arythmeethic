@@ -7,22 +7,57 @@ import {
   Text,
   Button,
   Stack,
-  Card,
-  CardBody,
-  SimpleGrid,
-  Icon,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  useDisclosure,
+  Flex,
+  Grid,
   Image,
+  HStack,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { Nav } from '@/components/Nav';
 import { ContactModal } from '@/components/ContactModal';
-import { FiHome, FiBook, FiAward, FiUsers } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useRef, type ReactNode, type CSSProperties } from 'react';
+import { motion, useInView } from 'framer-motion';
+
+function FadeUp({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.65, delay, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function SlideIn({
+  children,
+  from = 'left',
+  delay = 0,
+  style,
+}: {
+  children: ReactNode;
+  from?: 'left' | 'right';
+  delay?: number;
+  style?: CSSProperties;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, x: from === 'left' ? -50 : 50 }}
+      animate={inView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.7, delay, ease: 'easeOut' }}
+      style={{ height: '100%', ...style }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function HomePage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -37,295 +72,530 @@ export default function HomePage() {
     <>
       <Nav />
       <ContactModal isOpen={isOpen} onClose={onClose} defaultClientType={defaultClientType} />
-      <Box>
-        {/* Hero */}
-        <Box 
-          bgGradient="linear(to-b, #f9f3ee, #efe3d7)"
-          py={{ base: 16, md: 24 }}
-        >
-          <Container maxW="container.xl">
-            <Stack spacing={6} maxW="3xl" mx="auto" textAlign="center">
-              <Box mx="auto" mb={2}>
-                <Image 
-                  src="/logo.jpg" 
-                  alt="A Rythme Ethic" 
-                  maxH="120px" 
-                  mx="auto" 
-                  borderRadius="xl"
-                  boxShadow="sm"
-                />
-              </Box>
-              <Heading 
-                as="h1"
-                size={{ base: '2xl', md: '3xl' }} 
-                color="brand.500"
-                fontFamily="heading"
-                fontWeight="600"
-              >
-                A Rythme Ethic
-              </Heading>
-              <Text 
-                fontSize={{ base: 'xl', md: '2xl' }} 
-                color="terracotta.500"
-                fontWeight="400"
-              >
-                Accompagnement humain et bienveillant
-              </Text>
-              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" maxW="2xl" mx="auto">
-                Cours de mathématiques • Compétences psychosociales • Éducation financière
-              </Text>
-              <Text fontSize={{ base: 'sm', md: 'md' }} color="brand.600" maxW="2xl" mx="auto" opacity="0.8">
-                Interventions à Nantes Est, Thouaré-sur-Loire et en établissements sur Nantes
-              </Text>
-              <Button 
-                colorScheme="accent" 
-                size="md"
-                fontSize="md"
-                px={8}
-                onClick={() => handleContactClick('student')}
-                mt={2}
-              >
-                Prendre contact
-              </Button>
-            </Stack>
-          </Container>
-        </Box>
 
-        {/* Services by Client Type */}
-        <Box bg="white" py={{ base: 12, md: 20 }}>
-          <Container maxW="container.xl">
-            <Stack spacing={10}>
-              <Box textAlign="center">
-                <Heading 
-                  as="h2"
-                  size={{ base: 'xl', md: '2xl' }} 
-                  mb={4} 
+      {/* ── HERO ── */}
+      <Box
+        bgGradient="linear(to-br, #f9f3ee, #efe3d7, #e8d5c4)"
+        minH={{ base: 'auto', lg: '90vh' }}
+        display="flex"
+        alignItems="center"
+        py={{ base: 14, lg: 0 }}
+      >
+        <Container maxW="container.xl">
+          <Flex
+            direction={{ base: 'column', lg: 'row' }}
+            align="center"
+            gap={{ base: 10, lg: 16 }}
+            py={{ base: 4, lg: 16 }}
+          >
+            {/* Text */}
+            <motion.div
+              initial={{ opacity: 0, x: -60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
+              style={{ flex: 1 }}
+            >
+              <Stack spacing={6}>
+                <Image
+                  src="/logo.jpg"
+                  alt="A Rythme Ethic"
+                  h="72px"
+                  borderRadius="lg"
+                  alignSelf="flex-start"
+                />
+                <Heading
+                  as="h1"
+                  fontSize={{ base: '4xl', md: '5xl', lg: '6xl' }}
                   color="brand.500"
                   fontFamily="heading"
-                  fontWeight="600"
+                  fontWeight="700"
+                  lineHeight="1.1"
                 >
-                  Mes accompagnements
+                  A Rythme<br />Ethic
                 </Heading>
-                <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500" fontWeight="400">
-                  Une approche personnalisée pour chaque besoin
+                <Text fontSize={{ base: 'xl', md: '2xl' }} color="terracotta.500" fontWeight="500">
+                  Accompagnement humain et bienveillant
                 </Text>
+                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.8">
+                  Cours de mathématiques · Compétences psychosociales · Éducation financière
+                </Text>
+                <Text fontSize="sm" color="brand.600" opacity={0.65}>
+                  📍 Nantes Est · Thouaré-sur-Loire · En établissements
+                </Text>
+                <Flex gap={4} flexWrap="wrap" pt={2}>
+                  <Button
+                    colorScheme="accent"
+                    size="lg"
+                    px={8}
+                    onClick={() => handleContactClick('parent')}
+                  >
+                    Prendre contact
+                  </Button>
+                  <Button
+                    size="lg"
+                    px={6}
+                    variant="outline"
+                    borderColor="brand.400"
+                    color="brand.500"
+                    _hover={{ bg: 'brand.50' }}
+                    onClick={() => handleContactClick('school')}
+                  >
+                    Je suis un établissement
+                  </Button>
+                </Flex>
+              </Stack>
+            </motion.div>
+
+            {/* Photo */}
+            <motion.div
+              initial={{ opacity: 0, x: 60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
+              style={{ flex: 1, maxWidth: '500px', width: '100%' }}
+            >
+              <Box
+                borderRadius="3xl"
+                overflow="hidden"
+                boxShadow="2xl"
+                position="relative"
+              >
+                <Image
+                  src="/DSC08807.JPG"
+                  alt="Florence - A Rythme Ethic"
+                  w="100%"
+                  h={{ base: '300px', md: '480px', lg: '540px' }}
+                  objectFit="cover"
+                />
+                <Box
+                  position="absolute"
+                  bottom={5}
+                  left={5}
+                  bg="white"
+                  px={4}
+                  py={3}
+                  borderRadius="xl"
+                  boxShadow="md"
+                >
+                  <Text fontSize="sm" fontWeight="700" color="brand.500">Florence Louazel</Text>
+                  <Text fontSize="xs" color="terracotta.500">Enseignante & formatrice</Text>
+                </Box>
               </Box>
+            </motion.div>
+          </Flex>
+        </Container>
+      </Box>
 
-              <Tabs variant="soft-rounded" colorScheme="accent" align="center">
-                <TabList flexWrap="wrap" justifyContent="center" mb={10}>
-                  <Tab 
-                    fontSize={{ base: 'md', md: 'lg' }} 
-                    px={{ base: 4, md: 6 }}
-                    fontWeight="500"
-                    color="brand.500"
-                    _selected={{ bg: 'accent.500', color: 'white' }}
-                  >
-                    Jeunes & Parents
-                  </Tab>
-                  <Tab 
-                    fontSize={{ base: 'md', md: 'lg' }} 
-                    px={{ base: 4, md: 6 }}
-                    fontWeight="500"
-                    color="brand.500"
-                    _selected={{ bg: 'accent.500', color: 'white' }}
-                  >
-                    Établissements
-                  </Tab>
-                </TabList>
-
-                <TabPanels>
-                  {/* Jeunes & Parents Tab */}
-                  <TabPanel>
-                    <Card maxW="4xl" mx="auto" variant="beige">
-                      <CardBody p={8}>
-                        <Stack spacing={6}>
-                          <Box textAlign="center">
-                            <Icon as={FiUsers} boxSize={12} color="accent.500" mb={4} />
-                            <Heading size="lg" mb={4} color="brand.500" fontFamily="heading" fontWeight="600">
-                              Accompagnement privé
-                            </Heading>
-                          </Box>
-                          
-                          <Text fontSize="md" color="brand.600" fontWeight="500">
-                            📍 Secteur : Nantes Est et autour de Thouaré-sur-Loire
-                          </Text>
-                          
-                          <Box>
-                            <Heading size="md" color="brand.500" mb={3}>
-                              Cours particuliers en mathématiques
-                            </Heading>
-                            <Text fontSize="md" color="brand.600" mb={3}>
-                              Pour les parents d'élèves souhaitant un accompagnement personnalisé (via CESU).
-                            </Text>
-                            <Stack spacing={2} pl={4}>
-                              <Text color="brand.600">• Cours à domicile adaptés au niveau de l'élève</Text>
-                              <Text color="brand.600">• Soutien scolaire et aide aux devoirs</Text>
-                              <Text color="brand.600">• Préparation aux examens (Brevet, Bac)</Text>
-                              <Text color="brand.600">• Accompagnement individuel uniquement</Text>
-                            </Stack>
-                          </Box>
-
-                          <Box>
-                            <Heading size="md" color="brand.500" mb={3}>
-                              Parcours Envol - Jeunes actifs
-                            </Heading>
-                            <Text fontSize="md" color="brand.600" mb={3}>
-                              Un accompagnement vers l'autonomie et l'indépendance dans la vie adulte.
-                            </Text>
-                            <Stack spacing={2} pl={4}>
-                              <Text color="brand.600">• Connaissance de soi et compétences psychosociales</Text>
-                              <Text color="brand.600">• Gestion du stress et des émotions</Text>
-                              <Text color="brand.600">• Éducation financière et autonomie</Text>
-                              <Text color="brand.600">• Préparation à l'indépendance</Text>
-                            </Stack>
-                          </Box>
-
-                          <Button 
-                            size="md" 
-                            colorScheme="accent" 
-                            onClick={() => handleContactClick('parent')}
-                            mt={4}
-                          >
-                            Prendre contact
-                          </Button>
-                        </Stack>
-                      </CardBody>
-                    </Card>
-                  </TabPanel>
-
-                  {/* Établissements Tab */}
-                <TabPanel>
-                  <Card maxW="4xl" mx="auto" variant="beige">
-                    <CardBody p={8}>
-                      <Stack spacing={6}>
-                        <Box textAlign="center">
-                          <Icon as={FiHome} boxSize={12} color="accent.500" mb={4} />
-                          <Heading size="lg" mb={4} color="brand.500" fontFamily="heading" fontWeight="600">
-                            Interventions en établissements
-                          </Heading>
-                        </Box>
-                        
-                        <Text fontSize="md" color="brand.600" fontWeight="500">
-                          📍 Secteur : Nantes (selon récurrence des interventions)
-                        </Text>                        <Box>
-                          <Heading size="md" color="brand.500" mb={3}>
-                            Établissements d'enseignement supérieur
-                          </Heading>
-                          <Stack spacing={2} pl={4}>
-                            <Text color="brand.600">• Cours de mathématiques</Text>
-                            <Text color="brand.600">• Modules de développement de compétences psychosociales</Text>
-                            <Text color="brand.600">• Modules d'éducation financière</Text>
-                          </Stack>
-                        </Box>
-
-                        <Box>
-                          <Heading size="md" color="brand.500" mb={3}>
-                            Collèges, lycées et collectivités
-                          </Heading>
-                          <Stack spacing={2} pl={4}>
-                            <Text color="brand.600">• Modules de développement de compétences psychosociales</Text>
-                            <Text color="brand.600">• Modules d'éducation financière</Text>
-                            <Text color="brand.600">• Interventions ponctuelles ou régulières</Text>
-                            <Text color="brand.600">• Ateliers thématiques adaptés</Text>
-                          </Stack>
-                        </Box>
-
-                        <Button 
-                          size="md" 
-                          colorScheme="accent" 
-                          onClick={() => handleContactClick('school')}
-                          mt={4}
-                        >
-                          Prendre contact
-                        </Button>
-                      </Stack>
-                    </CardBody>
-                  </Card>
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
-          </Stack>
-          </Container>
-        </Box>
-
-        {/* Pédagogie Section */}
-        <Box bg="#faf6f2" py={{ base: 12, md: 20 }}>
-          <Container maxW="container.lg">
-            <Stack spacing={8} textAlign="center">
-              <Heading 
+      {/* ── SERVICES ── */}
+      <Box bg="white" py={{ base: 16, md: 24 }}>
+        <Container maxW="container.xl">
+          <FadeUp>
+            <Box textAlign="center" mb={14}>
+              <Text
+                fontSize="xs"
+                fontWeight="700"
+                color="accent.500"
+                textTransform="uppercase"
+                letterSpacing="widest"
+                mb={3}
+              >
+                Ce que je propose
+              </Text>
+              <Heading
                 as="h2"
-                size={{ base: 'xl', md: '2xl' }} 
+                fontSize={{ base: '3xl', md: '4xl' }}
                 color="brand.500"
                 fontFamily="heading"
-                fontWeight="600"
+                mb={3}
               >
-                Ma pédagogie
+                Mes accompagnements
               </Heading>
-              
-              <Card bg="white" maxW="3xl" mx="auto">
-                <CardBody p={{ base: 6, md: 10 }}>
-                  <Stack spacing={6} textAlign="left">
-                    <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.8">
-                      J'axe ma pédagogie sur la <strong>qualité de la relation humaine</strong> tissée avec l'apprenant. 
-                      J'ancre les apprentissages dans le <strong>réel et le concret</strong>.
-                    </Text>
-                    
-                    <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.8">
-                      J'aime <strong>innover</strong> pour trouver le bon angle d'approche avec chaque jeune. 
-                      J'aime susciter la <strong>curiosité et l'envie d'en savoir plus</strong> pour leur transmettre 
-                      des outils favorisant leur <strong>indépendance et leur autonomie</strong> au sens large.
+              <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500">
+                Une approche personnalisée pour chaque besoin
+              </Text>
+            </Box>
+          </FadeUp>
+
+          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={8}>
+            {/* Jeunes & Parents */}
+            <SlideIn from="left" delay={0.1}>
+              <Box
+                borderRadius="2xl"
+                overflow="hidden"
+                boxShadow="md"
+                border="1px solid"
+                borderColor="sand.200"
+                bg="white"
+                display="flex"
+                flexDirection="column"
+                h="100%"
+              >
+                <Box h="220px" overflow="hidden">
+                  <Image
+                    src="/DSC08828.JPG"
+                    alt="Cours particuliers"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    transition="transform 0.5s ease"
+                    _hover={{ transform: 'scale(1.05)' }}
+                  />
+                </Box>
+                <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
+                  <Stack spacing={5} flex={1}>
+                    <Box>
+                      <Text
+                        fontSize="xs"
+                        fontWeight="700"
+                        color="accent.500"
+                        textTransform="uppercase"
+                        letterSpacing="widest"
+                        mb={2}
+                      >
+                        Jeunes & Parents
+                      </Text>
+                      <Heading size="lg" color="brand.500" fontFamily="heading">
+                        Accompagnement privé
+                      </Heading>
+                    </Box>
+                    <Text fontSize="sm" color="brand.500" fontWeight="600">
+                      📍 Nantes Est · Thouaré-sur-Loire
                     </Text>
 
-                    <Box 
-                      bg="#f9f3ee" 
-                      p={6} 
-                      borderRadius="lg" 
-                      borderLeft="3px solid"
-                      borderColor="accent.500"
-                    >
-                      <Text 
-                        fontSize={{ base: 'md', md: 'lg' }} 
-                        color="terracotta.500" 
-                        fontWeight="400"
-                        fontStyle="italic"
-                        textAlign="center"
-                      >
-                        "Une approche humaine, bienveillante et concrète pour accompagner chaque jeune vers sa réussite"
+                    <Box>
+                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
+                        Cours particuliers en mathématiques
                       </Text>
+                      <Text fontSize="sm" color="brand.600" mb={2}>
+                        Accompagnement personnalisé à domicile via CESU :
+                      </Text>
+                      <Stack spacing={1} pl={2}>
+                        {[
+                          "Cours adaptés au niveau de l'élève",
+                          'Soutien scolaire & aide aux devoirs',
+                          'Préparation aux examens (Brevet, Bac)',
+                          'Accompagnement individuel uniquement',
+                        ].map((item) => (
+                          <Text key={item} fontSize="sm" color="brand.600">
+                            › {item}
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
+                        Parcours Envol — Jeunes actifs
+                      </Text>
+                      <Stack spacing={1} pl={2}>
+                        {[
+                          'Connaissance de soi & compétences psychosociales',
+                          'Gestion du stress et des émotions',
+                          'Éducation financière & autonomie',
+                          "Préparation à l'indépendance",
+                        ].map((item) => (
+                          <Text key={item} fontSize="sm" color="brand.600">
+                            › {item}
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    <Box pt={2}>
+                      <Button colorScheme="accent" size="md" onClick={() => handleContactClick('parent')}>
+                        Prendre contact
+                      </Button>
                     </Box>
                   </Stack>
-                </CardBody>
-              </Card>
+                </Box>
+              </Box>
+            </SlideIn>
 
-              <Button 
-                colorScheme="accent" 
-                size="md"
-                px={8}
-                onClick={() => handleContactClick('student')}
-                mt={4}
+            {/* Établissements */}
+            <SlideIn from="right" delay={0.2}>
+              <Box
+                borderRadius="2xl"
+                overflow="hidden"
+                boxShadow="md"
+                border="1px solid"
+                borderColor="sand.200"
+                bg="white"
+                display="flex"
+                flexDirection="column"
+                h="100%"
               >
-                Découvrir l'accompagnement
-              </Button>
-            </Stack>
-          </Container>
-        </Box>
+                <Box h="220px" overflow="hidden">
+                  <Image
+                    src="/DSC08853.JPG"
+                    alt="Interventions en établissements"
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    transition="transform 0.5s ease"
+                    _hover={{ transform: 'scale(1.05)' }}
+                  />
+                </Box>
+                <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
+                  <Stack spacing={5} flex={1}>
+                    <Box>
+                      <Text
+                        fontSize="xs"
+                        fontWeight="700"
+                        color="accent.500"
+                        textTransform="uppercase"
+                        letterSpacing="widest"
+                        mb={2}
+                      >
+                        Établissements
+                      </Text>
+                      <Heading size="lg" color="brand.500" fontFamily="heading">
+                        Interventions en établissements
+                      </Heading>
+                    </Box>
+                    <Text fontSize="sm" color="brand.500" fontWeight="600">
+                      📍 Nantes (selon récurrence des interventions)
+                    </Text>
 
-        {/* Footer */}
-        <Box bg="brand.500" color="white" py={{ base: 8, md: 12 }}>
-          <Container maxW="container.xl">
-            <Stack spacing={4} textAlign="center">
-              <Text fontSize={{ base: 'lg', md: 'xl' }} fontWeight="bold" fontFamily="heading">
+                    <Box>
+                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
+                        Enseignement supérieur
+                      </Text>
+                      <Stack spacing={1} pl={2}>
+                        {[
+                          'Cours de mathématiques',
+                          'Modules de compétences psychosociales',
+                          "Modules d'éducation financière",
+                        ].map((item) => (
+                          <Text key={item} fontSize="sm" color="brand.600">
+                            › {item}
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    <Box>
+                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
+                        Collèges, lycées & collectivités
+                      </Text>
+                      <Stack spacing={1} pl={2}>
+                        {[
+                          'Modules de compétences psychosociales',
+                          "Modules d'éducation financière",
+                          'Interventions ponctuelles ou régulières',
+                          'Ateliers thématiques adaptés',
+                        ].map((item) => (
+                          <Text key={item} fontSize="sm" color="brand.600">
+                            › {item}
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Box>
+
+                    <Box pt={2}>
+                      <Button colorScheme="accent" size="md" onClick={() => handleContactClick('school')}>
+                        Prendre contact
+                      </Button>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Box>
+            </SlideIn>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* ── PÉDAGOGIE ── */}
+      <Box bg="#faf6f2" py={{ base: 16, md: 24 }} overflow="hidden">
+        <Container maxW="container.xl">
+          <Flex
+            direction={{ base: 'column', lg: 'row' }}
+            align="center"
+            gap={{ base: 12, lg: 16 }}
+          >
+            <SlideIn from="left" style={{ flex: 1 }}>
+              <Box
+                borderRadius="3xl"
+                overflow="hidden"
+                boxShadow="xl"
+                maxW={{ base: '100%', lg: '460px' }}
+              >
+                <Image
+                  src="/DSC08870.JPG"
+                  alt="Pédagogie A Rythme Ethic"
+                  w="100%"
+                  h={{ base: '280px', md: '440px' }}
+                  objectFit="cover"
+                />
+              </Box>
+            </SlideIn>
+
+            <SlideIn from="right" delay={0.1} style={{ flex: 1 }}>
+              <Stack spacing={6}>
+                <Box>
+                  <Text
+                    fontSize="xs"
+                    fontWeight="700"
+                    color="accent.500"
+                    textTransform="uppercase"
+                    letterSpacing="widest"
+                    mb={3}
+                  >
+                    Ma philosophie
+                  </Text>
+                  <Heading
+                    as="h2"
+                    fontSize={{ base: '3xl', md: '4xl' }}
+                    color="brand.500"
+                    fontFamily="heading"
+                  >
+                    Ma pédagogie
+                  </Heading>
+                </Box>
+
+                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
+                  J'axe ma pédagogie sur la{' '}
+                  <strong>qualité de la relation humaine</strong> tissée avec l'apprenant.
+                  J'ancre les apprentissages dans le <strong>réel et le concret</strong>.
+                </Text>
+
+                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
+                  J'aime <strong>innover</strong> pour trouver le bon angle d'approche avec
+                  chaque jeune. J'aime susciter la{' '}
+                  <strong>curiosité et l'envie d'en savoir plus</strong> pour leur transmettre
+                  des outils favorisant leur{' '}
+                  <strong>indépendance et leur autonomie</strong> au sens large.
+                </Text>
+
+                <Box
+                  bg="white"
+                  p={{ base: 5, md: 6 }}
+                  borderRadius="xl"
+                  borderLeft="4px solid"
+                  borderColor="terracotta.400"
+                  boxShadow="sm"
+                >
+                  <Text
+                    fontSize={{ base: 'md', md: 'lg' }}
+                    color="terracotta.600"
+                    fontStyle="italic"
+                    lineHeight="1.7"
+                  >
+                    "Une approche humaine, bienveillante et concrète pour accompagner chaque
+                    jeune vers sa réussite"
+                  </Text>
+                </Box>
+
+                <Box>
+                  <Button
+                    colorScheme="accent"
+                    size="lg"
+                    px={8}
+                    onClick={() => handleContactClick('student')}
+                  >
+                    Découvrir l'accompagnement
+                  </Button>
+                </Box>
+              </Stack>
+            </SlideIn>
+          </Flex>
+        </Container>
+      </Box>
+
+      {/* ── GALERIE ── */}
+      <Box bg="white" py={{ base: 10, md: 14 }}>
+        <Container maxW="container.xl">
+          <FadeUp>
+            <Grid
+              templateColumns={{ base: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }}
+              gap={3}
+            >
+              {['/DSC08928.JPG', '/DSC08956.JPG', '/DSC08964.JPG', '/DSC08812.JPG'].map((src, i) => (
+                <Box key={i} overflow="hidden" h={{ base: '140px', md: '200px' }} borderRadius="xl">
+                  <Image
+                    src={src}
+                    alt={`A Rythme Ethic ${i + 1}`}
+                    w="100%"
+                    h="100%"
+                    objectFit="cover"
+                    transition="transform 0.5s ease"
+                    _hover={{ transform: 'scale(1.07)' }}
+                  />
+                </Box>
+              ))}
+            </Grid>
+          </FadeUp>
+        </Container>
+      </Box>
+
+      {/* ── CTA ── */}
+      <Box bg="brand.500" py={{ base: 14, md: 20 }}>
+        <Container maxW="container.md">
+          <FadeUp>
+            <Stack spacing={6} textAlign="center" align="center">
+              <Heading
+                as="h2"
+                fontSize={{ base: '3xl', md: '4xl' }}
+                color="white"
+                fontFamily="heading"
+              >
+                Prêt(e) à commencer ?
+              </Heading>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="sand.200" maxW="lg">
+                Chaque parcours commence par une rencontre. Contactez-moi pour échanger sur vos
+                besoins.
+              </Text>
+              <Flex gap={4} flexWrap="wrap" justify="center" pt={2}>
+                <Button
+                  size="lg"
+                  bg="white"
+                  color="brand.500"
+                  _hover={{ bg: 'sand.50', transform: 'translateY(-2px)', shadow: 'lg' }}
+                  transition="all 0.2s"
+                  px={8}
+                  onClick={() => handleContactClick('parent')}
+                >
+                  Je suis parent / jeune
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  borderColor="whiteAlpha.600"
+                  color="white"
+                  _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-2px)' }}
+                  transition="all 0.2s"
+                  px={8}
+                  onClick={() => handleContactClick('school')}
+                >
+                  Je représente un établissement
+                </Button>
+              </Flex>
+            </Stack>
+          </FadeUp>
+        </Container>
+      </Box>
+
+      {/* ── FOOTER ── */}
+      <Box bg="brand.700" color="white" py={{ base: 8, md: 10 }}>
+        <Container maxW="container.xl">
+          <Flex
+            direction={{ base: 'column', md: 'row' }}
+            justify="space-between"
+            align="center"
+            gap={4}
+          >
+            <HStack spacing={3}>
+              <Image src="/logo.jpg" alt="A Rythme Ethic" h="36px" borderRadius="md" />
+              <Text fontSize="lg" fontWeight="600" fontFamily="heading">
                 A Rythme Ethic
               </Text>
-              <Text fontSize={{ base: 'sm', md: 'md' }} color="sand.200">
-                Accompagnement personnalisé • Nantes Est & Thouaré-sur-Loire
-              </Text>
-              <Text fontSize="sm" color="sand.300">
-                © {new Date().getFullYear()} A Rythme Ethic - Tous droits réservés
-              </Text>
-            </Stack>
-          </Container>
-        </Box>
+            </HStack>
+            <Text fontSize="sm" color="sand.300" textAlign="center">
+              Accompagnement personnalisé · Nantes Est & Thouaré-sur-Loire
+            </Text>
+            <Text fontSize="xs" color="sand.400">
+              © {new Date().getFullYear()} A Rythme Ethic
+            </Text>
+          </Flex>
+        </Container>
       </Box>
     </>
   );
