@@ -6,7 +6,7 @@ import { generateContractPDF } from '@/lib/pdf-contract-generator';
 const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || 'https://api-sandbox.yousign.app/v3';
 const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY;
 
-// Signature field position (configured for example.pdf)
+// Signature field position (configured for dynamically generated contract PDF)
 const SIGNATURE_FIELD = {
   page: 1,
   x: 490,
