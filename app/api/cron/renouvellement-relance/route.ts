@@ -60,7 +60,11 @@ async function sendBrevoEmail({
 }
 
 // Generate the reminder email HTML
-function generateReminderEmailHtml(recipientName: string, jeuneName: string, formUrl: string): string {
+function generateReminderEmailHtml(
+  recipientName: string,
+  jeuneName: string,
+  formUrl: string
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -204,7 +208,8 @@ export async function GET(request: NextRequest) {
         // Build form URL with existing token
         const formUrl = `${baseUrl}/formulaire/renouvellement?token=${client.renouvellement_token}`;
         const recipientEmail = client.email_parent1 || client.email_jeune || client.email;
-        const recipientName = client.first_name_parent1 || client.first_name_jeune || client.first_name;
+        const recipientName =
+          client.first_name_parent1 || client.first_name_jeune || client.first_name;
         const jeuneName = client.first_name_jeune
           ? `${client.first_name_jeune}${client.last_name_jeune ? ' ' + client.last_name_jeune : ''}`
           : 'votre enfant';

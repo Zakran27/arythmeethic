@@ -60,7 +60,9 @@ function SlideIn({
 
 export default function HomePage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [defaultClientType, setDefaultClientType] = useState<'student' | 'parent' | 'school'>('student');
+  const [defaultClientType, setDefaultClientType] = useState<'student' | 'parent' | 'school'>(
+    'student'
+  );
 
   const handleContactClick = (type: 'student' | 'parent' | 'school') => {
     setDefaultClientType(type);
@@ -110,7 +112,9 @@ export default function HomePage() {
                   fontWeight="700"
                   lineHeight="1.1"
                 >
-                  A Rythme<br />Ethic
+                  A Rythme
+                  <br />
+                  Ethic
                 </Heading>
                 <Text fontSize={{ base: 'xl', md: '2xl' }} color="terracotta.500" fontWeight="500">
                   Accompagnement humain et bienveillant
@@ -152,12 +156,7 @@ export default function HomePage() {
               transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
               style={{ flex: 1, maxWidth: '500px', width: '100%' }}
             >
-              <Box
-                borderRadius="3xl"
-                overflow="hidden"
-                boxShadow="2xl"
-                position="relative"
-              >
+              <Box borderRadius="3xl" overflow="hidden" boxShadow="2xl" position="relative">
                 <Image
                   src="/DSC08807.JPG"
                   alt="Florence - A Rythme Ethic"
@@ -175,8 +174,12 @@ export default function HomePage() {
                   borderRadius="xl"
                   boxShadow="md"
                 >
-                  <Text fontSize="sm" fontWeight="700" color="brand.500">Florence Louazel</Text>
-                  <Text fontSize="xs" color="terracotta.500">Enseignante & formatrice</Text>
+                  <Text fontSize="sm" fontWeight="700" color="brand.500">
+                    Florence Louazel
+                  </Text>
+                  <Text fontSize="xs" color="terracotta.500">
+                    Enseignante & formatrice
+                  </Text>
                 </Box>
               </Box>
             </motion.div>
@@ -274,7 +277,7 @@ export default function HomePage() {
                           'Soutien scolaire & aide aux devoirs',
                           'Préparation aux examens (Brevet, Bac)',
                           'Accompagnement individuel uniquement',
-                        ].map((item) => (
+                        ].map(item => (
                           <Text key={item} fontSize="sm" color="brand.600">
                             › {item}
                           </Text>
@@ -292,7 +295,7 @@ export default function HomePage() {
                           'Gestion du stress et des émotions',
                           'Éducation financière & autonomie',
                           "Préparation à l'indépendance",
-                        ].map((item) => (
+                        ].map(item => (
                           <Text key={item} fontSize="sm" color="brand.600">
                             › {item}
                           </Text>
@@ -301,7 +304,11 @@ export default function HomePage() {
                     </Box>
 
                     <Box pt={2}>
-                      <Button colorScheme="accent" size="md" onClick={() => handleContactClick('parent')}>
+                      <Button
+                        colorScheme="accent"
+                        size="md"
+                        onClick={() => handleContactClick('parent')}
+                      >
                         Prendre contact
                       </Button>
                     </Box>
@@ -364,7 +371,7 @@ export default function HomePage() {
                           'Cours de mathématiques',
                           'Modules de compétences psychosociales',
                           "Modules d'éducation financière",
-                        ].map((item) => (
+                        ].map(item => (
                           <Text key={item} fontSize="sm" color="brand.600">
                             › {item}
                           </Text>
@@ -382,7 +389,7 @@ export default function HomePage() {
                           "Modules d'éducation financière",
                           'Interventions ponctuelles ou régulières',
                           'Ateliers thématiques adaptés',
-                        ].map((item) => (
+                        ].map(item => (
                           <Text key={item} fontSize="sm" color="brand.600">
                             › {item}
                           </Text>
@@ -391,7 +398,11 @@ export default function HomePage() {
                     </Box>
 
                     <Box pt={2}>
-                      <Button colorScheme="accent" size="md" onClick={() => handleContactClick('school')}>
+                      <Button
+                        colorScheme="accent"
+                        size="md"
+                        onClick={() => handleContactClick('school')}
+                      >
                         Prendre contact
                       </Button>
                     </Box>
@@ -406,11 +417,7 @@ export default function HomePage() {
       {/* ── PÉDAGOGIE ── */}
       <Box bg="#faf6f2" py={{ base: 16, md: 24 }} overflow="hidden">
         <Container maxW="container.xl">
-          <Flex
-            direction={{ base: 'column', lg: 'row' }}
-            align="center"
-            gap={{ base: 12, lg: 16 }}
-          >
+          <Flex direction={{ base: 'column', lg: 'row' }} align="center" gap={{ base: 12, lg: 16 }}>
             <SlideIn from="left" style={{ flex: 1 }}>
               <Box
                 borderRadius="3xl"
@@ -452,16 +459,15 @@ export default function HomePage() {
                 </Box>
 
                 <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
-                  J'axe ma pédagogie sur la{' '}
-                  <strong>qualité de la relation humaine</strong> tissée avec l'apprenant.
-                  J'ancre les apprentissages dans le <strong>réel et le concret</strong>.
+                  J'axe ma pédagogie sur la <strong>qualité de la relation humaine</strong> tissée
+                  avec l'apprenant. J'ancre les apprentissages dans le{' '}
+                  <strong>réel et le concret</strong>.
                 </Text>
 
                 <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
-                  J'aime <strong>innover</strong> pour trouver le bon angle d'approche avec
-                  chaque jeune. J'aime susciter la{' '}
-                  <strong>curiosité et l'envie d'en savoir plus</strong> pour leur transmettre
-                  des outils favorisant leur{' '}
+                  J'aime <strong>innover</strong> pour trouver le bon angle d'approche avec chaque
+                  jeune. J'aime susciter la <strong>curiosité et l'envie d'en savoir plus</strong>{' '}
+                  pour leur transmettre des outils favorisant leur{' '}
                   <strong>indépendance et leur autonomie</strong> au sens large.
                 </Text>
 
@@ -479,8 +485,8 @@ export default function HomePage() {
                     fontStyle="italic"
                     lineHeight="1.7"
                   >
-                    "Une approche humaine, bienveillante et concrète pour accompagner chaque
-                    jeune vers sa réussite"
+                    "Une approche humaine, bienveillante et concrète pour accompagner chaque jeune
+                    vers sa réussite"
                   </Text>
                 </Box>
 

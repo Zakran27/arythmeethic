@@ -132,12 +132,16 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           email_parent1: formData.email_parent1 || null,
           phone_parent1: formData.phone_parent1 || null,
           // Parent 2 fields (only for Jeune type)
-          first_name_parent2: formData.sub_type === 'Jeune' ? (formData.first_name_parent2 || null) : null,
-          last_name_parent2: formData.sub_type === 'Jeune' ? (formData.last_name_parent2 || null) : null,
-          email_parent2: formData.sub_type === 'Jeune' ? (formData.email_parent2 || null) : null,
-          phone_parent2: formData.sub_type === 'Jeune' ? (formData.phone_parent2 || null) : null,
+          first_name_parent2:
+            formData.sub_type === 'Jeune' ? formData.first_name_parent2 || null : null,
+          last_name_parent2:
+            formData.sub_type === 'Jeune' ? formData.last_name_parent2 || null : null,
+          email_parent2: formData.sub_type === 'Jeune' ? formData.email_parent2 || null : null,
+          phone_parent2: formData.sub_type === 'Jeune' ? formData.phone_parent2 || null : null,
           // École - Facturation fields
-          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement ? parseInt(formData.ecole_facturation_date_max_paiement, 10) : null,
+          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
+            ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
+            : null,
           ecole_facturation_type: formData.ecole_facturation_type || null,
           ecole_facturation_moment_paiement: formData.ecole_facturation_moment_paiement || null,
           // École - Responsable notes fields
@@ -163,11 +167,12 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       onSuccess();
     } catch (error) {
       console.error('Error creating contact:', error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : typeof error === 'object' && error !== null && 'message' in error
-          ? String((error as { message: unknown }).message)
-          : JSON.stringify(error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? String((error as { message: unknown }).message)
+            : JSON.stringify(error);
       toast({
         title: 'Erreur lors de la création du contact',
         description: errorMessage,
@@ -192,7 +197,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader color="brand.500" fontFamily="heading">Nouveau contact</ModalHeader>
+        <ModalHeader color="brand.500" fontFamily="heading">
+          Nouveau contact
+        </ModalHeader>
         <ModalCloseButton color="brand.500" />
         <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
           <ModalBody overflowY="auto">
@@ -247,7 +254,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
               {isJeune && (
                 <>
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Jeune / Élève</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Jeune / Élève
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl isRequired>
@@ -331,7 +340,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </Grid>
 
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent 1</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Parent 1
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -373,7 +384,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </Grid>
 
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent 2</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Parent 2
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -420,7 +433,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
               {isParent && (
                 <>
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Parent
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl isRequired>
@@ -536,7 +551,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </Select>
                   </FormControl>
 
-                  <Text fontWeight="bold" color="brand.500" mt={2}>Contact de l'établissement</Text>
+                  <Text fontWeight="bold" color="brand.500" mt={2}>
+                    Contact de l'établissement
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl isRequired>
@@ -578,7 +595,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </Grid>
 
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Facturation</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Facturation
+                  </Text>
                   <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -588,7 +607,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                           min="1"
                           max="31"
                           value={formData.ecole_facturation_date_max_paiement}
-                          onChange={e => handleChange('ecole_facturation_date_max_paiement', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_facturation_date_max_paiement', e.target.value)
+                          }
                           placeholder="Ex: 15"
                         />
                       </FormControl>
@@ -611,7 +632,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                         <FormLabel>Moment du paiement</FormLabel>
                         <Select
                           value={formData.ecole_facturation_moment_paiement}
-                          onChange={e => handleChange('ecole_facturation_moment_paiement', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_facturation_moment_paiement', e.target.value)
+                          }
                           placeholder="Sélectionnez..."
                         >
                           <option value="fin_mois_courant">Fin du mois en cours</option>
@@ -622,7 +645,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </Grid>
 
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Saisie des notes élèves</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Saisie des notes élèves
+                  </Text>
                   <FormControl>
                     <FormLabel>Notes élèves saisies par</FormLabel>
                     <Select
@@ -637,14 +662,18 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
 
                   {formData.ecole_notes_saisies_par === 'Personne tierce' && (
                     <>
-                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">Responsable Notes</Text>
+                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">
+                        Responsable Notes
+                      </Text>
                       <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                         <GridItem>
                           <FormControl>
                             <FormLabel>Prénom</FormLabel>
                             <Input
                               value={formData.ecole_resp_notes_prenom}
-                              onChange={e => handleChange('ecole_resp_notes_prenom', e.target.value)}
+                              onChange={e =>
+                                handleChange('ecole_resp_notes_prenom', e.target.value)
+                              }
                             />
                           </FormControl>
                         </GridItem>
@@ -684,7 +713,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
 
               {/* ========== COMMON FIELDS: Address & Notes ========== */}
               <Divider />
-              <Text fontWeight="bold" color="brand.500">Adresse</Text>
+              <Text fontWeight="bold" color="brand.500">
+                Adresse
+              </Text>
               <FormControl>
                 <FormLabel>Adresse</FormLabel>
                 <Input

@@ -1,6 +1,18 @@
 'use client';
 
-import { Table, Thead, Tbody, Tr, Th, Td, Box, Card, CardBody, Text, HStack } from '@chakra-ui/react';
+import {
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Box,
+  Card,
+  CardBody,
+  Text,
+  HStack,
+} from '@chakra-ui/react';
 import { useState, useMemo } from 'react';
 
 interface Column<T> {
@@ -22,23 +34,13 @@ type SortDirection = 'asc' | 'desc' | null;
 // Simple sort indicator component
 function SortIndicator({ direction, isActive }: { direction: SortDirection; isActive: boolean }) {
   return (
-    <Box
-      as="span"
-      ml={1}
-      opacity={isActive ? 1 : 0.3}
-      transition="opacity 0.2s"
-      fontSize="xs"
-    >
+    <Box as="span" ml={1} opacity={isActive ? 1 : 0.3} transition="opacity 0.2s" fontSize="xs">
       {isActive && direction === 'asc' ? '▲' : isActive && direction === 'desc' ? '▼' : '▲'}
     </Box>
   );
 }
 
-export function DataTable<T>({
-  columns,
-  data,
-  onRowClick,
-}: DataTableProps<T>) {
+export function DataTable<T>({ columns, data, onRowClick }: DataTableProps<T>) {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
 
@@ -92,7 +94,9 @@ export function DataTable<T>({
       }
 
       // Fallback to string comparison
-      const comparison = String(aValue).localeCompare(String(bValue), 'fr', { sensitivity: 'base' });
+      const comparison = String(aValue).localeCompare(String(bValue), 'fr', {
+        sensitivity: 'base',
+      });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   }, [data, sortColumn, sortDirection]);
@@ -152,7 +156,9 @@ export function DataTable<T>({
               >
                 {columns.map(col => (
                   <Td key={col.key} color="brand.600">
-                    {col.render ? col.render(item) : ((item as Record<string, unknown>)[col.key] as React.ReactNode)}
+                    {col.render
+                      ? col.render(item)
+                      : ((item as Record<string, unknown>)[col.key] as React.ReactNode)}
                   </Td>
                 ))}
               </Tr>

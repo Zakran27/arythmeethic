@@ -24,7 +24,12 @@ import { ClientsTable } from './ClientsTable';
 import { NewClientModal } from './NewClientModal';
 import { useClients } from '@/lib/hooks/useClients';
 import { Client } from '@/types';
-import { AdvancedFilters, FilterCondition, FilterField, applyFilters } from '@/components/admin/AdvancedFilters';
+import {
+  AdvancedFilters,
+  FilterCondition,
+  FilterField,
+  applyFilters,
+} from '@/components/admin/AdvancedFilters';
 
 export default function ClientsPage() {
   const { clients, loading, error, refetch } = useClients();
@@ -38,14 +43,24 @@ export default function ClientsPage() {
     { key: 'first_name', label: 'Prénom', type: 'text' },
     { key: 'last_name', label: 'Nom', type: 'text' },
     { key: 'email', label: 'Email', type: 'text' },
-    { key: 'type_client', label: 'Type', type: 'select', options: [
-      { value: 'Particulier', label: 'Particulier' },
-      { value: 'École', label: 'Établissement' },
-    ]},
-    { key: 'sub_type', label: 'Sous-type', type: 'select', options: [
-      { value: 'Jeune', label: 'Jeune / Élève' },
-      { value: 'Parent', label: 'Parent' },
-    ]},
+    {
+      key: 'type_client',
+      label: 'Type',
+      type: 'select',
+      options: [
+        { value: 'Particulier', label: 'Particulier' },
+        { value: 'École', label: 'Établissement' },
+      ],
+    },
+    {
+      key: 'sub_type',
+      label: 'Sous-type',
+      type: 'select',
+      options: [
+        { value: 'Jeune', label: 'Jeune / Élève' },
+        { value: 'Parent', label: 'Parent' },
+      ],
+    },
     { key: 'organisation', label: 'Organisation', type: 'text' },
     { key: 'city', label: 'Ville', type: 'text' },
     { key: 'postal_code', label: 'Code postal', type: 'text' },
@@ -100,7 +115,9 @@ export default function ClientsPage() {
   return (
     <Stack spacing={6}>
       <HStack justify="space-between" align="center">
-        <Heading color="brand.500" fontFamily="heading">Gestion des contacts</Heading>
+        <Heading color="brand.500" fontFamily="heading">
+          Gestion des contacts
+        </Heading>
         <Button colorScheme="accent" onClick={onOpen}>
           + Nouveau contact
         </Button>
@@ -122,11 +139,7 @@ export default function ClientsPage() {
           </InputGroup>
         </HStack>
 
-        <AdvancedFilters
-          fields={filterFields}
-          filters={filters}
-          onFiltersChange={setFilters}
-        />
+        <AdvancedFilters fields={filterFields} filters={filters} onFiltersChange={setFilters} />
       </Stack>
 
       {/* Tabs for Prospects and Clients */}

@@ -45,7 +45,7 @@ const REGIONS_FRANCE = [
   'Nouvelle-Aquitaine',
   'Occitanie',
   'Pays de la Loire',
-  'Provence-Alpes-Côte d\'Azur',
+  "Provence-Alpes-Côte d'Azur",
 ];
 
 interface EditClientModalProps {
@@ -97,7 +97,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     moyenne_maths: client.moyenne_maths || '',
     moyenne_generale: client.moyenne_generale || '',
     adresse_cours: client.adresse_cours || '',
-    jours_disponibles: client.jours_disponibles || [] as string[],
+    jours_disponibles: client.jours_disponibles || ([] as string[]),
     // École-specific fields
     ecole_siret: client.ecole_siret || '',
     ecole_nda: client.ecole_nda || '',
@@ -137,7 +137,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     ecole_enseignant_prenom: client.ecole_enseignant_prenom || '',
     ecole_enseignant_email: client.ecole_enseignant_email || '',
     // Facturation
-    ecole_facturation_date_max_paiement: client.ecole_facturation_date_max_paiement?.toString() || '',
+    ecole_facturation_date_max_paiement:
+      client.ecole_facturation_date_max_paiement?.toString() || '',
     ecole_facturation_type: client.ecole_facturation_type || '',
     ecole_facturation_moment_paiement: client.ecole_facturation_moment_paiement || '',
     // Responsable notes
@@ -225,7 +226,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       ecole_enseignant_prenom: client.ecole_enseignant_prenom || '',
       ecole_enseignant_email: client.ecole_enseignant_email || '',
       // Facturation
-      ecole_facturation_date_max_paiement: client.ecole_facturation_date_max_paiement?.toString() || '',
+      ecole_facturation_date_max_paiement:
+        client.ecole_facturation_date_max_paiement?.toString() || '',
       ecole_facturation_type: client.ecole_facturation_type || '',
       ecole_facturation_moment_paiement: client.ecole_facturation_moment_paiement || '',
       // Responsable notes
@@ -300,16 +302,21 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           moyenne_maths: formData.moyenne_maths || null,
           moyenne_generale: formData.moyenne_generale || null,
           adresse_cours: formData.adresse_cours || null,
-          jours_disponibles: formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
+          jours_disponibles:
+            formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
           // École-specific fields
           ecole_siret: formData.ecole_siret || null,
           ecole_nda: formData.ecole_nda || null,
           ecole_nda_region: formData.ecole_nda_region || null,
           // Frais pris en charge par l'établissement
-          ecole_frais_midi_montant: formData.ecole_frais_midi_montant ? parseFloat(formData.ecole_frais_midi_montant) : null,
+          ecole_frais_midi_montant: formData.ecole_frais_midi_montant
+            ? parseFloat(formData.ecole_frais_midi_montant)
+            : null,
           ecole_frais_midi_conditions: formData.ecole_frais_midi_conditions || null,
           ecole_frais_deplacement_rembourse: formData.ecole_frais_deplacement_rembourse ?? null,
-          ecole_frais_km_prix: formData.ecole_frais_km_prix ? parseFloat(formData.ecole_frais_km_prix) : null,
+          ecole_frais_km_prix: formData.ecole_frais_km_prix
+            ? parseFloat(formData.ecole_frais_km_prix)
+            : null,
           ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
           ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,
           ecole_resp_modules_email: formData.ecole_resp_modules_email || null,
@@ -328,19 +335,27 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           ecole_resp_planning_email: formData.ecole_resp_planning_email || null,
           ecole_resp_planning_phone: formData.ecole_resp_planning_phone || null,
           ecole_module_nom: formData.ecole_module_nom || null,
-          ecole_module_heures: formData.ecole_module_heures ? parseInt(formData.ecole_module_heures, 10) : null,
+          ecole_module_heures: formData.ecole_module_heures
+            ? parseInt(formData.ecole_module_heures, 10)
+            : null,
           ecole_formation_type: formData.ecole_formation_type || null,
           ecole_classes_noms: formData.ecole_classes_noms || null,
-          ecole_groupe_taille: formData.ecole_groupe_taille ? parseInt(formData.ecole_groupe_taille, 10) : null,
+          ecole_groupe_taille: formData.ecole_groupe_taille
+            ? parseInt(formData.ecole_groupe_taille, 10)
+            : null,
           ecole_evaluation_modalites: formData.ecole_evaluation_modalites || null,
-          ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min ? parseInt(formData.ecole_evaluation_nombre_min, 10) : null,
+          ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min
+            ? parseInt(formData.ecole_evaluation_nombre_min, 10)
+            : null,
           ecole_module_periode: formData.ecole_module_periode || null,
           // Enseignant
           ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
           ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
           ecole_enseignant_email: formData.ecole_enseignant_email || null,
           // Facturation
-          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement ? parseInt(formData.ecole_facturation_date_max_paiement, 10) : null,
+          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
+            ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
+            : null,
           ecole_facturation_type: formData.ecole_facturation_type || null,
           ecole_facturation_moment_paiement: formData.ecole_facturation_moment_paiement || null,
           // Responsable notes
@@ -386,7 +401,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
-        <ModalHeader color="brand.500" fontFamily="heading">Modifier le contact</ModalHeader>
+        <ModalHeader color="brand.500" fontFamily="heading">
+          Modifier le contact
+        </ModalHeader>
         <ModalCloseButton color="brand.500" />
         <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
           <ModalBody overflowY="auto">
@@ -442,7 +459,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                 <>
                   {/* Jeune / Élève */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Jeune / Élève</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Jeune / Élève
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -527,7 +546,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Parent 1 */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent 1</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Parent 1
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -570,7 +591,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Parent 2 */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Parent 2</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Parent 2
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -613,7 +636,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Informations scolaires */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Informations scolaires</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations scolaires
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem colSpan={2}>
                       <FormControl>
@@ -659,7 +684,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Lieu et disponibilités */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Lieu et disponibilités</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Lieu et disponibilités
+                  </Text>
                   <FormControl>
                     <FormLabel>Adresse des cours</FormLabel>
                     <Input
@@ -672,7 +699,15 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   <FormControl>
                     <FormLabel>Jours disponibles</FormLabel>
                     <SimpleGrid columns={{ base: 2, md: 4 }} spacing={2}>
-                      {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map(jour => (
+                      {[
+                        'Lundi',
+                        'Mardi',
+                        'Mercredi',
+                        'Jeudi',
+                        'Vendredi',
+                        'Samedi',
+                        'Dimanche',
+                      ].map(jour => (
                         <Checkbox
                           key={jour}
                           isChecked={formData.jours_disponibles.includes(jour)}
@@ -730,7 +765,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     </Select>
                   </FormControl>
 
-                  <Text fontWeight="bold" color="brand.500" mt={2}>Contact de l'établissement</Text>
+                  <Text fontWeight="bold" color="brand.500" mt={2}>
+                    Contact de l'établissement
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl isRequired>
@@ -773,7 +810,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Responsable modules */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Responsable modules</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Responsable modules
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -815,7 +854,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   </Grid>
                   <Checkbox
                     isChecked={formData.ecole_resp_modules_peut_negocier}
-                    onChange={e => setFormData(prev => ({ ...prev, ecole_resp_modules_peut_negocier: e.target.checked }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        ecole_resp_modules_peut_negocier: e.target.checked,
+                      }))
+                    }
                     colorScheme="accent"
                   >
                     Habilité(e) à négocier les prix
@@ -823,14 +867,18 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Responsable autorisation prix */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Responsable autorisation prix</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Responsable autorisation prix
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.ecole_resp_autorisation_prenom}
-                          onChange={e => handleChange('ecole_resp_autorisation_prenom', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_autorisation_prenom', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -839,7 +887,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <FormLabel>Nom</FormLabel>
                         <Input
                           value={formData.ecole_resp_autorisation_nom}
-                          onChange={e => handleChange('ecole_resp_autorisation_nom', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_autorisation_nom', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -848,7 +898,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <FormLabel>Téléphone</FormLabel>
                         <Input
                           value={formData.ecole_resp_autorisation_phone}
-                          onChange={e => handleChange('ecole_resp_autorisation_phone', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_autorisation_phone', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -858,7 +910,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <Input
                           type="email"
                           value={formData.ecole_resp_autorisation_email}
-                          onChange={e => handleChange('ecole_resp_autorisation_email', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_autorisation_email', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -866,14 +920,18 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Responsable facturation */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Responsable facturation</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Responsable facturation
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.ecole_resp_facturation_prenom}
-                          onChange={e => handleChange('ecole_resp_facturation_prenom', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_facturation_prenom', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -891,7 +949,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <FormLabel>Téléphone</FormLabel>
                         <Input
                           value={formData.ecole_resp_facturation_phone}
-                          onChange={e => handleChange('ecole_resp_facturation_phone', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_facturation_phone', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -901,7 +961,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <Input
                           type="email"
                           value={formData.ecole_resp_facturation_email}
-                          onChange={e => handleChange('ecole_resp_facturation_email', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_resp_facturation_email', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -909,7 +971,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Responsable planning */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Responsable planning</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Responsable planning
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -952,7 +1016,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Informations structure */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Informations structure</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations structure
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -994,7 +1060,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Frais pris en charge par l'établissement */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Frais pris en charge par l'établissement</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Frais pris en charge par l'établissement
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -1013,7 +1081,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <FormLabel>Conditions</FormLabel>
                         <Input
                           value={formData.ecole_frais_midi_conditions}
-                          onChange={e => handleChange('ecole_frais_midi_conditions', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_frais_midi_conditions', e.target.value)
+                          }
                           placeholder="Ex: Journée complète de cours"
                         />
                       </FormControl>
@@ -1021,7 +1091,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     <GridItem colSpan={2}>
                       <Checkbox
                         isChecked={formData.ecole_frais_deplacement_rembourse}
-                        onChange={e => setFormData(prev => ({ ...prev, ecole_frais_deplacement_rembourse: e.target.checked }))}
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            ecole_frais_deplacement_rembourse: e.target.checked,
+                          }))
+                        }
                         colorScheme="accent"
                       >
                         Remboursement des frais de déplacement
@@ -1045,7 +1120,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Informations module */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Informations module</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations module
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -1074,7 +1151,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                           onChange={e => handleChange('ecole_formation_type', e.target.value)}
                           placeholder="Sélectionnez..."
                         >
-                          <option value="initiale_en_alternance">Formation initiale / en alternance</option>
+                          <option value="initiale_en_alternance">
+                            Formation initiale / en alternance
+                          </option>
                           <option value="continue">Formation continue</option>
                         </Select>
                       </FormControl>
@@ -1104,7 +1183,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <Input
                           type="number"
                           value={formData.ecole_evaluation_nombre_min}
-                          onChange={e => handleChange('ecole_evaluation_nombre_min', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_evaluation_nombre_min', e.target.value)
+                          }
                         />
                       </FormControl>
                     </GridItem>
@@ -1132,8 +1213,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Enseignant */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Enseignant du contenu de la matière</Text>
-                  <Text fontSize="sm" color="gray.500">Facultatif</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Enseignant du contenu de la matière
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    Facultatif
+                  </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -1167,7 +1252,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Facturation */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Facturation</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Facturation
+                  </Text>
                   <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
@@ -1177,7 +1264,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                           min="1"
                           max="31"
                           value={formData.ecole_facturation_date_max_paiement}
-                          onChange={e => handleChange('ecole_facturation_date_max_paiement', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_facturation_date_max_paiement', e.target.value)
+                          }
                           placeholder="Ex: 15"
                         />
                       </FormControl>
@@ -1200,7 +1289,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         <FormLabel>Moment du paiement</FormLabel>
                         <Select
                           value={formData.ecole_facturation_moment_paiement}
-                          onChange={e => handleChange('ecole_facturation_moment_paiement', e.target.value)}
+                          onChange={e =>
+                            handleChange('ecole_facturation_moment_paiement', e.target.value)
+                          }
                           placeholder="Sélectionnez..."
                         >
                           <option value="fin_mois_courant">Fin du mois en cours</option>
@@ -1212,7 +1303,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {/* Saisie des notes élèves */}
                   <Divider />
-                  <Text fontWeight="bold" color="brand.500">Saisie des notes élèves</Text>
+                  <Text fontWeight="bold" color="brand.500">
+                    Saisie des notes élèves
+                  </Text>
                   <FormControl>
                     <FormLabel>Notes élèves saisies par</FormLabel>
                     <Select
@@ -1227,14 +1320,18 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
                   {formData.ecole_notes_saisies_par === 'Personne tierce' && (
                     <>
-                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">Responsable Notes</Text>
+                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">
+                        Responsable Notes
+                      </Text>
                       <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                         <GridItem>
                           <FormControl>
                             <FormLabel>Prénom</FormLabel>
                             <Input
                               value={formData.ecole_resp_notes_prenom}
-                              onChange={e => handleChange('ecole_resp_notes_prenom', e.target.value)}
+                              onChange={e =>
+                                handleChange('ecole_resp_notes_prenom', e.target.value)
+                              }
                             />
                           </FormControl>
                         </GridItem>
@@ -1274,7 +1371,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
               {/* ========== COMMON FIELDS: Address & Notes ========== */}
               <Divider />
-              <Text fontWeight="bold" color="brand.500">Adresse</Text>
+              <Text fontWeight="bold" color="brand.500">
+                Adresse
+              </Text>
               <FormControl>
                 <FormLabel>Adresse</FormLabel>
                 <Input

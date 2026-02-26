@@ -7,10 +7,7 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token');
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: 'Token requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
     }
 
     const supabase = createServiceRoleClient();
@@ -18,7 +15,8 @@ export async function GET(request: NextRequest) {
     // Find the procedure by download token
     const { data: procedure, error: procError } = await supabase
       .from('procedures')
-      .select(`
+      .select(
+        `
         id,
         download_token_expires_at,
         recipient_email,
@@ -27,7 +25,8 @@ export async function GET(request: NextRequest) {
           first_name,
           last_name
         )
-      `)
+      `
+      )
       .eq('download_token', token)
       .single();
 
@@ -66,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     // Generate signed URLs for each document
     const documentsWithUrls = await Promise.all(
-      (documents || []).map(async (doc) => {
+      (documents || []).map(async doc => {
         if (!doc.storage_path) return { ...doc, downloadUrl: null };
 
         const { data: signedUrl } = await supabase.storage
@@ -81,12 +80,17 @@ export async function GET(request: NextRequest) {
     );
 
     // Supabase returns joined relations as arrays, get the first element
-    const clientData = procedure.client as unknown as { organisation?: string; first_name: string; last_name: string } | { organisation?: string; first_name: string; last_name: string }[];
+    const clientData = procedure.client as unknown as
+      | { organisation?: string; first_name: string; last_name: string }
+      | { organisation?: string; first_name: string; last_name: string }[];
     const client = Array.isArray(clientData) ? clientData[0] : clientData;
 
     return NextResponse.json({
       success: true,
-      clientName: client?.organisation || `${client?.first_name || ''} ${client?.last_name || ''}`.trim() || 'Client',
+      clientName:
+        client?.organisation ||
+        `${client?.first_name || ''} ${client?.last_name || ''}`.trim() ||
+        'Client',
       expiresAt: procedure.download_token_expires_at,
       documents: documentsWithUrls,
     });

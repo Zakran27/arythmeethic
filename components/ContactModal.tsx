@@ -62,7 +62,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Erreur lors de l\'envoi');
+      if (!response.ok) throw new Error("Erreur lors de l'envoi");
 
       toast({
         title: 'Message envoyé !',
@@ -312,7 +312,9 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               <Select
                 placeholder="Sélectionnez une option"
                 value={formData.howDidYouHear}
-                onChange={e => setFormData({ ...formData, howDidYouHear: e.target.value, referrerName: '' })}
+                onChange={e =>
+                  setFormData({ ...formData, howDidYouHear: e.target.value, referrerName: '' })
+                }
               >
                 <option value="linkedin">LinkedIn</option>
                 <option value="recommandation">Recommandation</option>
@@ -361,21 +363,23 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                 <Select
                   placeholder="Sélectionnez votre profil"
                   value={formData.clientType}
-                  onChange={e => setFormData({
-                    ...formData,
-                    clientType: e.target.value,
-                    firstName: '',
-                    lastName: '',
-                    organisationName: '',
-                    email: '',
-                    phone: '',
-                    studentLevel: '',
-                    requestType: '',
-                    requestSubject: '',
-                    howDidYouHear: '',
-                    referrerName: '',
-                    message: '',
-                  })}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      clientType: e.target.value,
+                      firstName: '',
+                      lastName: '',
+                      organisationName: '',
+                      email: '',
+                      phone: '',
+                      studentLevel: '',
+                      requestType: '',
+                      requestSubject: '',
+                      howDidYouHear: '',
+                      referrerName: '',
+                      message: '',
+                    })
+                  }
                 >
                   <option value="parent">Parent</option>
                   <option value="student">Jeune / Élève</option>
@@ -390,12 +394,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                   <Button onClick={onClose} variant="ghost" flex={1}>
                     Annuler
                   </Button>
-                  <Button
-                    type="submit"
-                    colorScheme="brand"
-                    isLoading={loading}
-                    flex={1}
-                  >
+                  <Button type="submit" colorScheme="brand" isLoading={loading} flex={1}>
                     Envoyer
                   </Button>
                 </Stack>

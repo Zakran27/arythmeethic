@@ -77,11 +77,15 @@ export async function POST(request: NextRequest) {
 
     // Create a new procedure record and add to status history
     if (procedureType) {
-      const { data: newProcedure } = await supabase.from('procedures').insert({
-        client_id: clientId,
-        procedure_type_id: procedureType.id,
-        status: 'DRAFT',
-      }).select('id').single();
+      const { data: newProcedure } = await supabase
+        .from('procedures')
+        .insert({
+          client_id: clientId,
+          procedure_type_id: procedureType.id,
+          status: 'DRAFT',
+        })
+        .select('id')
+        .single();
 
       // Add initial status to history
       if (newProcedure) {

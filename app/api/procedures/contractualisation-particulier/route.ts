@@ -43,7 +43,7 @@ async function createSignatureRequest(name: string): Promise<{ id: string }> {
   const response = await fetch(`${YOUSIGN_API_URL}/signature_requests`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
+      Authorization: `Bearer ${YOUSIGN_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -62,20 +62,27 @@ async function createSignatureRequest(name: string): Promise<{ id: string }> {
   return response.json();
 }
 
-async function uploadDocument(signatureRequestId: string, pdfBuffer: Buffer, filename: string): Promise<{ id: string }> {
+async function uploadDocument(
+  signatureRequestId: string,
+  pdfBuffer: Buffer,
+  filename: string
+): Promise<{ id: string }> {
   const formData = new FormData();
   // Convert Buffer to Uint8Array for Blob compatibility
   const uint8Array = new Uint8Array(pdfBuffer);
   formData.append('file', new Blob([uint8Array], { type: 'application/pdf' }), filename);
   formData.append('nature', 'signable_document');
 
-  const response = await fetch(`${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
-    },
-    body: formData,
-  });
+  const response = await fetch(
+    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
+      },
+      body: formData,
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -92,33 +99,36 @@ async function addSigner(
   signer: SignerInfo,
   signatureField: { page: number; x: number; y: number }
 ): Promise<{ id: string }> {
-  const response = await fetch(`${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      info: {
-        first_name: signer.firstName,
-        last_name: signer.lastName,
-        email: signer.email,
-        phone_number: signer.phone || undefined,
-        locale: 'fr',
+  const response = await fetch(
+    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      signature_level: 'electronic_signature',
-      signature_authentication_mode: 'no_otp',
-      fields: [
-        {
-          type: 'signature',
-          document_id: documentId,
-          page: signatureField.page,
-          x: signatureField.x,
-          y: signatureField.y,
+      body: JSON.stringify({
+        info: {
+          first_name: signer.firstName,
+          last_name: signer.lastName,
+          email: signer.email,
+          phone_number: signer.phone || undefined,
+          locale: 'fr',
         },
-      ],
-    }),
-  });
+        signature_level: 'electronic_signature',
+        signature_authentication_mode: 'no_otp',
+        fields: [
+          {
+            type: 'signature',
+            document_id: documentId,
+            page: signatureField.page,
+            x: signatureField.x,
+            y: signatureField.y,
+          },
+        ],
+      }),
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -130,13 +140,16 @@ async function addSigner(
 }
 
 async function activateSignatureRequest(signatureRequestId: string): Promise<void> {
-  const response = await fetch(`${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/activate`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(
+    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/activate`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -169,7 +182,17 @@ export async function POST(request: NextRequest) {
       salaireHoraireNet,
     } = body;
 
-    if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire || !dateDebut || !dateFin || !dureePeriodeEssai || !salaireHoraireNet) {
+    if (
+      !clientId ||
+      !signerEmail ||
+      !signerFirstName ||
+      !signerLastName ||
+      !anneeScolaire ||
+      !dateDebut ||
+      !dateFin ||
+      !dureePeriodeEssai ||
+      !salaireHoraireNet
+    ) {
       return NextResponse.json(
         { success: false, error: 'Paramètres requis manquants' },
         { status: 400 }
@@ -186,10 +209,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Client non trouvé' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Client non trouvé' }, { status: 404 });
     }
 
     // Verify it's a Particulier client
@@ -335,14 +355,14 @@ export async function POST(request: NextRequest) {
       });
     } catch (yousignError) {
       // If Yousign fails, update the procedure to reflect the error
-      await supabase
-        .from('procedures')
-        .update({ status: 'DRAFT' })
-        .eq('id', newProcedure.id);
+      await supabase.from('procedures').update({ status: 'DRAFT' }).eq('id', newProcedure.id);
 
       console.error('Yousign error:', yousignError);
       return NextResponse.json(
-        { success: false, error: `Erreur Yousign: ${yousignError instanceof Error ? yousignError.message : 'Unknown error'}` },
+        {
+          success: false,
+          error: `Erreur Yousign: ${yousignError instanceof Error ? yousignError.message : 'Unknown error'}`,
+        },
         { status: 500 }
       );
     }

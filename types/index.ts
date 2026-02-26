@@ -77,7 +77,16 @@ export interface Client {
   ecole_siret?: string;
   ecole_nda?: string;
   ecole_nda_region?: string;
-  ecole_statut_juridique?: 'Association loi 1901' | 'SARL' | 'SAS' | 'SASU' | 'EURL' | 'SA' | 'Établissement public' | 'GIE' | 'Autre';
+  ecole_statut_juridique?:
+    | 'Association loi 1901'
+    | 'SARL'
+    | 'SAS'
+    | 'SASU'
+    | 'EURL'
+    | 'SA'
+    | 'Établissement public'
+    | 'GIE'
+    | 'Autre';
   // Frais pris en charge par l'établissement
   ecole_frais_midi_montant?: number;
   ecole_frais_midi_conditions?: string;
@@ -192,11 +201,11 @@ export interface ProcedureStatusHistory {
 
 // Helper to get French label for status
 export const statusLabels: Record<ProcedureStatusLabel, string> = {
-  'MAIL_ENVOYE': 'Mail envoyé',
-  'FORMULAIRE_REMPLI': 'Formulaire rempli',
-  'RELANCE_ENVOYEE': 'Relance envoyée',
-  'MAIL_AVIS_GOOGLE_ENVOYE': 'Mail avis Google envoyé',
-  'SIGNATURE_DEMANDEE': 'Signature demandée',
-  'SIGNATURE_EFFECTUEE': 'Signature effectuée',
-  'SIGNATURE_REFUSEE': 'Signature refusée',
+  MAIL_ENVOYE: 'Mail envoyé',
+  FORMULAIRE_REMPLI: 'Formulaire rempli',
+  RELANCE_ENVOYEE: 'Relance envoyée',
+  MAIL_AVIS_GOOGLE_ENVOYE: 'Mail avis Google envoyé',
+  SIGNATURE_DEMANDEE: 'Signature demandée',
+  SIGNATURE_EFFECTUEE: 'Signature effectuée',
+  SIGNATURE_REFUSEE: 'Signature refusée',
 };

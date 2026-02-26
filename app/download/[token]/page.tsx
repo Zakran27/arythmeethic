@@ -163,7 +163,7 @@ export default function DownloadPage() {
                   <Text color="gray.500">Aucun document disponible.</Text>
                 ) : (
                   <VStack spacing={3} align="stretch">
-                    {documents.map((doc) => (
+                    {documents.map(doc => (
                       <Box
                         key={doc.id}
                         p={4}

@@ -6,7 +6,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { clientId, mois, heures, tarifHoraire, km, baremeKm } = body;
 
-    if (!clientId || !mois || heures == null || tarifHoraire == null || km == null || baremeKm == null) {
+    if (
+      !clientId ||
+      !mois ||
+      heures == null ||
+      tarifHoraire == null ||
+      km == null ||
+      baremeKm == null
+    ) {
       return NextResponse.json(
         { success: false, error: 'Paramètres requis manquants' },
         { status: 400 }
@@ -37,18 +44,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error saving heures realisees:', error);
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error in heures-realisees route:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erreur serveur' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 });
   }
 }

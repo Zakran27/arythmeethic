@@ -85,10 +85,10 @@ function RenouvellementFormContent() {
       if (data.success) {
         setSubmitted(true);
       } else {
-        setError(data.error || 'Erreur lors de l\'envoi');
+        setError(data.error || "Erreur lors de l'envoi");
       }
     } catch {
-      setError('Erreur lors de l\'envoi');
+      setError("Erreur lors de l'envoi");
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +121,9 @@ function RenouvellementFormContent() {
         <Container maxW="md">
           <VStack spacing={6} bg="white" p={8} borderRadius="xl" shadow="sm">
             <Box textAlign="center">
-              <Text fontSize="4xl" mb={4}>✅</Text>
+              <Text fontSize="4xl" mb={4}>
+                ✅
+              </Text>
               <Heading size="lg" color="brand.500" fontFamily="heading" mb={4}>
                 Merci pour votre réponse !
               </Heading>
@@ -163,8 +165,8 @@ function RenouvellementFormContent() {
               </Text>
 
               <Text color="brand.600">
-                L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance
-                que vous m'avez accordée pour l'accompagnement de <strong>{jeuneName}</strong>.
+                L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que
+                vous m'avez accordée pour l'accompagnement de <strong>{jeuneName}</strong>.
               </Text>
 
               <Box bg="cream.100" p={6} borderRadius="lg">
@@ -194,7 +196,10 @@ function RenouvellementFormContent() {
                   placeholder="Partagez vos remarques, suggestions ou besoins particuliers pour l'année prochaine..."
                   rows={4}
                   borderColor="gray.300"
-                  _focus={{ borderColor: 'accent.500', boxShadow: '0 0 0 1px var(--chakra-colors-accent-500)' }}
+                  _focus={{
+                    borderColor: 'accent.500',
+                    boxShadow: '0 0 0 1px var(--chakra-colors-accent-500)',
+                  }}
                 />
               </Box>
 

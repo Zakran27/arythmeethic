@@ -27,7 +27,12 @@ interface HeuresRealiséesModalProps {
   onSuccess: () => void;
 }
 
-export function HeuresRealiséesModal({ isOpen, onClose, clientId, onSuccess }: HeuresRealiséesModalProps) {
+export function HeuresRealiséesModal({
+  isOpen,
+  onClose,
+  clientId,
+  onSuccess,
+}: HeuresRealiséesModalProps) {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,11 +46,15 @@ export function HeuresRealiséesModal({ isOpen, onClose, clientId, onSuccess }: 
   const [km, setKm] = useState('0');
   const [baremeKm, setBaremeKm] = useState('0.636');
 
-  const montantHeures = heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '—';
+  const montantHeures =
+    heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '—';
   const montantKm = km && baremeKm ? (parseFloat(km) * parseFloat(baremeKm)).toFixed(2) : '—';
   const total =
     heures && tarifHoraire && km && baremeKm
-      ? (parseFloat(heures) * parseFloat(tarifHoraire) + parseFloat(km) * parseFloat(baremeKm)).toFixed(2)
+      ? (
+          parseFloat(heures) * parseFloat(tarifHoraire) +
+          parseFloat(km) * parseFloat(baremeKm)
+        ).toFixed(2)
       : '—';
 
   const handleSubmit = async () => {
@@ -119,11 +128,7 @@ export function HeuresRealiséesModal({ isOpen, onClose, clientId, onSuccess }: 
           <Stack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Mois</FormLabel>
-              <Input
-                type="month"
-                value={mois}
-                onChange={e => setMois(e.target.value)}
-              />
+              <Input type="month" value={mois} onChange={e => setMois(e.target.value)} />
             </FormControl>
 
             <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -185,11 +190,17 @@ export function HeuresRealiséesModal({ isOpen, onClose, clientId, onSuccess }: 
             <Stack spacing={1} bg="gray.50" borderRadius="md" p={3} fontSize="sm">
               <Grid templateColumns="1fr 1fr" gap={2}>
                 <Text color="gray.600">Montant heures :</Text>
-                <Text fontWeight="medium">{montantHeures !== '—' ? `${montantHeures} €` : '—'}</Text>
+                <Text fontWeight="medium">
+                  {montantHeures !== '—' ? `${montantHeures} €` : '—'}
+                </Text>
                 <Text color="gray.600">Montant km :</Text>
                 <Text fontWeight="medium">{montantKm !== '—' ? `${montantKm} €` : '—'}</Text>
-                <Text color="gray.600" fontWeight="bold">Total :</Text>
-                <Text fontWeight="bold" color="brand.500">{total !== '—' ? `${total} €` : '—'}</Text>
+                <Text color="gray.600" fontWeight="bold">
+                  Total :
+                </Text>
+                <Text fontWeight="bold" color="brand.500">
+                  {total !== '—' ? `${total} €` : '—'}
+                </Text>
               </Grid>
             </Stack>
           </Stack>
@@ -198,11 +209,7 @@ export function HeuresRealiséesModal({ isOpen, onClose, clientId, onSuccess }: 
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button
-            colorScheme="accent"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-          >
+          <Button colorScheme="accent" onClick={handleSubmit} isLoading={isSubmitting}>
             Enregistrer
           </Button>
         </ModalFooter>

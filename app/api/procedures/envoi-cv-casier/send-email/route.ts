@@ -22,7 +22,7 @@ async function sendBrevoEmail({
   const response = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: {
-      'accept': 'application/json',
+      accept: 'application/json',
       'api-key': apiKey,
       'content-type': 'application/json',
     },
@@ -52,10 +52,7 @@ export async function POST(request: NextRequest) {
     const { procedureId } = body;
 
     if (!procedureId) {
-      return NextResponse.json(
-        { success: false, error: 'Procedure ID requis' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Procedure ID requis' }, { status: 400 });
     }
 
     const supabase = createServiceRoleClient();
@@ -63,7 +60,8 @@ export async function POST(request: NextRequest) {
     // Get the procedure with client info
     const { data: procedure, error: procError } = await supabase
       .from('procedures')
-      .select(`
+      .select(
+        `
         id,
         download_token,
         download_token_expires_at,
@@ -86,15 +84,13 @@ export async function POST(request: NextRequest) {
           ecole_resp_autorisation_prenom,
           ecole_resp_autorisation_nom
         )
-      `)
+      `
+      )
       .eq('id', procedureId)
       .single();
 
     if (procError || !procedure) {
-      return NextResponse.json(
-        { success: false, error: 'Procédure non trouvée' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Procédure non trouvée' }, { status: 404 });
     }
 
     type ClientData = {
@@ -121,10 +117,7 @@ export async function POST(request: NextRequest) {
     const client = Array.isArray(clientData) ? clientData[0] : clientData;
 
     if (!client) {
-      return NextResponse.json(
-        { success: false, error: 'Client non trouvé' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Client non trouvé' }, { status: 404 });
     }
 
     // Determine the recipient name based on email
@@ -274,7 +267,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error sending CV/Casier email:', error);
     return NextResponse.json(
-      { success: false, error: 'Erreur lors de l\'envoi de l\'email' },
+      { success: false, error: "Erreur lors de l'envoi de l'email" },
       { status: 500 }
     );
   }

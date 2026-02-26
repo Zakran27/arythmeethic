@@ -49,7 +49,7 @@ const REGIONS_FRANCE = [
   'Nouvelle-Aquitaine',
   'Occitanie',
   'Pays de la Loire',
-  'Provence-Alpes-Côte d\'Azur',
+  "Provence-Alpes-Côte d'Azur",
 ];
 
 function RecueilEcoleFormContent() {
@@ -193,7 +193,9 @@ function RecueilEcoleFormContent() {
     fetchClient();
   }, [token]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
@@ -211,11 +213,21 @@ function RecueilEcoleFormContent() {
       // Prepare data for submission (convert numbers)
       const submitData = {
         ...formData,
-        ecole_module_heures: formData.ecole_module_heures ? parseInt(formData.ecole_module_heures, 10) : null,
-        ecole_groupe_taille: formData.ecole_groupe_taille ? parseInt(formData.ecole_groupe_taille, 10) : null,
-        ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min ? parseInt(formData.ecole_evaluation_nombre_min, 10) : null,
-        ecole_frais_midi_montant: formData.ecole_frais_midi_montant ? parseFloat(formData.ecole_frais_midi_montant) : null,
-        ecole_frais_km_prix: formData.ecole_frais_km_prix ? parseFloat(formData.ecole_frais_km_prix) : null,
+        ecole_module_heures: formData.ecole_module_heures
+          ? parseInt(formData.ecole_module_heures, 10)
+          : null,
+        ecole_groupe_taille: formData.ecole_groupe_taille
+          ? parseInt(formData.ecole_groupe_taille, 10)
+          : null,
+        ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min
+          ? parseInt(formData.ecole_evaluation_nombre_min, 10)
+          : null,
+        ecole_frais_midi_montant: formData.ecole_frais_midi_montant
+          ? parseFloat(formData.ecole_frais_midi_montant)
+          : null,
+        ecole_frais_km_prix: formData.ecole_frais_km_prix
+          ? parseFloat(formData.ecole_frais_km_prix)
+          : null,
       };
 
       const response = await fetch('/api/formulaire/recueil-informations-ecole', {
@@ -227,7 +239,7 @@ function RecueilEcoleFormContent() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        setError(data.error || 'Erreur lors de l\'envoi du formulaire');
+        setError(data.error || "Erreur lors de l'envoi du formulaire");
         setSubmitting(false);
         return;
       }
@@ -273,7 +285,7 @@ function RecueilEcoleFormContent() {
       // Redirect to confirmation page
       router.push('/formulaire/recueil-informations-ecole/confirmation');
     } catch (err) {
-      setError('Erreur lors de l\'envoi du formulaire');
+      setError("Erreur lors de l'envoi du formulaire");
       setSubmitting(false);
     }
   };
@@ -282,7 +294,9 @@ function RecueilEcoleFormContent() {
     return (
       <Box textAlign="center" py={20}>
         <Spinner size="xl" color="accent.500" />
-        <Text mt={4} color="brand.600">Chargement du formulaire...</Text>
+        <Text mt={4} color="brand.600">
+          Chargement du formulaire...
+        </Text>
       </Box>
     );
   }
@@ -782,10 +796,11 @@ function RecueilEcoleFormContent() {
                     <FormControl>
                       <Checkbox
                         isChecked={autoriseContactEnseignant}
-                        onChange={(e) => setAutoriseContactEnseignant(e.target.checked)}
+                        onChange={e => setAutoriseContactEnseignant(e.target.checked)}
                         colorScheme="cyan"
                       >
-                        J'accepte de transmettre les coordonnées du précédent enseignant de la matière
+                        J'accepte de transmettre les coordonnées du précédent enseignant de la
+                        matière
                       </Checkbox>
                     </FormControl>
                     {autoriseContactEnseignant && (
@@ -865,7 +880,7 @@ function RecueilEcoleFormContent() {
                             id="syllabus-file"
                             type="file"
                             accept="image/*,.pdf"
-                            onChange={(e) => {
+                            onChange={e => {
                               const file = e.target.files?.[0];
                               if (file) setSyllabusFile(file);
                             }}
@@ -932,7 +947,7 @@ function RecueilEcoleFormContent() {
                             id="cours-exemple-file"
                             type="file"
                             accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
-                            onChange={(e) => {
+                            onChange={e => {
                               const file = e.target.files?.[0];
                               if (file) setCoursExempleFile(file);
                             }}
@@ -992,12 +1007,16 @@ function RecueilEcoleFormContent() {
 
 export default function RecueilInformationsEcolePage() {
   return (
-    <Suspense fallback={
-      <Box textAlign="center" py={20}>
-        <Spinner size="xl" color="accent.500" />
-        <Text mt={4} color="brand.600">Chargement...</Text>
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box textAlign="center" py={20}>
+          <Spinner size="xl" color="accent.500" />
+          <Text mt={4} color="brand.600">
+            Chargement...
+          </Text>
+        </Box>
+      }
+    >
       <RecueilEcoleFormContent />
     </Suspense>
   );

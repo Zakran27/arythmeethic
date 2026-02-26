@@ -29,9 +29,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <Box bg="white" borderBottom="1px" borderColor="grey.300" py={2}>
         <Container maxW="container.xl">
           <HStack justify="flex-end">
-            <Button 
-              size="sm" 
-              variant="ghost" 
+            <Button
+              size="sm"
+              variant="ghost"
               onClick={handleLogout}
               color="brand.600"
               _hover={{ bg: 'sand.50' }}

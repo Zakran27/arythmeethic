@@ -54,7 +54,10 @@ export async function POST(request: NextRequest) {
 
     // Create client in Supabase
     const supabase = createServiceRoleClient();
-    const { type_client, sub_type } = clientTypeMapping[clientType] || { type_client: 'Particulier', sub_type: null };
+    const { type_client, sub_type } = clientTypeMapping[clientType] || {
+      type_client: 'Particulier',
+      sub_type: null,
+    };
 
     // Build the client record based on type
     const clientRecord: Record<string, unknown> = {
@@ -174,7 +177,7 @@ ${message}
   } catch (error) {
     console.error('Error processing contact form:', error);
     return NextResponse.json(
-      { success: false, error: 'Erreur lors de l\'envoi du message' },
+      { success: false, error: "Erreur lors de l'envoi du message" },
       { status: 500 }
     );
   }

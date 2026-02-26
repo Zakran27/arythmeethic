@@ -28,15 +28,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { Client } from '@/types';
 
-const JOURS_SEMAINE = [
-  'Lundi',
-  'Mardi',
-  'Mercredi',
-  'Jeudi',
-  'Vendredi',
-  'Samedi',
-  'Dimanche',
-];
+const JOURS_SEMAINE = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
 function RecueilFormContent() {
   const searchParams = useSearchParams();
@@ -173,7 +165,7 @@ function RecueilFormContent() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        setError(data.error || 'Erreur lors de l\'envoi du formulaire');
+        setError(data.error || "Erreur lors de l'envoi du formulaire");
         setSubmitting(false);
         return;
       }
@@ -199,13 +191,18 @@ function RecueilFormContent() {
           console.log('File uploaded successfully');
         }
       } else {
-        console.log('No file to upload. File:', !!emploiDuTempsFile, 'ProcedureId:', data.procedureId);
+        console.log(
+          'No file to upload. File:',
+          !!emploiDuTempsFile,
+          'ProcedureId:',
+          data.procedureId
+        );
       }
 
       // Redirect to confirmation page
       router.push('/formulaire/recueil-informations/confirmation');
     } catch (err) {
-      setError('Erreur lors de l\'envoi du formulaire');
+      setError("Erreur lors de l'envoi du formulaire");
       setSubmitting(false);
     }
   };
@@ -214,7 +211,9 @@ function RecueilFormContent() {
     return (
       <Box textAlign="center" py={20}>
         <Spinner size="xl" color="accent.500" />
-        <Text mt={4} color="brand.600">Chargement du formulaire...</Text>
+        <Text mt={4} color="brand.600">
+          Chargement du formulaire...
+        </Text>
       </Box>
     );
   }
@@ -491,7 +490,9 @@ function RecueilFormContent() {
                     <FormControl isInvalid={!!joursError}>
                       <FormLabel color="brand.600">
                         Jours possibles pour le cours
-                        <Text as="span" color="red.500" ml={1}>*</Text>
+                        <Text as="span" color="red.500" ml={1}>
+                          *
+                        </Text>
                       </FormLabel>
                       <CheckboxGroup
                         value={formData.jours_disponibles}
@@ -596,12 +597,16 @@ function RecueilFormContent() {
 
 export default function RecueilInformationsPage() {
   return (
-    <Suspense fallback={
-      <Box textAlign="center" py={20}>
-        <Spinner size="xl" color="accent.500" />
-        <Text mt={4} color="brand.600">Chargement...</Text>
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box textAlign="center" py={20}>
+          <Spinner size="xl" color="accent.500" />
+          <Text mt={4} color="brand.600">
+            Chargement...
+          </Text>
+        </Box>
+      }
+    >
       <RecueilFormContent />
     </Suspense>
   );
