@@ -37,14 +37,22 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
 } from '@chakra-ui/react';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX, FiTrash2 } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
 import { EditClientModal } from './EditClientModal';
+import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -98,6 +106,53 @@ export default function ClientDetailPage() {
     onClose: onContractualisationParticulierClose
   } = useDisclosure();
   const [isLaunchingProcedure, setIsLaunchingProcedure] = useState(false);
+
+  // Heures réalisées
+  const {
+    isOpen: isHeuresOpen,
+    onOpen: onHeuresOpen,
+    onClose: onHeuresClose,
+  } = useDisclosure();
+  const [heuresRealisees, setHeuresRealisees] = useState<Array<{
+    id: string;
+    mois: string;
+    heures: number;
+    tarif_horaire: number;
+    km: number;
+    bareme_km: number;
+    created_at: string;
+  }>>([]);
+  const [heuresLoading, setHeuresLoading] = useState(false);
+  const now = new Date();
+  const defaultFilterFrom = `${now.getFullYear() - 1}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const defaultFilterTo = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const [heuresFilterFrom, setHeuresFilterFrom] = useState(defaultFilterFrom);
+  const [heuresFilterTo, setHeuresFilterTo] = useState(defaultFilterTo);
+
+  const fetchHeures = useCallback(async () => {
+    setHeuresLoading(true);
+    try {
+      const supabase = createClient();
+      const fromDate = heuresFilterFrom ? `${heuresFilterFrom}-01` : undefined;
+      const toDate = heuresFilterTo ? `${heuresFilterTo}-01` : undefined;
+      let query = supabase
+        .from('heures_realisees')
+        .select('*')
+        .eq('client_id', clientId)
+        .order('mois', { ascending: false });
+      if (fromDate) query = query.gte('mois', fromDate);
+      if (toDate) query = query.lte('mois', toDate);
+      const { data, error } = await query;
+      if (!error) setHeuresRealisees(data || []);
+    } finally {
+      setHeuresLoading(false);
+    }
+  }, [clientId, heuresFilterFrom, heuresFilterTo]);
+
+  useEffect(() => {
+    if (clientId) fetchHeures();
+  }, [fetchHeures]);
+
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const [selectedContractualisationSigner, setSelectedContractualisationSigner] = useState('');
   const [selectedAnneeScolaire, setSelectedAnneeScolaire] = useState('');
@@ -1258,6 +1313,94 @@ export default function ClientDetailPage() {
         )}
       </Grid>
 
+      {/* ========== HEURES RÉALISÉES - Particulier uniquement ========== */}
+      {isParticulier && (
+        <Card bg="white">
+          <CardBody>
+            <Stack spacing={4}>
+              <HStack justify="space-between" align="center">
+                <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
+                  Heures réalisées
+                </Heading>
+                <Button colorScheme="accent" size="sm" onClick={onHeuresOpen}>
+                  + Déclarer des heures
+                </Button>
+              </HStack>
+
+              {/* Filtres date range */}
+              <HStack spacing={3} align="flex-end">
+                <FormControl maxW="180px">
+                  <FormLabel fontSize="xs" mb={1}>De</FormLabel>
+                  <Input
+                    type="month"
+                    size="sm"
+                    value={heuresFilterFrom}
+                    onChange={e => setHeuresFilterFrom(e.target.value)}
+                  />
+                </FormControl>
+                <FormControl maxW="180px">
+                  <FormLabel fontSize="xs" mb={1}>À</FormLabel>
+                  <Input
+                    type="month"
+                    size="sm"
+                    value={heuresFilterTo}
+                    onChange={e => setHeuresFilterTo(e.target.value)}
+                  />
+                </FormControl>
+              </HStack>
+
+              {heuresLoading ? (
+                <Box textAlign="center" py={4}>
+                  <Spinner size="sm" color="accent.500" />
+                </Box>
+              ) : heuresRealisees.length > 0 ? (
+                <TableContainer>
+                  <Table size="sm" variant="simple">
+                    <Thead>
+                      <Tr>
+                        <Th>Mois</Th>
+                        <Th isNumeric>Heures</Th>
+                        <Th isNumeric>Tarif (€/h)</Th>
+                        <Th isNumeric>Montant heures</Th>
+                        <Th isNumeric>Km</Th>
+                        <Th isNumeric>Barème km</Th>
+                        <Th isNumeric>Montant km</Th>
+                        <Th isNumeric>Total</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {heuresRealisees.map(h => {
+                        const montantHeures = h.heures * h.tarif_horaire;
+                        const montantKm = h.km * h.bareme_km;
+                        const total = montantHeures + montantKm;
+                        const moisDate = new Date(h.mois + 'T00:00:00');
+                        const label = moisDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                        return (
+                          <Tr key={h.id}>
+                            <Td textTransform="capitalize">{label}</Td>
+                            <Td isNumeric>{h.heures}h</Td>
+                            <Td isNumeric>{h.tarif_horaire.toFixed(2)} €</Td>
+                            <Td isNumeric>{montantHeures.toFixed(2)} €</Td>
+                            <Td isNumeric>{h.km} km</Td>
+                            <Td isNumeric>{h.bareme_km.toFixed(3)} €</Td>
+                            <Td isNumeric>{montantKm.toFixed(2)} €</Td>
+                            <Td isNumeric fontWeight="bold">{total.toFixed(2)} €</Td>
+                          </Tr>
+                        );
+                      })}
+                    </Tbody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box textAlign="center" py={6}>
+                  <Text color="gray.500" fontSize="sm">Aucune heure déclarée pour cette période</Text>
+                </Box>
+              )}
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       <Card bg="white">
         <CardBody>
           <Stack spacing={4}>
@@ -1289,9 +1432,6 @@ export default function ClientDetailPage() {
                   </Button>
                   <Button colorScheme="accent" size="sm" onClick={onContractualisationParticulierOpen}>
                     Contractualisation
-                  </Button>
-                  <Button colorScheme="accent" size="sm">
-                    Déclaration des heures
                   </Button>
                   <Button colorScheme="accent" size="sm" onClick={onRenouvellementOpen}>
                     Souhait de renouvellement
@@ -2096,6 +2236,14 @@ export default function ClientDetailPage() {
           </AlertDialogContent>
         </AlertDialogOverlay>
       </AlertDialog>
+
+      {/* Modal Heures Réalisées */}
+      <HeuresRealiséesModal
+        isOpen={isHeuresOpen}
+        onClose={onHeuresClose}
+        clientId={clientId}
+        onSuccess={fetchHeures}
+      />
     </Stack>
   );
 }
