@@ -35,7 +35,7 @@ const ECOLE_STEPS = [
   { title: "Réalisation du module" },
   { title: "Facturation mensuelle", subtitle: "Paiement par virement" },
   { title: "Bilan annuel" },
-  { title: "Arrêt de la prestation", subtitle: "ou poursuite l'année scolaire suivante" },
+  { title: "Poursuite l'année scolaire suivante", subtitle: "ou fin de prestation" },
 ];
 
 function ProcessStep({
@@ -84,7 +84,7 @@ function ProcessStep({
       <Box ml={3} pb={isLast ? 0 : 5}>
         <Text fontSize="sm" fontWeight={600} color="brand.600">{step.title}</Text>
         {step.subtitle && (
-          <Text fontSize="xs" color="brand.400" mt={0.5}>{step.subtitle}</Text>
+          <Text fontSize="xs" color="brand.400" mt={0.5} fontStyle="italic">{step.subtitle}</Text>
         )}
       </Box>
     </Flex>
@@ -496,6 +496,7 @@ export default function HomePage() {
                       h="100%"
                       objectFit="cover"
                       objectPosition={activeTab === 'particulier' ? 'center 45%' : 'center'}
+                      transform={activeTab === 'ecole' ? 'scale(0.88)' : 'none'}
                     />
                   </Box>
 
