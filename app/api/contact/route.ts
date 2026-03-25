@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
       howDidYouHear,
       referrerName,
       message,
+      demarcheVolontaire,
     } = body;
 
     // Map client types to database values
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       clientRecord.email = email;
       clientRecord.email_jeune = email;
       clientRecord.phone_jeune = phone || null;
+      clientRecord.demarche_volontaire = demarcheVolontaire === true;
     } else if (clientType === 'parent') {
       // Parent - store in parent1 fields
       clientRecord.first_name = firstName;
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
       clientRecord.phone_parent1 = phone || null;
       clientRecord.niveau_eleve = studentLevel || null;
       clientRecord.demande_type = requestTypeLabels[requestType] || requestType || null;
+      clientRecord.demarche_volontaire = demarcheVolontaire === true;
     } else if (clientType === 'school') {
       // École - store in main fields + organisation
       clientRecord.first_name = firstName;
