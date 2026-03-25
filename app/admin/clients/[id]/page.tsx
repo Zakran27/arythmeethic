@@ -1314,24 +1314,12 @@ export default function ClientDetailPage() {
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
-                    Type de facturation
+                    Période de facturation
                   </Text>
                   <Text fontWeight="medium">
-                    {client.ecole_facturation_type === 'recurrente'
-                      ? 'Récurrente'
-                      : client.ecole_facturation_type === 'ponctuelle'
-                        ? 'Ponctuelle'
-                        : '—'}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Moment du paiement
-                  </Text>
-                  <Text fontWeight="medium">
-                    {client.ecole_facturation_moment_paiement === 'fin_mois_courant'
+                    {client.ecole_periode_facturation === 'fin_mois_en_cours'
                       ? 'Fin du mois en cours'
-                      : client.ecole_facturation_moment_paiement === 'mois_suivant'
+                      : client.ecole_periode_facturation === 'mois_suivant'
                         ? 'Mois suivant'
                         : '—'}
                   </Text>

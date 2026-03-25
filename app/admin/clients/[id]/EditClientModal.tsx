@@ -139,8 +139,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     // Facturation
     ecole_facturation_date_max_paiement:
       client.ecole_facturation_date_max_paiement?.toString() || '',
-    ecole_facturation_type: client.ecole_facturation_type || '',
-    ecole_facturation_moment_paiement: client.ecole_facturation_moment_paiement || '',
+    ecole_periode_facturation: client.ecole_periode_facturation || '',
     // Responsable notes
     ecole_notes_saisies_par: client.ecole_notes_saisies_par || '',
     ecole_resp_notes_nom: client.ecole_resp_notes_nom || '',
@@ -232,8 +231,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       // Facturation
       ecole_facturation_date_max_paiement:
         client.ecole_facturation_date_max_paiement?.toString() || '',
-      ecole_facturation_type: client.ecole_facturation_type || '',
-      ecole_facturation_moment_paiement: client.ecole_facturation_moment_paiement || '',
+      ecole_periode_facturation: client.ecole_periode_facturation || '',
       // Responsable notes
       ecole_notes_saisies_par: client.ecole_notes_saisies_par || '',
       ecole_resp_notes_nom: client.ecole_resp_notes_nom || '',
@@ -364,8 +362,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
             ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
             : null,
-          ecole_facturation_type: formData.ecole_facturation_type || null,
-          ecole_facturation_moment_paiement: formData.ecole_facturation_moment_paiement || null,
+          ecole_periode_facturation: formData.ecole_periode_facturation || null,
           // Responsable notes
           ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
           ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
@@ -1327,28 +1324,13 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     </GridItem>
                     <GridItem>
                       <FormControl>
-                        <FormLabel>Type de facturation</FormLabel>
+                        <FormLabel>Période de facturation</FormLabel>
                         <Select
-                          value={formData.ecole_facturation_type}
-                          onChange={e => handleChange('ecole_facturation_type', e.target.value)}
+                          value={formData.ecole_periode_facturation}
+                          onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
                           placeholder="Sélectionnez..."
                         >
-                          <option value="recurrente">Récurrente</option>
-                          <option value="ponctuelle">Ponctuelle</option>
-                        </Select>
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Moment du paiement</FormLabel>
-                        <Select
-                          value={formData.ecole_facturation_moment_paiement}
-                          onChange={e =>
-                            handleChange('ecole_facturation_moment_paiement', e.target.value)
-                          }
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="fin_mois_courant">Fin du mois en cours</option>
+                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
                           <option value="mois_suivant">Mois suivant</option>
                         </Select>
                       </FormControl>
