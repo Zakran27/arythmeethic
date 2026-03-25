@@ -4,11 +4,10 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Client } from '@/types';
 
-const TARIF_HORAIRE_HT = 44.8;
-
 interface ContractData {
   client: Client;
   anneeScolaire: string;
+  tarifHoraireHT?: number;
 }
 
 export interface ContractEcoleResult {
@@ -21,7 +20,7 @@ export interface ContractEcoleResult {
 }
 
 export async function generateContractPDF(data: ContractData): Promise<ContractEcoleResult> {
-  const { client, anneeScolaire } = data;
+  const { client, anneeScolaire, tarifHoraireHT = 44.8 } = data;
 
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
@@ -283,7 +282,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('Article 7 : Modalites financieres', 11, true);
   br(6);
   write(
-    `Le sous-traitant percevra une remuneration de ${TARIF_HORAIRE_HT.toFixed(2)} euros HT par heure de face a face pedagogique.`,
+    `Le sous-traitant percevra une remuneration de ${tarifHoraireHT.toFixed(2)} euros HT par heure de face a face pedagogique.`,
     9
   );
   br(6);
@@ -531,9 +530,9 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   // Yousign fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
   const signaturePage = pdfDoc.getPageCount();
   const signatureX = MARGIN; // left column — donneur d'ordre
-  const signatureY = sigLabelY - 55;
+  const signatureY = sigLabelY - 80;
   const florenceSignatureX = MARGIN + 250; // right column — sous-traitant
-  const florenceSignatureY = sigLabelY - 55;
+  const florenceSignatureY = sigLabelY - 80;
 
   const pdfBytes = await pdfDoc.save();
   return {

@@ -9,7 +9,6 @@ interface ContractParticulierData {
   anneeScolaire: string;
   dateDebut: string;
   dateFin: string;
-  dureePeriodeEssai: string;
   salaireHoraireNet: number;
   signerFirstName: string;
   signerLastName: string;
@@ -40,7 +39,6 @@ export async function generateContractParticulierPDF(
     anneeScolaire,
     dateDebut,
     dateFin,
-    dureePeriodeEssai,
     salaireHoraireNet,
     signerFirstName,
     signerLastName,
@@ -168,18 +166,6 @@ export async function generateContractParticulierPDF(
   );
   br(8);
 
-  write("Periode d'essai", 10, true);
-  write(`Duree de la periode d'essai : ${dureePeriodeEssai}`, 9);
-  write("La duree maximale de la periode d'essai depend de la duree du contrat :", 9);
-  write(
-    '  Pour un CDD inferieur ou egal a 6 mois : 1 jour par semaine, dans la limite de 2 semaines.',
-    9
-  );
-  write("  Pour un CDD superieur a 6 mois : 1 jour par semaine, dans la limite d'1 mois.", 9);
-  write(
-    'Ces durees sont applicables que le salarie soit embauche a temps plein ou a temps partiel.',
-    9
-  );
   br(14);
 
   // ===== SECTION 3 : LIEU DE TRAVAIL =====
@@ -317,9 +303,9 @@ export async function generateContractParticulierPDF(
   // Yousign fields: Florence (salarié) on left, client (employeur) on right
   const signaturePage = pdfDoc.getPageCount();
   const signatureX = MARGIN + 250; // right column — employeur
-  const signatureY = sigLabelY - 55;
+  const signatureY = sigLabelY - 80;
   const florenceSignatureX = MARGIN; // left column — salarié
-  const florenceSignatureY = sigLabelY - 55;
+  const florenceSignatureY = sigLabelY - 80;
 
   const pdfBytes = await pdfDoc.save();
   return {

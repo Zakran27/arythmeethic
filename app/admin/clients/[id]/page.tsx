@@ -157,8 +157,8 @@ export default function ClientDetailPage() {
   const [selectedRenouvellementEmail, setSelectedRenouvellementEmail] = useState('');
   const [contractDateDebut, setContractDateDebut] = useState('');
   const [contractDateFin, setContractDateFin] = useState('');
-  const [contractDureePeriodeEssai, setContractDureePeriodeEssai] = useState('');
   const [contractSalaireHoraireNet, setContractSalaireHoraireNet] = useState('');
+  const [contractTarifEcole, setContractTarifEcole] = useState('');
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -510,6 +510,7 @@ export default function ClientDetailPage() {
           signerLastName,
           signerPhone: signerPhone || undefined,
           anneeScolaire: selectedAnneeScolaire,
+          tarifHoraireHT: contractTarifEcole || undefined,
         }),
       });
 
@@ -530,6 +531,7 @@ export default function ClientDetailPage() {
       onContractualisationClose();
       setSelectedContractualisationSigner('');
       setSelectedAnneeScolaire('');
+      setContractTarifEcole('');
       refetch();
     } catch (err) {
       toast({
@@ -570,12 +572,7 @@ export default function ClientDetailPage() {
       return;
     }
 
-    if (
-      !contractDateDebut ||
-      !contractDateFin ||
-      !contractDureePeriodeEssai ||
-      !contractSalaireHoraireNet
-    ) {
+    if (!contractDateDebut || !contractDateFin || !contractSalaireHoraireNet) {
       toast({
         title: 'Erreur',
         description: 'Veuillez remplir tous les champs requis.',
@@ -605,7 +602,6 @@ export default function ClientDetailPage() {
           anneeScolaire: selectedAnneeScolaire,
           dateDebut: contractDateDebut,
           dateFin: contractDateFin,
-          dureePeriodeEssai: contractDureePeriodeEssai,
           salaireHoraireNet: parseFloat(contractSalaireHoraireNet),
         }),
       });
@@ -629,7 +625,6 @@ export default function ClientDetailPage() {
       setSelectedAnneeScolaire('');
       setContractDateDebut('');
       setContractDateFin('');
-      setContractDureePeriodeEssai('');
       setContractSalaireHoraireNet('');
       refetch();
     } catch (err) {
@@ -1408,6 +1403,14 @@ export default function ClientDetailPage() {
                   </Text>
                   <Text fontWeight="medium">{client.numero_cesu || '—'}</Text>
                 </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Tarif horaire net
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '—'}
+                  </Text>
+                </GridItem>
               </Grid>
             </Stack>
           </CardBody>
@@ -1655,7 +1658,12 @@ export default function ClientDetailPage() {
                   <Button
                     colorScheme="accent"
                     size="sm"
-                    onClick={onContractualisationParticulierOpen}
+                    onClick={() => {
+                      if (client?.tarif_horaire) {
+                        setContractSalaireHoraireNet(client.tarif_horaire.toString());
+                      }
+                      onContractualisationParticulierOpen();
+                    }}
                   >
                     Contractualisation
                   </Button>
@@ -2325,6 +2333,7 @@ export default function ClientDetailPage() {
           onContractualisationClose();
           setSelectedContractualisationSigner('');
           setSelectedAnneeScolaire('');
+          setContractTarifEcole('');
         }}
         isCentered
       >
@@ -2356,6 +2365,17 @@ export default function ClientDetailPage() {
                   </option>
                 ))}
               </Select>
+            </FormControl>
+
+            <FormControl mb={4}>
+              <FormLabel color="brand.600">Tarif horaire HT (€) — optionnel</FormLabel>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="Défaut : 44.80 €/h"
+                value={contractTarifEcole}
+                onChange={e => setContractTarifEcole(e.target.value)}
+              />
             </FormControl>
 
             <FormControl isRequired>
@@ -2461,7 +2481,6 @@ export default function ClientDetailPage() {
           setSelectedAnneeScolaire('');
           setContractDateDebut('');
           setContractDateFin('');
-          setContractDureePeriodeEssai('');
           setContractSalaireHoraireNet('');
         }}
         isCentered
@@ -2514,16 +2533,6 @@ export default function ClientDetailPage() {
                   type="date"
                   value={contractDateFin}
                   onChange={e => setContractDateFin(e.target.value)}
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel color="brand.600">Durée de la période d'essai</FormLabel>
-                <Input
-                  type="text"
-                  placeholder="Ex: 2 semaines"
-                  value={contractDureePeriodeEssai}
-                  onChange={e => setContractDureePeriodeEssai(e.target.value)}
                 />
               </FormControl>
 
@@ -2591,7 +2600,6 @@ export default function ClientDetailPage() {
                 setSelectedAnneeScolaire('');
                 setContractDateDebut('');
                 setContractDateFin('');
-                setContractDureePeriodeEssai('');
                 setContractSalaireHoraireNet('');
               }}
             >
@@ -2607,7 +2615,6 @@ export default function ClientDetailPage() {
                 !selectedAnneeScolaire ||
                 !contractDateDebut ||
                 !contractDateFin ||
-                !contractDureePeriodeEssai ||
                 !contractSalaireHoraireNet
               }
             >
