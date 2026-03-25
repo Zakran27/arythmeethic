@@ -27,6 +27,7 @@ interface HeuresRealiséesModalProps {
   onSuccess: () => void;
   clientTarifHoraire?: number;
   clientDistanceKm?: number;
+  defaultBaremeKm?: string;
 }
 
 export function HeuresRealiséesModal({
@@ -36,6 +37,7 @@ export function HeuresRealiséesModal({
   onSuccess,
   clientTarifHoraire,
   clientDistanceKm,
+  defaultBaremeKm = '0.636',
 }: HeuresRealiséesModalProps) {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,7 +49,7 @@ export function HeuresRealiséesModal({
   const [heures, setHeures] = useState('');
   const [tarifHoraire, setTarifHoraire] = useState(clientTarifHoraire?.toString() ?? '');
   const [nbDeplacements, setNbDeplacements] = useState('0');
-  const [baremeKm, setBaremeKm] = useState('0.636');
+  const [baremeKm, setBaremeKm] = useState(defaultBaremeKm);
   const [tempsAReporter, setTempsAReporter] = useState('');
 
   // km calculés automatiquement depuis nb_deplacements × distance_km du client
@@ -114,7 +116,7 @@ export function HeuresRealiséesModal({
       setHeures('');
       setTarifHoraire(clientTarifHoraire?.toString() ?? '');
       setNbDeplacements('0');
-      setBaremeKm('0.636');
+      setBaremeKm(defaultBaremeKm);
       setTempsAReporter('');
     } catch (err) {
       toast({
