@@ -1,4 +1,7 @@
-import { PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFPage, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { Client } from '@/types';
 
 const TARIF_HORAIRE_HT = 44.8;
@@ -13,15 +16,24 @@ export interface ContractEcoleResult {
   signaturePage: number; // 1-indexed
   signatureX: number;
   signatureY: number;
+  florenceSignatureX: number;
+  florenceSignatureY: number;
 }
 
 export async function generateContractPDF(data: ContractData): Promise<ContractEcoleResult> {
   const { client, anneeScolaire } = data;
 
   const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+  pdfDoc.registerFontkit(fontkit);
+
+  const fontsDir = join(process.cwd(), 'public', 'fonts');
+  const fontBytes = readFileSync(join(fontsDir, 'NotoSans-Regular.ttf'));
+  const fontBoldBytes = readFileSync(join(fontsDir, 'NotoSans-Bold.ttf'));
+  const fontItalicBytes = readFileSync(join(fontsDir, 'NotoSans-Italic.ttf'));
+
+  const font = await pdfDoc.embedFont(fontBytes);
+  const fontBold = await pdfDoc.embedFont(fontBoldBytes);
+  const fontItalic = await pdfDoc.embedFont(fontItalicBytes);
 
   const PAGE_W = 595;
   const PAGE_H = 842;
@@ -516,10 +528,12 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   br(4);
   write('[Nom, prenom, qualite, signature, tampon]', 9, false, 0, true);
 
-  // Yousign field under "Le donneur d'ordre," (left side)
+  // Yousign fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
   const signaturePage = pdfDoc.getPageCount();
-  const signatureX = MARGIN; // left column
-  const signatureY = sigLabelY - 55; // below the label
+  const signatureX = MARGIN; // left column — donneur d'ordre
+  const signatureY = sigLabelY - 55;
+  const florenceSignatureX = MARGIN + 250; // right column — sous-traitant
+  const florenceSignatureY = sigLabelY - 55;
 
   const pdfBytes = await pdfDoc.save();
   return {
@@ -527,5 +541,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     signaturePage,
     signatureX,
     signatureY,
+    florenceSignatureX,
+    florenceSignatureY,
   };
 }

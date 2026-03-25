@@ -1,4 +1,7 @@
-import { PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFPage, rgb } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { Client } from '@/types';
 
 interface ContractParticulierData {
@@ -19,6 +22,8 @@ export interface ContractParticulierResult {
   signaturePage: number; // 1-indexed
   signatureX: number;
   signatureY: number;
+  florenceSignatureX: number;
+  florenceSignatureY: number;
 }
 
 function formatDate(isoDate: string): string {
@@ -44,8 +49,14 @@ export async function generateContractParticulierPDF(
   } = data;
 
   const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  pdfDoc.registerFontkit(fontkit);
+
+  const fontsDir = join(process.cwd(), 'public', 'fonts');
+  const fontBytes = readFileSync(join(fontsDir, 'NotoSans-Regular.ttf'));
+  const fontBoldBytes = readFileSync(join(fontsDir, 'NotoSans-Bold.ttf'));
+
+  const font = await pdfDoc.embedFont(fontBytes);
+  const fontBold = await pdfDoc.embedFont(fontBoldBytes);
 
   const PAGE_W = 595;
   const PAGE_H = 842;
@@ -303,10 +314,12 @@ export async function generateContractParticulierPDF(
   write('Signature salarie :', 9);
   writeRight('Signature employeur :', 9, sigLabelY);
 
-  // Yousign field under "Signature employeur :" (right column)
+  // Yousign fields: Florence (salarié) on left, client (employeur) on right
   const signaturePage = pdfDoc.getPageCount();
-  const signatureX = MARGIN + 250; // 300
+  const signatureX = MARGIN + 250; // right column — employeur
   const signatureY = sigLabelY - 55;
+  const florenceSignatureX = MARGIN; // left column — salarié
+  const florenceSignatureY = sigLabelY - 55;
 
   const pdfBytes = await pdfDoc.save();
   return {
@@ -314,5 +327,7 @@ export async function generateContractParticulierPDF(
     signaturePage,
     signatureX,
     signatureY,
+    florenceSignatureX,
+    florenceSignatureY,
   };
 }

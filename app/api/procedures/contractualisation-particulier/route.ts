@@ -239,6 +239,8 @@ export async function POST(request: NextRequest) {
     let signaturePage: number;
     let signatureX: number;
     let signatureY: number;
+    let florenceSignatureX: number;
+    let florenceSignatureY: number;
     try {
       const result = await generateContractParticulierPDF({
         client,
@@ -256,6 +258,8 @@ export async function POST(request: NextRequest) {
       signaturePage = result.signaturePage;
       signatureX = result.signatureX;
       signatureY = result.signatureY;
+      florenceSignatureX = result.florenceSignatureX;
+      florenceSignatureY = result.florenceSignatureY;
     } catch (err) {
       console.error('Error generating contract PDF:', err);
       return NextResponse.json(
@@ -298,7 +302,7 @@ export async function POST(request: NextRequest) {
       );
       console.log('Document uploaded:', document.id);
 
-      // 3. Add signer with signature field
+      // 3. Add client signer with signature field (right — employeur)
       const signer = await addSigner(
         signatureRequest.id,
         document.id,
@@ -311,6 +315,19 @@ export async function POST(request: NextRequest) {
         { page: signaturePage, x: signatureX, y: signatureY }
       );
       console.log('Signer added:', signer.id);
+
+      // 3b. Add Florence as second signer (left — salarié)
+      const florenceSigner = await addSigner(
+        signatureRequest.id,
+        document.id,
+        {
+          firstName: 'Florence',
+          lastName: 'LOUAZEL',
+          email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
+        },
+        { page: signaturePage, x: florenceSignatureX, y: florenceSignatureY }
+      );
+      console.log('Florence signer added:', florenceSigner.id);
 
       // 4. Activate the signature request
       await activateSignatureRequest(signatureRequest.id);
