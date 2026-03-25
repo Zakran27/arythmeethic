@@ -1303,7 +1303,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                     <GridItem>
                       <FormControl>
-                        <FormLabel>Date max de paiement (jour du mois)</FormLabel>
+                        <FormLabel>Date max d'envoi de la facture (jour du mois)</FormLabel>
                         <Input
                           type="number"
                           min="1"

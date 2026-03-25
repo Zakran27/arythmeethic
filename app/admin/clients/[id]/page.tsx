@@ -1282,7 +1282,7 @@ export default function ClientDetailPage() {
               <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
-                    Date max de paiement
+                    Date max d'envoi de la facture
                   </Text>
                   <Text fontWeight="medium">
                     {client.ecole_facturation_date_max_paiement
