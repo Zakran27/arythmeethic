@@ -131,20 +131,9 @@ export default function HomePage() {
                     colorScheme="accent"
                     size="lg"
                     px={8}
-                    onClick={() => handleContactClick('parent')}
+                    onClick={onOpen}
                   >
                     Prendre contact
-                  </Button>
-                  <Button
-                    size="lg"
-                    px={6}
-                    variant="outline"
-                    borderColor="brand.400"
-                    color="brand.500"
-                    _hover={{ bg: 'brand.50' }}
-                    onClick={() => handleContactClick('school')}
-                  >
-                    Je suis un établissement
                   </Button>
                 </Flex>
               </Stack>
@@ -179,7 +168,7 @@ export default function HomePage() {
                     Florence Louazel
                   </Text>
                   <Text fontSize="xs" color="terracotta.500">
-                    Enseignante & formatrice
+                    Formatrice
                   </Text>
                 </Box>
               </Box>
@@ -239,7 +228,7 @@ export default function HomePage() {
                     w="100%"
                     h="100%"
                     objectFit="cover"
-                    objectPosition="center top"
+                    objectPosition="center 30%"
                     transition="transform 0.5s ease"
                     _hover={{ transform: 'scale(1.05)' }}
                   />
@@ -370,6 +359,7 @@ export default function HomePage() {
                       <Stack spacing={1} pl={2}>
                         {[
                           'Cours de mathématiques',
+                          'Modules de management',
                           'Modules de compétences psychosociales',
                           "Modules d'éducation financière",
                         ].map(item => (
@@ -415,95 +405,50 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* ── PÉDAGOGIE ── */}
-      <Box bg="#faf6f2" py={{ base: 16, md: 24 }} overflow="hidden">
-        <Container maxW="container.xl">
-          <Flex direction={{ base: 'column', lg: 'row' }} align="center" gap={{ base: 12, lg: 16 }}>
-            <SlideIn from="left" style={{ flex: 1 }}>
+      {/* ── DÉCOUVREZ QUI JE SUIS ── */}
+      <Box id="decouvrir" bg="#faf6f2" py={{ base: 16, md: 24 }}>
+        <Container maxW="container.lg">
+          <FadeUp>
+            <Stack spacing={8} align="center" textAlign="center">
+              <Box>
+                <Text
+                  fontSize="xs"
+                  fontWeight="700"
+                  color="accent.500"
+                  textTransform="uppercase"
+                  letterSpacing="widest"
+                  mb={3}
+                >
+                  En vidéo
+                </Text>
+                <Heading
+                  as="h2"
+                  fontSize={{ base: '3xl', md: '4xl' }}
+                  color="brand.500"
+                  fontFamily="heading"
+                >
+                  Découvrez qui je suis
+                </Heading>
+              </Box>
+              {/* Placeholder vidéo — remplacer l'URL ci-dessous par l'URL YouTube/Vimeo */}
               <Box
-                borderRadius="3xl"
+                w="100%"
+                maxW="720px"
+                borderRadius="2xl"
                 overflow="hidden"
                 boxShadow="xl"
-                maxW={{ base: '100%', lg: '460px' }}
+                bg="brand.100"
+                aspectRatio={16 / 9}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
               >
-                <Image
-                  src="/DSC08870.JPG"
-                  alt="Pédagogie A Rythme Ethic"
-                  w="100%"
-                  h={{ base: '280px', md: '440px' }}
-                  objectFit="cover"
-                />
+                <Text color="brand.400" fontSize="lg" fontWeight="500">
+                  Vidéo à venir
+                </Text>
               </Box>
-            </SlideIn>
-
-            <SlideIn from="right" delay={0.1} style={{ flex: 1 }}>
-              <Stack spacing={6}>
-                <Box>
-                  <Text
-                    fontSize="xs"
-                    fontWeight="700"
-                    color="accent.500"
-                    textTransform="uppercase"
-                    letterSpacing="widest"
-                    mb={3}
-                  >
-                    Ma philosophie
-                  </Text>
-                  <Heading
-                    as="h2"
-                    fontSize={{ base: '3xl', md: '4xl' }}
-                    color="brand.500"
-                    fontFamily="heading"
-                  >
-                    Ma pédagogie
-                  </Heading>
-                </Box>
-
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
-                  J'axe ma pédagogie sur la <strong>qualité de la relation humaine</strong> tissée
-                  avec l'apprenant. J'ancre les apprentissages dans le{' '}
-                  <strong>réel et le concret</strong>.
-                </Text>
-
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9">
-                  J'aime <strong>innover</strong> pour trouver le bon angle d'approche avec chaque
-                  jeune. J'aime susciter la <strong>curiosité et l'envie d'en savoir plus</strong>{' '}
-                  pour leur transmettre des outils favorisant leur{' '}
-                  <strong>indépendance et leur autonomie</strong> au sens large.
-                </Text>
-
-                <Box
-                  bg="white"
-                  p={{ base: 5, md: 6 }}
-                  borderRadius="xl"
-                  borderLeft="4px solid"
-                  borderColor="terracotta.400"
-                  boxShadow="sm"
-                >
-                  <Text
-                    fontSize={{ base: 'md', md: 'lg' }}
-                    color="terracotta.600"
-                    fontStyle="italic"
-                    lineHeight="1.7"
-                  >
-                    "Une approche humaine, bienveillante et concrète pour accompagner chaque jeune
-                    vers sa réussite"
-                  </Text>
-                </Box>
-
-                <Box>
-                  <Button
-                    colorScheme="accent"
-                    size="lg"
-                    px={8}
-                    onClick={() => handleContactClick('student')}
-                  >
-                    Découvrir l'accompagnement
-                  </Button>
-                </Box>
-              </Stack>
-            </SlideIn>
-          </Flex>
+            </Stack>
+          </FadeUp>
         </Container>
       </Box>
 
@@ -532,21 +477,9 @@ export default function HomePage() {
                   _hover={{ bg: 'sand.50', transform: 'translateY(-2px)', shadow: 'lg' }}
                   transition="all 0.2s"
                   px={8}
-                  onClick={() => handleContactClick('parent')}
+                  onClick={onOpen}
                 >
-                  Je suis parent / jeune
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  borderColor="whiteAlpha.600"
-                  color="white"
-                  _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-2px)' }}
-                  transition="all 0.2s"
-                  px={8}
-                  onClick={() => handleContactClick('school')}
-                >
-                  Je représente un établissement
+                  Prendre contact
                 </Button>
               </Flex>
             </Stack>
