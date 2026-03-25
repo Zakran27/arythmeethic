@@ -19,7 +19,7 @@ import {
   Badge,
 } from '@chakra-ui/react';
 import { FiSearch } from 'react-icons/fi';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ClientsTable } from './ClientsTable';
 import { NewClientModal } from './NewClientModal';
 import { DeclarerHeuresModal } from './DeclarerHeuresModal';
@@ -43,6 +43,31 @@ export default function ClientsPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+  const [baremeKm, setBaremeKm] = useState('0.636');
+  const [baremeKmEditing, setBaremeKmEditing] = useState(false);
+  const [baremeKmInput, setBaremeKmInput] = useState('0.636');
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        if (data.settings?.bareme_km) {
+          setBaremeKm(data.settings.bareme_km);
+          setBaremeKmInput(data.settings.bareme_km);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSaveBaremeKm = async () => {
+    await fetch('/api/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'bareme_km', value: baremeKmInput }),
+    });
+    setBaremeKm(baremeKmInput);
+    setBaremeKmEditing(false);
+  };
 
   // Define filterable fields
   const filterFields: FilterField[] = [
@@ -124,7 +149,39 @@ export default function ClientsPage() {
         <Heading color="brand.500" fontFamily="heading">
           Gestion des contacts
         </Heading>
-        <HStack>
+        <HStack spacing={3} flexWrap="wrap">
+          <HStack spacing={1}>
+            {baremeKmEditing ? (
+              <>
+                <Input
+                  size="sm"
+                  type="number"
+                  step="0.001"
+                  value={baremeKmInput}
+                  onChange={e => setBaremeKmInput(e.target.value)}
+                  w="80px"
+                />
+                <Button size="sm" colorScheme="brand" onClick={handleSaveBaremeKm}>
+                  OK
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setBaremeKmEditing(false)}>
+                  ✕
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant="ghost"
+                colorScheme="gray"
+                onClick={() => {
+                  setBaremeKmInput(baremeKm);
+                  setBaremeKmEditing(true);
+                }}
+              >
+                Barème km : {baremeKm} €/km
+              </Button>
+            )}
+          </HStack>
           <Button colorScheme="brand" variant="outline" onClick={onDeclarerOpen}>
             Déclarer heures
           </Button>
@@ -193,7 +250,12 @@ export default function ClientsPage() {
       </Tabs>
 
       <NewClientModal isOpen={isOpen} onClose={onClose} onSuccess={handleClientCreated} />
-      <DeclarerHeuresModal isOpen={isDeclarerOpen} onClose={onDeclarerClose} clients={clients} />
+      <DeclarerHeuresModal
+        isOpen={isDeclarerOpen}
+        onClose={onDeclarerClose}
+        clients={clients}
+        defaultBaremeKm={baremeKm}
+      />
     </Stack>
   );
 }
