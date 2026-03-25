@@ -168,16 +168,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const {
-      clientId,
-      signerEmail,
-      signerFirstName,
-      signerLastName,
-      signerPhone,
-      anneeScolaire,
-      tarifHoraireHT,
-    } = body;
+    const formData = await request.formData();
+    const clientId = formData.get('clientId') as string;
+    const signerEmail = formData.get('signerEmail') as string;
+    const signerFirstName = formData.get('signerFirstName') as string;
+    const signerLastName = formData.get('signerLastName') as string;
+    const signerPhone = formData.get('signerPhone') as string | null;
+    const anneeScolaire = formData.get('anneeScolaire') as string;
+    const tarifHoraireHT = formData.get('tarifHoraireHT') as string | null;
+    const annexeArticle3 = formData.get('annexeArticle3') as File | null;
 
     if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire) {
       return NextResponse.json(
@@ -232,7 +231,7 @@ export async function POST(request: NextRequest) {
       const result = await generateContractPDF({
         client,
         anneeScolaire,
-        tarifHoraireHT: tarifHoraireHT ? parseFloat(tarifHoraireHT) : undefined,
+        tarifHoraireHT: tarifHoraireHT ? parseFloat(tarifHoraireHT as string) : undefined,
       });
       pdfBuffer = result.buffer;
       signaturePage = result.signaturePage;
@@ -274,13 +273,45 @@ export async function POST(request: NextRequest) {
       const signatureRequest = await createSignatureRequest(signatureName);
       console.log('Signature request created:', signatureRequest.id);
 
-      // 2. Upload document
+      // 2. Upload main contract document
       const document = await uploadDocument(
         signatureRequest.id,
         pdfBuffer,
         `contractualisation_${client.id}.pdf`
       );
       console.log('Document uploaded:', document.id);
+
+      // 2b. Upload Article 3 annex as attachment (if provided)
+      if (annexeArticle3 && annexeArticle3.size > 0) {
+        try {
+          const annexeBuffer = Buffer.from(await annexeArticle3.arrayBuffer());
+          const annexeFormData = new FormData();
+          const uint8 = new Uint8Array(annexeBuffer);
+          annexeFormData.append(
+            'file',
+            new Blob([uint8], { type: 'application/pdf' }),
+            annexeArticle3.name || `annexe_article3_${client.id}.pdf`
+          );
+          annexeFormData.append('nature', 'attachment');
+
+          const annexeRes = await fetch(
+            `${YOUSIGN_API_URL}/signature_requests/${signatureRequest.id}/documents`,
+            {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${YOUSIGN_API_KEY}` },
+              body: annexeFormData,
+            }
+          );
+          if (!annexeRes.ok) {
+            console.error('Yousign annex upload error:', await annexeRes.text());
+          } else {
+            console.log('Annex uploaded');
+          }
+        } catch (annexeErr) {
+          console.error('Error uploading annex:', annexeErr);
+          // Non-blocking: continue without annex if upload fails
+        }
+      }
 
       // 3. Add client signer with signature field (left — donneur d'ordre)
       const signer = await addSigner(
@@ -290,7 +321,7 @@ export async function POST(request: NextRequest) {
           firstName: signerFirstName,
           lastName: signerLastName,
           email: signerEmail,
-          phone: formatPhoneNumber(signerPhone),
+          phone: formatPhoneNumber(signerPhone ?? undefined),
         },
         { page: signaturePage, x: signatureX, y: signatureY }
       );

@@ -160,6 +160,7 @@ export default function ClientDetailPage() {
   const [contractDateFin, setContractDateFin] = useState('');
   const [contractSalaireHoraireNet, setContractSalaireHoraireNet] = useState('');
   const [contractTarifEcole, setContractTarifEcole] = useState('');
+  const [contractAnnexeFile, setContractAnnexeFile] = useState<File | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -501,18 +502,19 @@ export default function ClientDetailPage() {
 
     setIsLaunchingProcedure(true);
     try {
+      const formData = new FormData();
+      formData.append('clientId', clientId);
+      formData.append('signerEmail', signerEmail);
+      formData.append('signerFirstName', signerFirstName);
+      formData.append('signerLastName', signerLastName);
+      if (signerPhone) formData.append('signerPhone', signerPhone);
+      formData.append('anneeScolaire', selectedAnneeScolaire);
+      if (contractTarifEcole) formData.append('tarifHoraireHT', contractTarifEcole);
+      if (contractAnnexeFile) formData.append('annexeArticle3', contractAnnexeFile);
+
       const response = await fetch('/api/procedures/contractualisation-ecole', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId,
-          signerEmail,
-          signerFirstName,
-          signerLastName,
-          signerPhone: signerPhone || undefined,
-          anneeScolaire: selectedAnneeScolaire,
-          tarifHoraireHT: contractTarifEcole || undefined,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -544,6 +546,7 @@ export default function ClientDetailPage() {
       setSelectedContractualisationSigner('');
       setSelectedAnneeScolaire('');
       setContractTarifEcole('');
+      setContractAnnexeFile(null);
       refetch();
     } catch (err) {
       toast({
@@ -2409,6 +2412,16 @@ export default function ClientDetailPage() {
               />
             </FormControl>
 
+            <FormControl mb={4}>
+              <FormLabel color="brand.600">Annexe Article 3 (PDF) — optionnel</FormLabel>
+              <Input
+                type="file"
+                accept=".pdf"
+                onChange={e => setContractAnnexeFile(e.target.files?.[0] ?? null)}
+                p={1}
+              />
+            </FormControl>
+
             <FormControl isRequired>
               <FormLabel color="brand.600">Signataire</FormLabel>
               <Select
@@ -2486,6 +2499,8 @@ export default function ClientDetailPage() {
                 onContractualisationClose();
                 setSelectedContractualisationSigner('');
                 setSelectedAnneeScolaire('');
+                setContractTarifEcole('');
+                setContractAnnexeFile(null);
               }}
             >
               Annuler
