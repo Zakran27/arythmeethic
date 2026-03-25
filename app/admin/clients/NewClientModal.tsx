@@ -9,6 +9,7 @@ import {
   ModalFooter,
   ModalCloseButton,
   Button,
+  Checkbox,
   FormControl,
   FormLabel,
   Input,
@@ -64,8 +65,7 @@ const initialFormData = {
   phone_parent2: '',
   // École - Facturation fields
   ecole_facturation_date_max_paiement: '',
-  ecole_facturation_type: '',
-  ecole_facturation_moment_paiement: '',
+  ecole_periode_facturation: '',
   // École - Responsable notes fields
   ecole_notes_saisies_par: '',
   ecole_resp_notes_nom: '',
@@ -74,9 +74,10 @@ const initialFormData = {
   ecole_resp_notes_phone: '',
   // École - Statut juridique
   ecole_statut_juridique: '',
-  // Particulier — tarif et distance
+  // Particulier — tarif, distance, démarche
   tarif_horaire: '',
   distance_km: '',
+  demarche_volontaire: false,
 };
 
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
@@ -145,8 +146,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
             ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
             : null,
-          ecole_facturation_type: formData.ecole_facturation_type || null,
-          ecole_facturation_moment_paiement: formData.ecole_facturation_moment_paiement || null,
+          ecole_periode_facturation: formData.ecole_periode_facturation || null,
           // École - Responsable notes fields
           ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
           ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
@@ -157,6 +157,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           ecole_statut_juridique: formData.ecole_statut_juridique || null,
           tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
           distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
+          demarche_volontaire: formData.demarche_volontaire || false,
         },
       ]);
 
@@ -558,6 +559,14 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                   </Grid>
+                  <Checkbox
+                    isChecked={formData.demarche_volontaire}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, demarche_volontaire: e.target.checked }))
+                    }
+                  >
+                    Démarche volontaire du jeune
+                  </Checkbox>
                 </>
               )}
 
@@ -657,28 +666,13 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </GridItem>
                     <GridItem>
                       <FormControl>
-                        <FormLabel>Type de facturation</FormLabel>
+                        <FormLabel>Période de facturation</FormLabel>
                         <Select
-                          value={formData.ecole_facturation_type}
-                          onChange={e => handleChange('ecole_facturation_type', e.target.value)}
+                          value={formData.ecole_periode_facturation}
+                          onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
                           placeholder="Sélectionnez..."
                         >
-                          <option value="recurrente">Récurrente</option>
-                          <option value="ponctuelle">Ponctuelle</option>
-                        </Select>
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Moment du paiement</FormLabel>
-                        <Select
-                          value={formData.ecole_facturation_moment_paiement}
-                          onChange={e =>
-                            handleChange('ecole_facturation_moment_paiement', e.target.value)
-                          }
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="fin_mois_courant">Fin du mois en cours</option>
+                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
                           <option value="mois_suivant">Mois suivant</option>
                         </Select>
                       </FormControl>

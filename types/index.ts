@@ -128,11 +128,11 @@ export interface Client {
   ecole_enseignant_email?: string;
   // Facturation
   ecole_facturation_date_max_paiement?: number;
-  ecole_facturation_type?: 'recurrente' | 'ponctuelle';
-  ecole_facturation_moment_paiement?: 'fin_mois_courant' | 'mois_suivant';
-  // Particulier — tarif et distance
+  ecole_periode_facturation?: 'fin_mois_en_cours' | 'mois_suivant';
+  // Particulier — tarif, distance, démarche
   tarif_horaire?: number;
   distance_km?: number;
+  demarche_volontaire?: boolean;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
