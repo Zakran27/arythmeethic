@@ -84,7 +84,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <Flex minH="100vh">
+    <Flex minH="100vh" maxW="100vw" overflow="hidden">
       {/* ── Sidebar — desktop only ── */}
       <Box
         display={{ base: 'none', md: 'flex' }}
@@ -153,7 +153,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </Drawer>
 
       {/* ── Main area ── */}
-      <Box ml={{ base: 0, md: SIDEBAR_W }} flex={1} minH="100vh" bg="#fafafa">
+      <Box ml={{ base: 0, md: SIDEBAR_W }} flex={1} minH="100vh" bg="#fafafa" minW={0} overflow="hidden">
         {/* Top bar */}
         <Box
           bg="white"
