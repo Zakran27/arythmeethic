@@ -496,7 +496,6 @@ export default function HomePage() {
                       h="100%"
                       objectFit="cover"
                       objectPosition={activeTab === 'particulier' ? 'center 45%' : 'center'}
-                      transform={activeTab === 'ecole' ? 'scale(0.88)' : 'none'}
                     />
                   </Box>
 
