@@ -74,6 +74,8 @@ const initialFormData = {
   ecole_resp_notes_phone: '',
   // École - Statut juridique
   ecole_statut_juridique: '',
+  // Particulier — tarif
+  tarif_horaire: '',
 };
 
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
@@ -152,6 +154,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
           // École - Statut juridique
           ecole_statut_juridique: formData.ecole_statut_juridique || null,
+          tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
         },
       ]);
 
@@ -517,6 +520,26 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                   </Grid>
+                </>
+              )}
+
+              {/* ========== TARIF HORAIRE (Particulier) ========== */}
+              {isParticulier && (
+                <>
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations contrat
+                  </Text>
+                  <FormControl>
+                    <FormLabel>Tarif horaire net (€)</FormLabel>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 35.00"
+                      value={formData.tarif_horaire}
+                      onChange={e => handleChange('tarif_horaire', e.target.value)}
+                    />
+                  </FormControl>
                 </>
               )}
 

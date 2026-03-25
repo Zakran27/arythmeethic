@@ -178,7 +178,6 @@ export async function POST(request: NextRequest) {
       anneeScolaire,
       dateDebut,
       dateFin,
-      dureePeriodeEssai,
       salaireHoraireNet,
     } = body;
 
@@ -190,7 +189,6 @@ export async function POST(request: NextRequest) {
       !anneeScolaire ||
       !dateDebut ||
       !dateFin ||
-      !dureePeriodeEssai ||
       !salaireHoraireNet
     ) {
       return NextResponse.json(
@@ -247,7 +245,6 @@ export async function POST(request: NextRequest) {
         anneeScolaire,
         dateDebut,
         dateFin,
-        dureePeriodeEssai,
         salaireHoraireNet: parseFloat(salaireHoraireNet),
         signerFirstName,
         signerLastName,

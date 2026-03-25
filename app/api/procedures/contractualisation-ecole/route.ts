@@ -169,8 +169,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { clientId, signerEmail, signerFirstName, signerLastName, signerPhone, anneeScolaire } =
-      body;
+    const {
+      clientId,
+      signerEmail,
+      signerFirstName,
+      signerLastName,
+      signerPhone,
+      anneeScolaire,
+      tarifHoraireHT,
+    } = body;
 
     if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire) {
       return NextResponse.json(
@@ -222,7 +229,11 @@ export async function POST(request: NextRequest) {
     let florenceSignatureX: number;
     let florenceSignatureY: number;
     try {
-      const result = await generateContractPDF({ client, anneeScolaire });
+      const result = await generateContractPDF({
+        client,
+        anneeScolaire,
+        tarifHoraireHT: tarifHoraireHT ? parseFloat(tarifHoraireHT) : undefined,
+      });
       pdfBuffer = result.buffer;
       signaturePage = result.signaturePage;
       signatureX = result.signatureX;

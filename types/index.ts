@@ -130,6 +130,8 @@ export interface Client {
   ecole_facturation_date_max_paiement?: number;
   ecole_facturation_type?: 'recurrente' | 'ponctuelle';
   ecole_facturation_moment_paiement?: 'fin_mois_courant' | 'mois_suivant';
+  // Particulier — tarif et distance
+  tarif_horaire?: number;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;

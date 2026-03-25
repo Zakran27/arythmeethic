@@ -149,6 +149,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
     // Statut juridique
     ecole_statut_juridique: client.ecole_statut_juridique || '',
+    // Particulier — tarif
+    tarif_horaire: client.tarif_horaire?.toString() || '',
   });
 
   useEffect(() => {
@@ -238,6 +240,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
       // Statut juridique
       ecole_statut_juridique: client.ecole_statut_juridique || '',
+      // Particulier — tarif
+      tarif_horaire: client.tarif_horaire?.toString() || '',
     });
   }, [client]);
 
@@ -366,6 +370,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
           // Statut juridique
           ecole_statut_juridique: formData.ecole_statut_juridique || null,
+          // Particulier — tarif
+          tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
         })
         .eq('id', client.id);
 
@@ -730,6 +736,26 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                         </Checkbox>
                       ))}
                     </SimpleGrid>
+                  </FormControl>
+                </>
+              )}
+
+              {/* ========== TARIF HORAIRE (Particulier) ========== */}
+              {isParticulier && (
+                <>
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations contrat
+                  </Text>
+                  <FormControl>
+                    <FormLabel>Tarif horaire net (€)</FormLabel>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 35.00"
+                      value={formData.tarif_horaire}
+                      onChange={e => handleChange('tarif_horaire', e.target.value)}
+                    />
                   </FormControl>
                 </>
               )}
