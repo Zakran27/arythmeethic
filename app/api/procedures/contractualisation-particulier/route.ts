@@ -366,6 +366,7 @@ export async function POST(request: NextRequest) {
         message: 'Demande de signature envoyée avec succès',
         procedureId: newProcedure.id,
         yousignRequestId: signatureRequest.id,
+        dbUpdateError: updateError ? true : false,
       });
     } catch (yousignError) {
       // If Yousign fails, update the procedure to reflect the error
