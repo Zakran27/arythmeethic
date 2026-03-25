@@ -370,9 +370,10 @@ export default function HomePage() {
                     w="100%"
                     h="100%"
                     objectFit="cover"
-                    objectPosition="center 30%"
+                    objectPosition="center 45%"
+                    transform="scale(0.92)"
                     transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(1.05)' }}
+                    _hover={{ transform: 'scale(0.97)' }}
                   />
                 </Box>
                 <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
