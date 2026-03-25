@@ -3,7 +3,7 @@
 import { Box, Flex, Button, Container, HStack, Text, Image } from '@chakra-ui/react';
 import Link from 'next/link';
 
-export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
+export function Nav() {
   return (
     <Box bg="white" borderBottom="1px" borderColor="grey.300">
       <Container maxW="container.xl">
@@ -28,21 +28,11 @@ export function Nav({ isAdmin = false }: { isAdmin?: boolean }) {
             </HStack>
           </Link>
           <HStack spacing={4}>
-            {isAdmin ? (
-              <>
-                <Link href="/admin/clients">
-                  <Button variant="ghost" color="brand.600">
-                    Contacts
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <Link href="/admin/login">
-                <Button colorScheme="accent" size={{ base: 'sm', md: 'md' }}>
-                  Connexion
-                </Button>
-              </Link>
-            )}
+            <Link href="/admin/login">
+              <Button colorScheme="accent" size={{ base: 'sm', md: 'md' }}>
+                Connexion
+              </Button>
+            </Link>
           </HStack>
         </Flex>
       </Container>
