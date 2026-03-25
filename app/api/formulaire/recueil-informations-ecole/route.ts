@@ -187,6 +187,16 @@ export async function POST(request: NextRequest) {
       ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
       ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
       ecole_enseignant_email: formData.ecole_enseignant_email || null,
+      // Modalités de facturation
+      ecole_facturation_date_max_paiement:
+        formData.ecole_facturation_date_max_paiement || null,
+      ecole_periode_facturation: formData.ecole_periode_facturation || null,
+      // Saisie des notes élèves
+      ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
+      ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
+      ecole_resp_notes_prenom: formData.ecole_resp_notes_prenom || null,
+      ecole_resp_notes_email: formData.ecole_resp_notes_email || null,
+      ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
       // Clear the token after successful submission
       form_token: null,
       form_token_expires_at: null,

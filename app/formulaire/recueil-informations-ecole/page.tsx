@@ -113,6 +113,15 @@ function RecueilEcoleFormContent() {
     ecole_enseignant_nom: '',
     ecole_enseignant_prenom: '',
     ecole_enseignant_email: '',
+    // Modalités de facturation
+    ecole_facturation_date_max_paiement: '',
+    ecole_periode_facturation: '',
+    // Saisie des notes élèves
+    ecole_notes_saisies_par: '',
+    ecole_resp_notes_nom: '',
+    ecole_resp_notes_prenom: '',
+    ecole_resp_notes_email: '',
+    ecole_resp_notes_phone: '',
   });
 
   useEffect(() => {
@@ -182,6 +191,16 @@ function RecueilEcoleFormContent() {
           ecole_enseignant_nom: data.client.ecole_enseignant_nom || '',
           ecole_enseignant_prenom: data.client.ecole_enseignant_prenom || '',
           ecole_enseignant_email: data.client.ecole_enseignant_email || '',
+          // Modalités de facturation
+          ecole_facturation_date_max_paiement:
+            data.client.ecole_facturation_date_max_paiement?.toString() || '',
+          ecole_periode_facturation: data.client.ecole_periode_facturation || '',
+          // Saisie des notes élèves
+          ecole_notes_saisies_par: data.client.ecole_notes_saisies_par || '',
+          ecole_resp_notes_nom: data.client.ecole_resp_notes_nom || '',
+          ecole_resp_notes_prenom: data.client.ecole_resp_notes_prenom || '',
+          ecole_resp_notes_email: data.client.ecole_resp_notes_email || '',
+          ecole_resp_notes_phone: data.client.ecole_resp_notes_phone || '',
         });
         setLoading(false);
       } catch (err) {
@@ -213,6 +232,9 @@ function RecueilEcoleFormContent() {
       // Prepare data for submission (convert numbers)
       const submitData = {
         ...formData,
+        ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
+          ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
+          : null,
         ecole_module_heures: formData.ecole_module_heures
           ? parseInt(formData.ecole_module_heures, 10)
           : null,
@@ -781,6 +803,108 @@ function RecueilEcoleFormContent() {
                           placeholder="Ex: 0.50"
                         />
                       </FormControl>
+                    )}
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {/* Modalités de facturation */}
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Heading size="sm" color="brand.500" fontFamily="heading">
+                      Modalités de facturation
+                    </Heading>
+                    <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                      <FormControl>
+                        <FormLabel color="brand.600">Date max d'envoi de la facture (jour du mois)</FormLabel>
+                        <Input
+                          name="ecole_facturation_date_max_paiement"
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={formData.ecole_facturation_date_max_paiement}
+                          onChange={handleChange}
+                          placeholder="Ex: 15"
+                        />
+                      </FormControl>
+                      <FormControl>
+                        <FormLabel color="brand.600">Période de facturation</FormLabel>
+                        <Select
+                          name="ecole_periode_facturation"
+                          value={formData.ecole_periode_facturation}
+                          onChange={handleChange}
+                          placeholder="Sélectionner..."
+                        >
+                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
+                          <option value="mois_suivant">Mois suivant</option>
+                        </Select>
+                      </FormControl>
+                    </SimpleGrid>
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {/* Saisie des notes élèves */}
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={4}>
+                    <Heading size="sm" color="brand.500" fontFamily="heading">
+                      Saisie des notes élèves
+                    </Heading>
+                    <FormControl>
+                      <FormLabel color="brand.600">Notes élèves saisies par</FormLabel>
+                      <Select
+                        name="ecole_notes_saisies_par"
+                        value={formData.ecole_notes_saisies_par}
+                        onChange={handleChange}
+                        placeholder="Sélectionner..."
+                      >
+                        <option value="A Rythme Ethic">A Rythme Ethic</option>
+                        <option value="Personne tierce">Personne tierce</option>
+                      </Select>
+                    </FormControl>
+                    {formData.ecole_notes_saisies_par === 'Personne tierce' && (
+                      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                        <FormControl>
+                          <FormLabel color="brand.600">Prénom</FormLabel>
+                          <Input
+                            name="ecole_resp_notes_prenom"
+                            value={formData.ecole_resp_notes_prenom}
+                            onChange={handleChange}
+                            placeholder="Prénom"
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel color="brand.600">Nom</FormLabel>
+                          <Input
+                            name="ecole_resp_notes_nom"
+                            value={formData.ecole_resp_notes_nom}
+                            onChange={handleChange}
+                            placeholder="Nom"
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel color="brand.600">Email</FormLabel>
+                          <Input
+                            name="ecole_resp_notes_email"
+                            type="email"
+                            value={formData.ecole_resp_notes_email}
+                            onChange={handleChange}
+                            placeholder="email@etablissement.fr"
+                          />
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel color="brand.600">Téléphone</FormLabel>
+                          <Input
+                            name="ecole_resp_notes_phone"
+                            type="tel"
+                            value={formData.ecole_resp_notes_phone}
+                            onChange={handleChange}
+                            placeholder="06 12 34 56 78"
+                          />
+                        </FormControl>
+                      </SimpleGrid>
                     )}
                   </Stack>
                 </CardBody>
