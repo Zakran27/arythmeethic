@@ -22,6 +22,7 @@ import { FiSearch } from 'react-icons/fi';
 import { useState, useMemo } from 'react';
 import { ClientsTable } from './ClientsTable';
 import { NewClientModal } from './NewClientModal';
+import { DeclarerHeuresModal } from './DeclarerHeuresModal';
 import { useClients } from '@/lib/hooks/useClients';
 import { Client } from '@/types';
 import {
@@ -34,6 +35,11 @@ import {
 export default function ClientsPage() {
   const { clients, loading, error, refetch } = useClients();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDeclarerOpen,
+    onOpen: onDeclarerOpen,
+    onClose: onDeclarerClose,
+  } = useDisclosure();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterCondition[]>([]);
@@ -118,9 +124,14 @@ export default function ClientsPage() {
         <Heading color="brand.500" fontFamily="heading">
           Gestion des contacts
         </Heading>
-        <Button colorScheme="accent" onClick={onOpen}>
-          + Nouveau contact
-        </Button>
+        <HStack>
+          <Button colorScheme="brand" variant="outline" onClick={onDeclarerOpen}>
+            Déclarer heures
+          </Button>
+          <Button colorScheme="accent" onClick={onOpen}>
+            + Nouveau contact
+          </Button>
+        </HStack>
       </HStack>
 
       {/* Search and Filters */}
@@ -182,6 +193,7 @@ export default function ClientsPage() {
       </Tabs>
 
       <NewClientModal isOpen={isOpen} onClose={onClose} onSuccess={handleClientCreated} />
+      <DeclarerHeuresModal isOpen={isDeclarerOpen} onClose={onDeclarerClose} clients={clients} />
     </Stack>
   );
 }
