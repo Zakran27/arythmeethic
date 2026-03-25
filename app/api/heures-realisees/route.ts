@@ -4,7 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase-server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId, mois, heures, tarifHoraire, km, baremeKm } = body;
+    const { clientId, mois, heures, tarifHoraire, km, baremeKm, tempsAReporter } = body;
 
     if (
       !clientId ||
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
           tarif_horaire: parseFloat(tarifHoraire),
           km: parseFloat(km),
           bareme_km: parseFloat(baremeKm),
+          temps_a_reporter: tempsAReporter ? parseFloat(tempsAReporter) : 0,
         },
         { onConflict: 'client_id,mois' }
       )

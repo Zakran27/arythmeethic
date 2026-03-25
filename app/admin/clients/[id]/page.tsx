@@ -110,6 +110,7 @@ export default function ClientDetailPage() {
       tarif_horaire: number;
       km: number;
       bareme_km: number;
+      temps_a_reporter?: number;
       created_at: string;
     }>
   >([]);
@@ -1442,6 +1443,14 @@ export default function ClientDetailPage() {
                       : '—'}
                   </Text>
                 </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Distance domicile → cours
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.distance_km != null ? `${client.distance_km} km` : '—'}
+                  </Text>
+                </GridItem>
               </Grid>
             </Stack>
           </CardBody>
@@ -1584,6 +1593,7 @@ export default function ClientDetailPage() {
                         <Th isNumeric>Barème km</Th>
                         <Th isNumeric>Montant km</Th>
                         <Th isNumeric>Total</Th>
+                        <Th isNumeric>À reporter</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -1607,6 +1617,9 @@ export default function ClientDetailPage() {
                             <Td isNumeric>{montantKm.toFixed(2)} €</Td>
                             <Td isNumeric fontWeight="bold">
                               {total.toFixed(2)} €
+                            </Td>
+                            <Td isNumeric color={h.temps_a_reporter ? 'orange.500' : 'gray.400'}>
+                              {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '—'}
                             </Td>
                           </Tr>
                         );
@@ -2702,6 +2715,8 @@ export default function ClientDetailPage() {
         onClose={onHeuresClose}
         clientId={clientId}
         onSuccess={fetchHeures}
+        clientTarifHoraire={client?.tarif_horaire}
+        clientDistanceKm={client?.distance_km}
       />
     </Stack>
   );

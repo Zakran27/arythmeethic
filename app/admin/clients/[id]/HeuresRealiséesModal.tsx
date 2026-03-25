@@ -25,6 +25,8 @@ interface HeuresRealiséesModalProps {
   onClose: () => void;
   clientId: string;
   onSuccess: () => void;
+  clientTarifHoraire?: number;
+  clientDistanceKm?: number;
 }
 
 export function HeuresRealiséesModal({
@@ -32,28 +34,37 @@ export function HeuresRealiséesModal({
   onClose,
   clientId,
   onSuccess,
+  clientTarifHoraire,
+  clientDistanceKm,
 }: HeuresRealiséesModalProps) {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Default to current month
   const now = new Date();
   const defaultMois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
   const [mois, setMois] = useState(defaultMois);
   const [heures, setHeures] = useState('');
-  const [tarifHoraire, setTarifHoraire] = useState('');
-  const [km, setKm] = useState('0');
+  const [tarifHoraire, setTarifHoraire] = useState(clientTarifHoraire?.toString() ?? '');
+  const [nbDeplacements, setNbDeplacements] = useState('0');
   const [baremeKm, setBaremeKm] = useState('0.636');
+  const [tempsAReporter, setTempsAReporter] = useState('');
+
+  // km calculés automatiquement depuis nb_deplacements × distance_km du client
+  const kmCalcules =
+    clientDistanceKm && nbDeplacements
+      ? (parseFloat(nbDeplacements) * clientDistanceKm).toFixed(1)
+      : null;
 
   const montantHeures =
     heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '—';
-  const montantKm = km && baremeKm ? (parseFloat(km) * parseFloat(baremeKm)).toFixed(2) : '—';
+  const montantKm =
+    kmCalcules && baremeKm ? (parseFloat(kmCalcules) * parseFloat(baremeKm)).toFixed(2) : '—';
   const total =
-    heures && tarifHoraire && km && baremeKm
+    heures && tarifHoraire && kmCalcules && baremeKm
       ? (
           parseFloat(heures) * parseFloat(tarifHoraire) +
-          parseFloat(km) * parseFloat(baremeKm)
+          parseFloat(kmCalcules) * parseFloat(baremeKm)
         ).toFixed(2)
       : '—';
 
@@ -71,6 +82,7 @@ export function HeuresRealiséesModal({
 
     setIsSubmitting(true);
     try {
+      const km = kmCalcules ?? '0';
       const res = await fetch('/api/heures-realisees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,8 +91,9 @@ export function HeuresRealiséesModal({
           mois,
           heures,
           tarifHoraire,
-          km: km || '0',
+          km,
           baremeKm: baremeKm || '0',
+          tempsAReporter: tempsAReporter || '0',
         }),
       });
 
@@ -97,12 +110,12 @@ export function HeuresRealiséesModal({
 
       onSuccess();
       onClose();
-      // Reset
       setMois(defaultMois);
       setHeures('');
-      setTarifHoraire('');
-      setKm('0');
+      setTarifHoraire(clientTarifHoraire?.toString() ?? '');
+      setNbDeplacements('0');
       setBaremeKm('0.636');
+      setTempsAReporter('');
     } catch (err) {
       toast({
         title: 'Erreur',
@@ -160,14 +173,27 @@ export function HeuresRealiséesModal({
               </GridItem>
               <GridItem>
                 <FormControl>
-                  <FormLabel>Kilomètres réalisés</FormLabel>
+                  <FormLabel>Nombre de déplacements</FormLabel>
                   <Input
                     type="number"
                     min="0"
-                    step="0.1"
-                    placeholder="Ex : 45"
-                    value={km}
-                    onChange={e => setKm(e.target.value)}
+                    step="1"
+                    placeholder="Ex : 8"
+                    value={nbDeplacements}
+                    onChange={e => setNbDeplacements(e.target.value)}
+                  />
+                </FormControl>
+              </GridItem>
+              <GridItem>
+                <FormControl>
+                  <FormLabel>
+                    Km calculés{clientDistanceKm ? ` (${clientDistanceKm} km/dépl.)` : ''}
+                  </FormLabel>
+                  <Input
+                    value={kmCalcules !== null ? `${kmCalcules} km` : '— (distance non renseignée)'}
+                    isReadOnly
+                    bg="gray.50"
+                    color={kmCalcules !== null ? 'inherit' : 'gray.400'}
                   />
                 </FormControl>
               </GridItem>
@@ -181,6 +207,19 @@ export function HeuresRealiséesModal({
                     placeholder="Ex : 0.636"
                     value={baremeKm}
                     onChange={e => setBaremeKm(e.target.value)}
+                  />
+                </FormControl>
+              </GridItem>
+              <GridItem>
+                <FormControl>
+                  <FormLabel>Temps à reporter (h)</FormLabel>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.25"
+                    placeholder="Ex : 0.5"
+                    value={tempsAReporter}
+                    onChange={e => setTempsAReporter(e.target.value)}
                   />
                 </FormControl>
               </GridItem>

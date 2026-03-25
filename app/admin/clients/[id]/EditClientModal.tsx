@@ -149,8 +149,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
     // Statut juridique
     ecole_statut_juridique: client.ecole_statut_juridique || '',
-    // Particulier — tarif
+    // Particulier — tarif et distance
     tarif_horaire: client.tarif_horaire?.toString() || '',
+    distance_km: client.distance_km?.toString() || '',
   });
 
   useEffect(() => {
@@ -240,8 +241,9 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
       // Statut juridique
       ecole_statut_juridique: client.ecole_statut_juridique || '',
-      // Particulier — tarif
+      // Particulier — tarif et distance
       tarif_horaire: client.tarif_horaire?.toString() || '',
+      distance_km: client.distance_km?.toString() || '',
     });
   }, [client]);
 
@@ -372,6 +374,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           ecole_statut_juridique: formData.ecole_statut_juridique || null,
           // Particulier — tarif
           tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
+          distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
         })
         .eq('id', client.id);
 
@@ -747,16 +750,32 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   <Text fontWeight="bold" color="brand.500">
                     Informations contrat
                   </Text>
-                  <FormControl>
-                    <FormLabel>Tarif horaire net (€)</FormLabel>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Ex: 35.00"
-                      value={formData.tarif_horaire}
-                      onChange={e => handleChange('tarif_horaire', e.target.value)}
-                    />
-                  </FormControl>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Tarif horaire net (€)</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="Ex: 35.00"
+                          value={formData.tarif_horaire}
+                          onChange={e => handleChange('tarif_horaire', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Distance domicile → cours (km)</FormLabel>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="Ex: 12.5"
+                          value={formData.distance_km}
+                          onChange={e => handleChange('distance_km', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
                 </>
               )}
 
