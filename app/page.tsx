@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   Flex,
-  Grid,
   Image,
   HStack,
   useDisclosure,
@@ -16,6 +15,81 @@ import {
 import { Nav } from '@/components/Nav';
 import { ContactModal } from '@/components/ContactModal';
 import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from 'react';
+
+const PARTICULIER_STEPS = [
+  { title: "Prise d'info via le formulaire en ligne" },
+  { title: "Appel découverte de 30 min offert" },
+  { title: "RDV Bilan", subtitle: "1h à 1h30 avec le jeune · 30 min de débrief avec les parents" },
+  { title: "Contractualisation", subtitle: "Signature d'un contrat · Compte CESU et activation CESU+" },
+  { title: "Suivi régulier du jeune" },
+  { title: "Déclaration mensuelle CESU", subtitle: "Virement automatique du salaire" },
+  { title: "Bilan de trimestre sur demande (30 min)" },
+  { title: "Poursuite dans la classe supérieure", subtitle: "ou fin de l'accompagnement" },
+];
+
+const ECOLE_STEPS = [
+  { title: "Prise d'info via le formulaire en ligne" },
+  { title: "Appel visio ou RDV en présentiel sur site" },
+  { title: "Contractualisation", subtitle: "Signature d'un contrat de prestation" },
+  { title: "Planification" },
+  { title: "Réalisation du module" },
+  { title: "Facturation mensuelle", subtitle: "Paiement par virement" },
+  { title: "Bilan annuel" },
+  { title: "Arrêt de la prestation", subtitle: "ou poursuite l'année scolaire suivante" },
+];
+
+function ProcessStep({
+  step,
+  index,
+  isLast,
+}: {
+  step: { title: string; subtitle?: string };
+  index: number;
+  isLast: boolean;
+}) {
+  const isFirst = index === 0;
+  return (
+    <Flex position="relative" align="flex-start">
+      {!isLast && (
+        <Box
+          position="absolute"
+          left="15px"
+          top="34px"
+          bottom="-4px"
+          w="2px"
+          bg="sand.200"
+          zIndex={0}
+        />
+      )}
+      <Box
+        w="32px"
+        h="32px"
+        borderRadius="full"
+        bg={isFirst ? 'accent.500' : 'white'}
+        border="2px solid"
+        borderColor={isFirst ? 'accent.500' : 'sand.300'}
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        flexShrink={0}
+        zIndex={1}
+        mt="2px"
+      >
+        {isFirst ? (
+          <Text color="white" fontSize="xs" fontWeight="700" lineHeight={1}>✓</Text>
+        ) : (
+          <Text color="brand.400" fontSize="xs" fontWeight="700" lineHeight={1}>{index + 1}</Text>
+        )}
+      </Box>
+      <Box ml={3} pb={isLast ? 0 : 5}>
+        <Text fontSize="sm" fontWeight={600} color="brand.600">{step.title}</Text>
+        {step.subtitle && (
+          <Text fontSize="xs" color="brand.400" mt={0.5}>{step.subtitle}</Text>
+        )}
+      </Box>
+    </Flex>
+  );
+}
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 
 function FadeUp({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
@@ -206,6 +280,7 @@ export default function HomePage() {
   const [defaultClientType, setDefaultClientType] = useState<'student' | 'parent' | 'school'>(
     'student'
   );
+  const [activeTab, setActiveTab] = useState<'particulier' | 'ecole'>('particulier');
 
   const handleContactClick = (type: 'student' | 'parent' | 'school') => {
     setDefaultClientType(type);
@@ -323,7 +398,7 @@ export default function HomePage() {
       <Box bg="white" py={{ base: 16, md: 24 }}>
         <Container maxW="container.xl">
           <FadeUp>
-            <Box textAlign="center" mb={14}>
+            <Box textAlign="center" mb={10}>
               <Text
                 fontSize="xs"
                 fontWeight="700"
@@ -343,15 +418,58 @@ export default function HomePage() {
               >
                 Mes accompagnements
               </Heading>
-              <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500">
+              <Text fontSize={{ base: 'lg', md: 'xl' }} color="terracotta.500" mb={8}>
                 Une approche personnalisée pour chaque besoin
               </Text>
+
+              {/* Tab selector */}
+              <Flex justify="center">
+                <HStack
+                  bg="sand.100"
+                  borderRadius="full"
+                  p="4px"
+                  spacing={1}
+                >
+                  <Button
+                    borderRadius="full"
+                    size="sm"
+                    bg={activeTab === 'particulier' ? 'brand.500' : 'transparent'}
+                    color={activeTab === 'particulier' ? 'white' : 'brand.500'}
+                    _hover={{ bg: activeTab === 'particulier' ? 'brand.600' : 'sand.200' }}
+                    onClick={() => setActiveTab('particulier')}
+                    fontWeight="600"
+                    px={6}
+                    transition="all 0.2s"
+                  >
+                    Jeunes & Parents
+                  </Button>
+                  <Button
+                    borderRadius="full"
+                    size="sm"
+                    bg={activeTab === 'ecole' ? 'brand.500' : 'transparent'}
+                    color={activeTab === 'ecole' ? 'white' : 'brand.500'}
+                    _hover={{ bg: activeTab === 'ecole' ? 'brand.600' : 'sand.200' }}
+                    onClick={() => setActiveTab('ecole')}
+                    fontWeight="600"
+                    px={6}
+                    transition="all 0.2s"
+                  >
+                    Établissements
+                  </Button>
+                </HStack>
+              </Flex>
             </Box>
           </FadeUp>
 
-          <Grid templateColumns={{ base: '1fr', lg: 'repeat(2, 1fr)' }} gap={8}>
-            {/* Jeunes & Parents */}
-            <SlideIn from="left" delay={0.1}>
+          {/* Tab content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
               <Box
                 borderRadius="2xl"
                 overflow="hidden"
@@ -359,192 +477,64 @@ export default function HomePage() {
                 border="1px solid"
                 borderColor="sand.200"
                 bg="white"
-                display="flex"
-                flexDirection="column"
-                h="100%"
+                maxW="860px"
+                mx="auto"
               >
-                <Box h="220px" overflow="hidden">
-                  <Image
-                    src="/DSC08964.JPG"
-                    alt="Cours particuliers"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    objectPosition="center 45%"
-                    transform="scale(0.92)"
-                    transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(0.97)' }}
-                  />
-                </Box>
-                <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
-                  <Stack spacing={5} flex={1}>
-                    <Box>
+                <Flex direction={{ base: 'column', lg: 'row' }}>
+                  {/* Photo */}
+                  <Box
+                    w={{ base: '100%', lg: '42%' }}
+                    h={{ base: '240px', lg: 'auto' }}
+                    minH={{ lg: '520px' }}
+                    overflow="hidden"
+                    flexShrink={0}
+                  >
+                    <Image
+                      src={activeTab === 'particulier' ? '/DSC08964.JPG' : '/DSC08853.JPG'}
+                      alt={activeTab === 'particulier' ? 'Cours particuliers' : 'Interventions en établissements'}
+                      w="100%"
+                      h="100%"
+                      objectFit="cover"
+                      objectPosition={activeTab === 'particulier' ? 'center 45%' : 'center'}
+                    />
+                  </Box>
+
+                  {/* Steps */}
+                  <Box p={{ base: 6, md: 8 }} flex={1}>
+                    <Box mb={6}>
                       <Text
                         fontSize="xs"
                         fontWeight="700"
                         color="accent.500"
                         textTransform="uppercase"
                         letterSpacing="widest"
-                        mb={2}
+                        mb={1}
                       >
-                        Jeunes & Parents
+                        {activeTab === 'particulier' ? 'Clients particuliers' : 'Clients professionnels'}
                       </Text>
-                      <Heading size="lg" color="brand.500" fontFamily="heading">
-                        Accompagnement privé
+                      <Heading size="md" color="brand.500" fontFamily="heading" mb={1}>
+                        {activeTab === 'particulier' ? "Votre parcours d'accompagnement" : "Votre parcours d'intervention"}
                       </Heading>
-                    </Box>
-                    <Text fontSize="sm" color="brand.500" fontWeight="600">
-                      📍 Nantes Est · Thouaré-sur-Loire
-                    </Text>
-
-                    <Box>
-                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
-                        Cours particuliers en mathématiques
+                      <Text fontSize="xs" color="brand.400" fontWeight="500">
+                        {activeTab === 'particulier' ? '📍 Nantes Est · Thouaré-sur-Loire' : '📍 Nantes (selon récurrence)'}
                       </Text>
-                      <Text fontSize="sm" color="brand.600" mb={2}>
-                        Accompagnement personnalisé à domicile via CESU :
-                      </Text>
-                      <Stack spacing={1} pl={2}>
-                        {[
-                          "Cours adaptés au niveau de l'élève",
-                          'Soutien scolaire & aide aux devoirs',
-                          'Préparation aux examens (Brevet, Bac)',
-                          'Accompagnement individuel uniquement',
-                        ].map(item => (
-                          <Text key={item} fontSize="sm" color="brand.600">
-                            › {item}
-                          </Text>
-                        ))}
-                      </Stack>
                     </Box>
 
-                    <Box>
-                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
-                        Parcours Envol — Jeunes actifs
-                      </Text>
-                      <Stack spacing={1} pl={2}>
-                        {[
-                          'Connaissance de soi & compétences psychosociales',
-                          'Gestion du stress et des émotions',
-                          'Éducation financière & autonomie',
-                          "Préparation à l'indépendance",
-                        ].map(item => (
-                          <Text key={item} fontSize="sm" color="brand.600">
-                            › {item}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Box>
-
-                    <Box pt={2}>
-                      <Button
-                        colorScheme="accent"
-                        size="md"
-                        onClick={() => handleContactClick('parent')}
-                      >
-                        Prendre contact
-                      </Button>
-                    </Box>
-                  </Stack>
-                </Box>
+                    <Stack spacing={0}>
+                      {(activeTab === 'particulier' ? PARTICULIER_STEPS : ECOLE_STEPS).map((step, i, arr) => (
+                        <ProcessStep
+                          key={i}
+                          step={step}
+                          index={i}
+                          isLast={i === arr.length - 1}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                </Flex>
               </Box>
-            </SlideIn>
-
-            {/* Établissements */}
-            <SlideIn from="right" delay={0.2}>
-              <Box
-                borderRadius="2xl"
-                overflow="hidden"
-                boxShadow="md"
-                border="1px solid"
-                borderColor="sand.200"
-                bg="white"
-                display="flex"
-                flexDirection="column"
-                h="100%"
-              >
-                <Box h="220px" overflow="hidden">
-                  <Image
-                    src="/DSC08853.JPG"
-                    alt="Interventions en établissements"
-                    w="100%"
-                    h="100%"
-                    objectFit="cover"
-                    transition="transform 0.5s ease"
-                    _hover={{ transform: 'scale(1.05)' }}
-                  />
-                </Box>
-                <Box p={{ base: 6, md: 8 }} flex={1} display="flex" flexDirection="column">
-                  <Stack spacing={5} flex={1}>
-                    <Box>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="700"
-                        color="accent.500"
-                        textTransform="uppercase"
-                        letterSpacing="widest"
-                        mb={2}
-                      >
-                        Établissements
-                      </Text>
-                      <Heading size="lg" color="brand.500" fontFamily="heading">
-                        Interventions en établissements
-                      </Heading>
-                    </Box>
-                    <Text fontSize="sm" color="brand.500" fontWeight="600">
-                      📍 Nantes (selon récurrence des interventions)
-                    </Text>
-
-                    <Box>
-                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
-                        Enseignement supérieur
-                      </Text>
-                      <Stack spacing={1} pl={2}>
-                        {[
-                          'Cours de mathématiques',
-                          'Modules de management',
-                          'Modules de compétences psychosociales',
-                          "Modules d'éducation financière",
-                        ].map(item => (
-                          <Text key={item} fontSize="sm" color="brand.600">
-                            › {item}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Box>
-
-                    <Box>
-                      <Text fontSize="md" fontWeight="600" color="brand.500" mb={2}>
-                        Collèges, lycées & collectivités
-                      </Text>
-                      <Stack spacing={1} pl={2}>
-                        {[
-                          'Modules de compétences psychosociales',
-                          "Modules d'éducation financière",
-                          'Interventions ponctuelles ou régulières',
-                          'Ateliers thématiques adaptés',
-                        ].map(item => (
-                          <Text key={item} fontSize="sm" color="brand.600">
-                            › {item}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Box>
-
-                    <Box pt={2}>
-                      <Button
-                        colorScheme="accent"
-                        size="md"
-                        onClick={() => handleContactClick('school')}
-                      >
-                        Prendre contact
-                      </Button>
-                    </Box>
-                  </Stack>
-                </Box>
-              </Box>
-            </SlideIn>
-          </Grid>
+            </motion.div>
+          </AnimatePresence>
         </Container>
       </Box>
 
