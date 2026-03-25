@@ -145,6 +145,16 @@ export default function ClientDetailPage() {
     if (clientId) fetchHeures();
   }, [fetchHeures]);
 
+  const [defaultBaremeKm, setDefaultBaremeKm] = useState('0.636');
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        if (data.settings?.bareme_km) setDefaultBaremeKm(data.settings.bareme_km);
+      })
+      .catch(() => {});
+  }, []);
+
   const [selectedRecueilEmail, setSelectedRecueilEmail] = useState('');
   const [selectedContractualisationSigner, setSelectedContractualisationSigner] = useState('');
   const [selectedAnneeScolaire, setSelectedAnneeScolaire] = useState('');
@@ -2750,6 +2760,7 @@ export default function ClientDetailPage() {
         onSuccess={fetchHeures}
         clientTarifHoraire={client?.tarif_horaire}
         clientDistanceKm={client?.distance_km}
+        defaultBaremeKm={defaultBaremeKm}
       />
     </Stack>
   );
