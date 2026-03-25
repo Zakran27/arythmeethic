@@ -1572,18 +1572,18 @@ export default function ClientDetailPage() {
         <Card bg="white">
           <CardBody>
             <Stack spacing={4}>
-              <HStack justify="space-between" align="center">
+              <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'flex-start', md: 'center' }} spacing={2}>
                 <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
                   Heures réalisées
                 </Heading>
-                <Button colorScheme="accent" size="sm" onClick={onHeuresOpen}>
+                <Button colorScheme="accent" size="sm" onClick={onHeuresOpen} flexShrink={0}>
                   + Déclarer des heures
                 </Button>
-              </HStack>
+              </Stack>
 
               {/* Filtres date range */}
-              <HStack spacing={3} align="flex-end">
-                <FormControl maxW="180px">
+              <Stack direction={{ base: 'column', md: 'row' }} spacing={3} align={{ base: 'stretch', md: 'flex-end' }}>
+                <FormControl>
                   <FormLabel fontSize="xs" mb={1}>
                     De
                   </FormLabel>
@@ -1594,7 +1594,7 @@ export default function ClientDetailPage() {
                     onChange={e => setHeuresFilterFrom(e.target.value)}
                   />
                 </FormControl>
-                <FormControl maxW="180px">
+                <FormControl>
                   <FormLabel fontSize="xs" mb={1}>
                     À
                   </FormLabel>
@@ -1605,7 +1605,7 @@ export default function ClientDetailPage() {
                     onChange={e => setHeuresFilterTo(e.target.value)}
                   />
                 </FormControl>
-              </HStack>
+              </Stack>
 
               {heuresLoading ? (
                 <Box textAlign="center" py={4}>
@@ -1725,16 +1725,19 @@ export default function ClientDetailPage() {
               <>
                 <Stack spacing={1}>
                   {paginatedHistory.map(entry => (
-                    <HStack
+                    <Stack
                       key={entry.id}
+                      direction={{ base: 'column', md: 'row' }}
                       py={2}
                       px={3}
                       bg="gray.50"
                       borderRadius="md"
                       justify="space-between"
+                      align={{ base: 'flex-start', md: 'center' }}
+                      spacing={1}
                     >
-                      <HStack spacing={3} flex={1}>
-                        <Text fontWeight="medium" fontSize="sm" minW="180px">
+                      <HStack spacing={3} flex={1} flexWrap="wrap">
+                        <Text fontWeight="medium" fontSize="sm">
                           {entry.procedure_label}
                         </Text>
                         <Badge
@@ -1750,7 +1753,7 @@ export default function ClientDetailPage() {
                           {statusLabels[entry.status]}
                         </Badge>
                       </HStack>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color="gray.500" flexShrink={0}>
                         {new Date(entry.created_at).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'short',
@@ -1759,7 +1762,7 @@ export default function ClientDetailPage() {
                           minute: '2-digit',
                         })}
                       </Text>
-                    </HStack>
+                    </Stack>
                   ))}
                 </Stack>
                 {totalHistoryPages > 1 && (
@@ -1815,15 +1818,18 @@ export default function ClientDetailPage() {
                     // Find the procedure for this document
                     const docProcedure = procedures.find(p => p.id === doc.procedure_id);
                     return (
-                      <HStack
+                      <Stack
                         key={doc.id}
+                        direction={{ base: 'column', md: 'row' }}
                         py={2}
                         px={3}
                         bg="gray.50"
                         borderRadius="md"
                         justify="space-between"
+                        align={{ base: 'flex-start', md: 'center' }}
+                        spacing={2}
                       >
-                        <Stack spacing={0} flex={1}>
+                        <Stack spacing={0} flex={1} minW={0}>
                           <Text fontWeight="medium" fontSize="sm">
                             {doc.title}
                           </Text>
@@ -1841,7 +1847,7 @@ export default function ClientDetailPage() {
                             </Text>
                           )}
                         </Stack>
-                        <HStack>
+                        <HStack flexShrink={0}>
                           <Button
                             size="sm"
                             variant="outline"
@@ -1897,7 +1903,7 @@ export default function ClientDetailPage() {
                             }}
                           />
                         </HStack>
-                      </HStack>
+                      </Stack>
                     );
                   })}
                 </Stack>
