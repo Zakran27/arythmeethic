@@ -8,6 +8,7 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
+  Checkbox,
   FormControl,
   FormLabel,
   Input,
@@ -40,6 +41,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
     howDidYouHear: '',
     referrerName: '',
     message: '',
+    demarcheVolontaire: false,
   });
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -85,6 +87,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
         howDidYouHear: '',
         referrerName: '',
         message: '',
+        demarcheVolontaire: false,
       });
       onClose();
     } catch (error) {
@@ -169,6 +172,13 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               </Select>
             </FormControl>
 
+            <Checkbox
+              isChecked={formData.demarcheVolontaire}
+              onChange={e => setFormData({ ...formData, demarcheVolontaire: e.target.checked })}
+            >
+              Démarche volontaire du jeune
+            </Checkbox>
+
             <FormControl isRequired>
               <FormLabel>Message</FormLabel>
               <Textarea
@@ -226,6 +236,13 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                 placeholder="06 12 34 56 78"
               />
             </FormControl>
+
+            <Checkbox
+              isChecked={formData.demarcheVolontaire}
+              onChange={e => setFormData({ ...formData, demarcheVolontaire: e.target.checked })}
+            >
+              Démarche volontaire du jeune
+            </Checkbox>
 
             <FormControl isRequired>
               <FormLabel>Message</FormLabel>
@@ -378,10 +395,11 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                       howDidYouHear: '',
                       referrerName: '',
                       message: '',
+                      demarcheVolontaire: false,
                     })
                   }
                 >
-                  <option value="parent">Parent</option>
+                  <option value="parent">Parent d'enfant mineur</option>
                   <option value="student">Jeune / Élève</option>
                   <option value="school">Établissement</option>
                 </Select>
