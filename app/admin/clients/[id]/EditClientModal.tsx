@@ -407,7 +407,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   const isEcole = formData.type_client === 'École';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }} scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader color="brand.500" fontFamily="heading">
