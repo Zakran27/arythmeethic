@@ -1451,6 +1451,14 @@ export default function ClientDetailPage() {
                     {client.distance_km != null ? `${client.distance_km} km` : '—'}
                   </Text>
                 </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Démarche volontaire du jeune
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.demarche_volontaire ? 'Oui' : 'Non'}
+                  </Text>
+                </GridItem>
               </Grid>
             </Stack>
           </CardBody>

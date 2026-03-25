@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Checkbox,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -20,7 +21,6 @@ import {
   useToast,
   Divider,
   Text,
-  Checkbox,
   SimpleGrid,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
@@ -149,9 +149,10 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
     // Statut juridique
     ecole_statut_juridique: client.ecole_statut_juridique || '',
-    // Particulier — tarif et distance
+    // Particulier — tarif, distance, démarche
     tarif_horaire: client.tarif_horaire?.toString() || '',
     distance_km: client.distance_km?.toString() || '',
+    demarche_volontaire: client.demarche_volontaire || false,
   });
 
   useEffect(() => {
@@ -244,6 +245,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       // Particulier — tarif et distance
       tarif_horaire: client.tarif_horaire?.toString() || '',
       distance_km: client.distance_km?.toString() || '',
+      demarche_volontaire: client.demarche_volontaire || false,
     });
   }, [client]);
 
@@ -375,6 +377,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           // Particulier — tarif
           tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
           distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
+          demarche_volontaire: formData.demarche_volontaire || false,
         })
         .eq('id', client.id);
 
@@ -399,7 +402,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -776,6 +779,12 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       </FormControl>
                     </GridItem>
                   </Grid>
+                  <Checkbox
+                    isChecked={formData.demarche_volontaire}
+                    onChange={e => handleChange('demarche_volontaire', e.target.checked)}
+                  >
+                    Démarche volontaire du jeune
+                  </Checkbox>
                 </>
               )}
 
