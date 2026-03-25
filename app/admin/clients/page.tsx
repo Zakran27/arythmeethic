@@ -145,7 +145,7 @@ export default function ClientsPage() {
 
   return (
     <Stack spacing={6}>
-      <HStack justify="space-between" align="center">
+      <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'stretch', md: 'center' }} spacing={3}>
         <Heading color="brand.500" fontFamily="heading">
           Gestion des contacts
         </Heading>
@@ -189,7 +189,7 @@ export default function ClientsPage() {
             + Nouveau contact
           </Button>
         </HStack>
-      </HStack>
+      </Stack>
 
       {/* Search and Filters */}
       <Stack spacing={3}>

@@ -763,11 +763,11 @@ export default function ClientDetailPage() {
 
   return (
     <Stack spacing={6}>
-      <HStack justify="space-between" align="center">
+      <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'stretch', md: 'center' }} spacing={3}>
         <Heading color="brand.500" fontFamily="heading">
           {getDisplayName()}
         </Heading>
-        <HStack spacing={3}>
+        <HStack spacing={3} flexShrink={0}>
           <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
             Modifier
           </Button>
@@ -775,7 +775,7 @@ export default function ClientDetailPage() {
             Supprimer
           </Button>
         </HStack>
-      </HStack>
+      </Stack>
 
       {/* Informations générales */}
       <Card bg="white" shadow="sm">

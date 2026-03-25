@@ -12,7 +12,6 @@ import {
   Drawer,
   DrawerOverlay,
   DrawerContent,
-  DrawerCloseButton,
   DrawerBody,
   useDisclosure,
   useToast,
@@ -109,10 +108,34 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <Drawer isOpen={isOpen} placement="left" onClose={onClose} size="xs">
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton mt={3} />
           <DrawerBody px={0} pt={0}>
-            <SidebarLogo />
+            {/* Drawer header : logo + close button côte à côte */}
+            <HStack
+              px={4}
+              py={4}
+              borderBottom="1px solid"
+              borderColor="gray.100"
+              justify="space-between"
+            >
+              <HStack spacing={3}>
+                <Image src="/logo.jpg" alt="A Rythme Ethic" h="32px" borderRadius="md" />
+                <Text fontSize="sm" fontWeight="700" color="brand.500" fontFamily="heading">
+                  A Rythme Ethic
+                </Text>
+              </HStack>
+              <IconButton
+                aria-label="Fermer le menu"
+                icon={<Text fontSize="lg" lineHeight={1}>✕</Text>}
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                color="gray.400"
+                _hover={{ color: 'gray.700', bg: 'gray.100' }}
+              />
+            </HStack>
+
             <NavLinks pathname={pathname} onClose={onClose} />
+
             <Box px={4} pt={4} borderTop="1px solid" borderColor="gray.100" mt={4}>
               <Button
                 w="full"
