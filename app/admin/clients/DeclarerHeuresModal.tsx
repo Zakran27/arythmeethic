@@ -30,6 +30,7 @@ interface DeclarerHeuresModalProps {
   isOpen: boolean;
   onClose: () => void;
   clients: Client[];
+  defaultBaremeKm?: string;
 }
 
 interface EntryForm {
@@ -58,7 +59,12 @@ function getParentEmail(client: Client): string {
   return client.email_parent1 || client.email || '';
 }
 
-export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeuresModalProps) {
+export function DeclarerHeuresModal({
+  isOpen,
+  onClose,
+  clients,
+  defaultBaremeKm = '0.636',
+}: DeclarerHeuresModalProps) {
   const toast = useToast();
 
   const now = new Date();
@@ -67,7 +73,7 @@ export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeures
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [mois, setMois] = useState(defaultMois);
   const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
-  const [baremeKm, setBaremeKm] = useState('0.636');
+  const [baremeKm, setBaremeKm] = useState(defaultBaremeKm);
   const [entries, setEntries] = useState<Record<string, EntryForm>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -237,7 +243,7 @@ export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeures
     setStep(1);
     setMois(defaultMois);
     setSelectedClientIds(new Set());
-    setBaremeKm('0.636');
+    setBaremeKm(defaultBaremeKm);
     setEntries({});
     setSavedEntries([]);
     onClose();
