@@ -529,6 +529,17 @@ export default function ClientDetailPage() {
         isClosable: true,
       });
 
+      if (data.dbUpdateError) {
+        toast({
+          title: 'Attention',
+          description:
+            "La signature a été envoyée mais le statut en base de données n'a pas pu être mis à jour. Rechargez la page.",
+          status: 'warning',
+          duration: 10000,
+          isClosable: true,
+        });
+      }
+
       onContractualisationClose();
       setSelectedContractualisationSigner('');
       setSelectedAnneeScolaire('');
@@ -620,6 +631,17 @@ export default function ClientDetailPage() {
         duration: 5000,
         isClosable: true,
       });
+
+      if (data.dbUpdateError) {
+        toast({
+          title: 'Attention',
+          description:
+            "La signature a été envoyée mais le statut en base de données n'a pas pu être mis à jour. Rechargez la page.",
+          status: 'warning',
+          duration: 10000,
+          isClosable: true,
+        });
+      }
 
       onContractualisationParticulierClose();
       setSelectedContractualisationParticulierSigner('');
