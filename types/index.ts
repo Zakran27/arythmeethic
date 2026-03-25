@@ -132,6 +132,7 @@ export interface Client {
   ecole_facturation_moment_paiement?: 'fin_mois_courant' | 'mois_suivant';
   // Particulier — tarif et distance
   tarif_horaire?: number;
+  distance_km?: number;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
