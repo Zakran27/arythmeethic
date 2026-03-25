@@ -13,6 +13,7 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Select,
   Stack,
   Grid,
   GridItem,
@@ -55,8 +56,17 @@ function getClientDisplayName(client: Client): string {
   return `${first} ${last}`.trim();
 }
 
-function getParentEmail(client: Client): string {
-  return client.email_parent1 || client.email || '';
+function getEmailOptions(client: Client): { label: string; value: string }[] {
+  const opts: { label: string; value: string }[] = [];
+  if (client.email_parent1) opts.push({ label: `Parent 1 — ${client.email_parent1}`, value: client.email_parent1 });
+  if (client.email_parent2) opts.push({ label: `Parent 2 — ${client.email_parent2}`, value: client.email_parent2 });
+  if (client.email_jeune) opts.push({ label: `Jeune — ${client.email_jeune}`, value: client.email_jeune });
+  if (client.email) opts.push({ label: `Principal — ${client.email}`, value: client.email });
+  return opts;
+}
+
+function getDefaultEmail(client: Client): string {
+  return client.email_parent1 || client.email_parent2 || client.email_jeune || client.email || '';
 }
 
 export function DeclarerHeuresModal({
@@ -78,6 +88,7 @@ export function DeclarerHeuresModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([]);
+  const [selectedEmails, setSelectedEmails] = useState<Record<string, string>>({});
 
   const particulierClients = clients.filter(
     c => c.type_client === 'Particulier' && c.client_status === 'Client'
@@ -174,6 +185,11 @@ export function DeclarerHeuresModal({
       }
 
       setSavedEntries(results);
+      const initEmails: Record<string, string> = {};
+      for (const r of results) {
+        initEmails[r.client.id] = getDefaultEmail(r.client);
+      }
+      setSelectedEmails(initEmails);
       setStep(3);
 
       toast({
@@ -207,7 +223,7 @@ export function DeclarerHeuresModal({
           entries: savedEntries.map(e => ({
             clientId: e.client.id,
             clientName: getClientDisplayName(e.client),
-            parentEmail: getParentEmail(e.client),
+            parentEmail: selectedEmails[e.client.id] || getDefaultEmail(e.client),
             heures: e.heures,
             tarifHoraire: e.tarifHoraire,
             km: e.km,
@@ -217,15 +233,25 @@ export function DeclarerHeuresModal({
       });
 
       const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      const failed = data.results?.filter((r: { ok: boolean }) => !r.ok) ?? [];
 
-      toast({
-        title: 'Emails envoyés',
-        description: `Récapitulatif envoyé à ${savedEntries.length} parent(s).`,
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
+      if (failed.length === 0) {
+        toast({
+          title: 'Emails envoyés',
+          description: `Récapitulatif envoyé à ${savedEntries.length} destinataire(s).`,
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: `${failed.length} email(s) non envoyé(s)`,
+          description: data.message || 'Vérifiez les adresses email.',
+          status: 'warning',
+          duration: 6000,
+          isClosable: true,
+        });
+      }
     } catch (err) {
       toast({
         title: 'Erreur envoi email',
@@ -246,6 +272,7 @@ export function DeclarerHeuresModal({
     setBaremeKm(defaultBaremeKm);
     setEntries({});
     setSavedEntries([]);
+    setSelectedEmails({});
     onClose();
   };
 
@@ -475,36 +502,60 @@ export function DeclarerHeuresModal({
 
               <Divider />
 
-              <Stack spacing={2}>
+              <Stack spacing={3}>
                 {savedEntries.map(e => {
                   const montantHeures = (parseFloat(e.heures) * parseFloat(e.tarifHoraire)).toFixed(2);
                   const montantKm = (parseFloat(e.km) * parseFloat(e.baremeKm)).toFixed(2);
                   const total = (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2);
+                  const emailOptions = getEmailOptions(e.client);
                   return (
-                    <HStack key={e.client.id} justify="space-between" p={2} bg="gray.50" borderRadius="md">
-                      <Text fontWeight="medium" fontSize="sm">
-                        {getClientDisplayName(e.client)}
-                      </Text>
-                      <Text fontSize="sm" color="brand.600" fontWeight="bold">
-                        {total} €
-                      </Text>
-                    </HStack>
+                    <Box key={e.client.id} p={3} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
+                      <HStack justify="space-between" mb={2}>
+                        <Text fontWeight="medium" fontSize="sm">
+                          {getClientDisplayName(e.client)}
+                        </Text>
+                        <Text fontSize="sm" color="brand.600" fontWeight="bold">
+                          {total} €
+                        </Text>
+                      </HStack>
+                      <FormControl>
+                        <FormLabel fontSize="xs" color="gray.500" mb={1}>
+                          Envoyer à
+                        </FormLabel>
+                        {emailOptions.length > 0 ? (
+                          <Select
+                            size="sm"
+                            value={selectedEmails[e.client.id] || ''}
+                            onChange={ev =>
+                              setSelectedEmails(prev => ({ ...prev, [e.client.id]: ev.target.value }))
+                            }
+                          >
+                            {emailOptions.map(opt => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </Select>
+                        ) : (
+                          <Text fontSize="xs" color="red.400">
+                            Aucune adresse email renseignée
+                          </Text>
+                        )}
+                      </FormControl>
+                    </Box>
                   );
                 })}
               </Stack>
 
               <Divider />
 
-              <Text fontSize="sm" color="gray.600">
-                Envoyer un récapitulatif par email aux parents des clients sélectionnés.
-              </Text>
               <Button
                 colorScheme="accent"
                 onClick={handleSendEmail}
                 isLoading={isSendingEmail}
                 loadingText="Envoi en cours..."
               >
-                Envoyer récap email aux parents
+                Envoyer récapitulatif par email
               </Button>
             </Stack>
           )}
