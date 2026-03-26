@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     const signerPhone = formData.get('signerPhone') as string | null;
     const anneeScolaire = formData.get('anneeScolaire') as string;
     const tarifHoraireHT = formData.get('tarifHoraireHT') as string | null;
-    const annexeArticle3 = formData.get('annexeArticle3') as File | null;
+    const annexes = formData.getAll('annexes') as File[];
 
     if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire) {
       return NextResponse.json(
@@ -281,16 +281,17 @@ export async function POST(request: NextRequest) {
       );
       console.log('Document uploaded:', document.id);
 
-      // 2b. Upload Article 3 annex as attachment (if provided)
-      if (annexeArticle3 && annexeArticle3.size > 0) {
+      // 2b. Upload annexes as attachments (if provided)
+      for (const annexe of annexes) {
+        if (!annexe || annexe.size === 0) continue;
         try {
-          const annexeBuffer = Buffer.from(await annexeArticle3.arrayBuffer());
+          const annexeBuffer = Buffer.from(await annexe.arrayBuffer());
           const annexeFormData = new FormData();
           const uint8 = new Uint8Array(annexeBuffer);
           annexeFormData.append(
             'file',
             new Blob([uint8], { type: 'application/pdf' }),
-            annexeArticle3.name || `annexe_article3_${client.id}.pdf`
+            annexe.name || `annexe_${client.id}.pdf`
           );
           annexeFormData.append('nature', 'attachment');
 
@@ -305,7 +306,7 @@ export async function POST(request: NextRequest) {
           if (!annexeRes.ok) {
             console.error('Yousign annex upload error:', await annexeRes.text());
           } else {
-            console.log('Annex uploaded');
+            console.log('Annex uploaded:', annexe.name);
           }
         } catch (annexeErr) {
           console.error('Error uploading annex:', annexeErr);

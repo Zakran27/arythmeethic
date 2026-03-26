@@ -1324,7 +1324,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     </GridItem>
                     <GridItem>
                       <FormControl>
-                        <FormLabel>Période de facturation</FormLabel>
+                        <FormLabel>Délai de paiement</FormLabel>
                         <Select
                           value={formData.ecole_periode_facturation}
                           onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
@@ -1333,6 +1333,19 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                           <option value="fin_mois_en_cours">Fin du mois en cours</option>
                           <option value="mois_suivant">Mois suivant</option>
                         </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Tarif horaire HT (€/h)</FormLabel>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.tarif_horaire ?? ''}
+                          onChange={e => handleChange('tarif_horaire', e.target.value)}
+                          placeholder="Ex: 44.80"
+                        />
                       </FormControl>
                     </GridItem>
                   </Grid>

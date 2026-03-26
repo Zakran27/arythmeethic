@@ -27,21 +27,27 @@ interface ContactModalProps {
   defaultClientType?: 'student' | 'parent' | 'school';
 }
 
+const emptyFormData = {
+  serviceType: '',
+  clientType: '',
+  firstName: '',
+  lastName: '',
+  organisationName: '',
+  email: '',
+  phone: '',
+  studentLevel: '',
+  requestType: '',
+  requestSubject: '',
+  howDidYouHear: '',
+  referrerName: '',
+  message: '',
+  demarcheVolontaire: false,
+};
+
 export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModalProps) {
   const [formData, setFormData] = useState({
+    ...emptyFormData,
     clientType: defaultClientType || '',
-    firstName: '',
-    lastName: '',
-    organisationName: '',
-    email: '',
-    phone: '',
-    studentLevel: '',
-    requestType: '',
-    requestSubject: '',
-    howDidYouHear: '',
-    referrerName: '',
-    message: '',
-    demarcheVolontaire: false,
   });
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -52,6 +58,22 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       setFormData(prev => ({ ...prev, clientType: defaultClientType }));
     }
   }, [defaultClientType]);
+
+  const handleServiceTypeChange = (value: string) => {
+    setFormData({
+      ...emptyFormData,
+      serviceType: value,
+      clientType: value === 'prestation_professionnels' ? 'school' : '',
+    });
+  };
+
+  const handleClientTypeChange = (value: string) => {
+    setFormData(prev => ({
+      ...emptyFormData,
+      serviceType: prev.serviceType,
+      clientType: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,19 +97,8 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       });
 
       setFormData({
+        ...emptyFormData,
         clientType: defaultClientType || '',
-        firstName: '',
-        lastName: '',
-        organisationName: '',
-        email: '',
-        phone: '',
-        studentLevel: '',
-        requestType: '',
-        requestSubject: '',
-        howDidYouHear: '',
-        referrerName: '',
-        message: '',
-        demarcheVolontaire: false,
       });
       onClose();
     } catch (error) {
@@ -102,6 +113,11 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       setLoading(false);
     }
   };
+
+  const showButtons =
+    (formData.serviceType === 'prestation_professionnels' && formData.clientType === 'school') ||
+    (['cours_particulier', 'accompagnement_uniquement'].includes(formData.serviceType) &&
+      !!formData.clientType);
 
   const renderFormFields = () => {
     switch (formData.clientType) {
@@ -176,7 +192,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               isChecked={formData.demarcheVolontaire}
               onChange={e => setFormData({ ...formData, demarcheVolontaire: e.target.checked })}
             >
-              Démarche volontaire du jeune
+              S'agit-il d'une démarche volontaire de votre jeune ?
             </Checkbox>
 
             <FormControl isRequired>
@@ -236,13 +252,6 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                 placeholder="06 12 34 56 78"
               />
             </FormControl>
-
-            <Checkbox
-              isChecked={formData.demarcheVolontaire}
-              onChange={e => setFormData({ ...formData, demarcheVolontaire: e.target.checked })}
-            >
-              Démarche volontaire du jeune
-            </Checkbox>
 
             <FormControl isRequired>
               <FormLabel>Message</FormLabel>
@@ -375,39 +384,41 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
         <ModalBody pb={6} overflowY="auto">
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
+
+              {/* Step 1 — Type d'accompagnement */}
               <FormControl isRequired>
-                <FormLabel>Vous êtes</FormLabel>
+                <FormLabel>Type d'accompagnement</FormLabel>
                 <Select
-                  placeholder="Sélectionnez votre profil"
-                  value={formData.clientType}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      clientType: e.target.value,
-                      firstName: '',
-                      lastName: '',
-                      organisationName: '',
-                      email: '',
-                      phone: '',
-                      studentLevel: '',
-                      requestType: '',
-                      requestSubject: '',
-                      howDidYouHear: '',
-                      referrerName: '',
-                      message: '',
-                      demarcheVolontaire: false,
-                    })
-                  }
+                  placeholder="Sélectionnez un type d'accompagnement"
+                  value={formData.serviceType}
+                  onChange={e => handleServiceTypeChange(e.target.value)}
                 >
-                  <option value="parent">Parent d'enfant mineur</option>
-                  <option value="student">Jeune / Élève</option>
-                  <option value="school">Établissement</option>
+                  <option value="cours_particulier">Cours particulier</option>
+                  <option value="accompagnement_uniquement">Accompagnement uniquement</option>
+                  <option value="prestation_professionnels">Prestation pour les professionnels</option>
                 </Select>
               </FormControl>
 
+              {/* Step 2 — "Vous êtes" uniquement pour cours/accompagnement */}
+              {['cours_particulier', 'accompagnement_uniquement'].includes(formData.serviceType) && (
+                <FormControl isRequired>
+                  <FormLabel>Vous êtes</FormLabel>
+                  <Select
+                    placeholder="Sélectionnez votre profil"
+                    value={formData.clientType}
+                    onChange={e => handleClientTypeChange(e.target.value)}
+                  >
+                    <option value="parent">Parent d'enfant mineur</option>
+                    <option value="student">Jeune / Élève</option>
+                  </Select>
+                </FormControl>
+              )}
+
+              {/* Champs spécifiques au profil */}
               {renderFormFields()}
 
-              {formData.clientType && (
+              {/* Boutons — visibles uniquement quand le formulaire est prêt */}
+              {showButtons && (
                 <Stack direction="row" spacing={3} pt={2}>
                   <Button onClick={onClose} variant="ghost" flex={1}>
                     Annuler
@@ -417,6 +428,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                   </Button>
                 </Stack>
               )}
+
             </Stack>
           </form>
         </ModalBody>

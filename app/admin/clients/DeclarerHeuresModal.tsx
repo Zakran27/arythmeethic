@@ -15,30 +15,24 @@ import {
   Input,
   Select,
   Stack,
-  Grid,
-  GridItem,
   Text,
   HStack,
   Divider,
   Badge,
   useToast,
   Box,
+  Spinner,
+  Center,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { Client } from '@/types';
+import { createClient } from '@/lib/supabase-client';
 
 interface DeclarerHeuresModalProps {
   isOpen: boolean;
   onClose: () => void;
   clients: Client[];
   defaultBaremeKm?: string;
-}
-
-interface EntryForm {
-  heures: string;
-  nbDeplacements: string;
-  tarifHoraire: string;
-  tempsAReporter: string;
 }
 
 interface SavedEntry {
@@ -80,19 +74,82 @@ export function DeclarerHeuresModal({
   const now = new Date();
   const defaultMois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [mois, setMois] = useState(defaultMois);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadedEntries, setLoadedEntries] = useState<SavedEntry[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
-  const [baremeKm, setBaremeKm] = useState(defaultBaremeKm);
-  const [entries, setEntries] = useState<Record<string, EntryForm>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [savedEntries, setSavedEntries] = useState<SavedEntry[]>([]);
   const [selectedEmails, setSelectedEmails] = useState<Record<string, string>>({});
 
-  const particulierClients = clients.filter(
-    c => c.type_client === 'Particulier' && c.client_status === 'Client'
-  );
+  const handleLoad = async () => {
+    if (!mois) {
+      toast({
+        title: 'Mois requis',
+        description: 'Veuillez sélectionner un mois.',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setHasLoaded(false);
+    setLoadedEntries([]);
+    setSelectedClientIds(new Set());
+
+    try {
+      const supabase = createClient();
+      const moisDate = `${mois}-01`;
+      const { data, error } = await supabase
+        .from('heures_realisees')
+        .select('*')
+        .gte('mois', moisDate)
+        .lte('mois', moisDate)
+        .order('client_id');
+
+      if (error) throw new Error(error.message);
+
+      const entries: SavedEntry[] = [];
+      for (const row of data ?? []) {
+        const client = clients.find(c => c.id === row.client_id);
+        if (!client) continue;
+        entries.push({
+          client,
+          heures: row.heures?.toString() ?? '0',
+          tarifHoraire: row.tarif_horaire?.toString() ?? '0',
+          km: row.km?.toString() ?? '0',
+          baremeKm: row.bareme_km?.toString() ?? defaultBaremeKm,
+          tempsAReporter: row.temps_a_reporter?.toString() ?? '0',
+        });
+      }
+
+      setLoadedEntries(entries);
+      setHasLoaded(true);
+
+      if (entries.length === 0) {
+        toast({
+          title: 'Aucune heure trouvée',
+          description: `Aucune déclaration pour ${new Date(moisDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}.`,
+          status: 'info',
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Erreur de chargement',
+        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleClient = (id: string) => {
     setSelectedClientIds(prev => {
@@ -106,113 +163,38 @@ export function DeclarerHeuresModal({
     });
   };
 
+  const toggleAll = () => {
+    if (selectedClientIds.size === loadedEntries.length) {
+      setSelectedClientIds(new Set());
+    } else {
+      setSelectedClientIds(new Set(loadedEntries.map(e => e.client.id)));
+    }
+  };
+
   const goToStep2 = () => {
     if (selectedClientIds.size === 0) {
       toast({
         title: 'Aucun client sélectionné',
-        description: 'Veuillez sélectionner au moins un client.',
+        description: 'Veuillez sélectionner au moins un client pour le récap email.',
         status: 'warning',
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-    const newEntries: Record<string, EntryForm> = {};
+
+    const initEmails: Record<string, string> = {};
     for (const id of selectedClientIds) {
-      const client = clients.find(c => c.id === id);
-      newEntries[id] = {
-        heures: '',
-        nbDeplacements: '0',
-        tarifHoraire: client?.tarif_horaire?.toString() ?? '',
-        tempsAReporter: '',
-      };
+      const entry = loadedEntries.find(e => e.client.id === id);
+      if (entry) initEmails[id] = getDefaultEmail(entry.client);
     }
-    setEntries(newEntries);
+    setSelectedEmails(initEmails);
     setStep(2);
   };
 
-  const updateEntry = (clientId: string, field: keyof EntryForm, value: string) => {
-    setEntries(prev => ({
-      ...prev,
-      [clientId]: { ...prev[clientId], [field]: value },
-    }));
-  };
-
-  const handleSaveAll = async () => {
-    for (const id of selectedClientIds) {
-      const entry = entries[id];
-      if (!entry.heures || !entry.tarifHoraire) {
-        const client = clients.find(c => c.id === id);
-        toast({
-          title: 'Champs requis manquants',
-          description: `Veuillez renseigner les heures et le tarif pour ${getClientDisplayName(client!)}`,
-          status: 'warning',
-          duration: 4000,
-          isClosable: true,
-        });
-        return;
-      }
-    }
-
-    setIsSubmitting(true);
-    try {
-      const results: SavedEntry[] = [];
-      for (const id of selectedClientIds) {
-        const client = clients.find(c => c.id === id)!;
-        const entry = entries[id];
-        const km =
-          client.distance_km && entry.nbDeplacements
-            ? (parseFloat(entry.nbDeplacements) * client.distance_km).toFixed(1)
-            : '0';
-
-        const res = await fetch('/api/heures-realisees', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            clientId: id,
-            mois,
-            heures: entry.heures,
-            tarifHoraire: entry.tarifHoraire,
-            km,
-            baremeKm: baremeKm || '0',
-            tempsAReporter: entry.tempsAReporter || '0',
-          }),
-        });
-
-        const data = await res.json();
-        if (!data.success) throw new Error(`${getClientDisplayName(client)}: ${data.error}`);
-        results.push({ client, ...entry, km, baremeKm });
-      }
-
-      setSavedEntries(results);
-      const initEmails: Record<string, string> = {};
-      for (const r of results) {
-        initEmails[r.client.id] = getDefaultEmail(r.client);
-      }
-      setSelectedEmails(initEmails);
-      setStep(3);
-
-      toast({
-        title: 'Heures enregistrées',
-        description: `${results.length} déclaration(s) sauvegardée(s).`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (err) {
-      toast({
-        title: 'Erreur',
-        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleSendEmail = async () => {
+    const entriesToSend = loadedEntries.filter(e => selectedClientIds.has(e.client.id));
+
     setIsSendingEmail(true);
     try {
       const res = await fetch('/api/heures-realisees/recap-email', {
@@ -220,7 +202,7 @@ export function DeclarerHeuresModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mois,
-          entries: savedEntries.map(e => ({
+          entries: entriesToSend.map(e => ({
             clientId: e.client.id,
             clientName: getClientDisplayName(e.client),
             parentEmail: selectedEmails[e.client.id] || getDefaultEmail(e.client),
@@ -233,12 +215,24 @@ export function DeclarerHeuresModal({
       });
 
       const data = await res.json();
+
+      if (!data.success) {
+        toast({
+          title: 'Erreur envoi email',
+          description: data.message || data.error || 'Une erreur est survenue.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const failed = data.results?.filter((r: { ok: boolean }) => !r.ok) ?? [];
 
       if (failed.length === 0) {
         toast({
           title: 'Emails envoyés',
-          description: `Récapitulatif envoyé à ${savedEntries.length} destinataire(s).`,
+          description: `Récapitulatif envoyé à ${entriesToSend.length} destinataire(s).`,
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -268,251 +262,214 @@ export function DeclarerHeuresModal({
   const handleClose = () => {
     setStep(1);
     setMois(defaultMois);
+    setIsLoading(false);
+    setLoadedEntries([]);
+    setHasLoaded(false);
     setSelectedClientIds(new Set());
-    setBaremeKm(defaultBaremeKm);
-    setEntries({});
-    setSavedEntries([]);
     setSelectedEmails({});
     onClose();
   };
 
-  const selectedClients = Array.from(selectedClientIds)
-    .map(id => clients.find(c => c.id === id))
-    .filter(Boolean) as Client[];
+  const allSelected = loadedEntries.length > 0 && selectedClientIds.size === loadedEntries.length;
+  const someSelected = selectedClientIds.size > 0 && !allSelected;
+
+  const selectedEntries = loadedEntries.filter(e => selectedClientIds.has(e.client.id));
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader color="brand.500" fontFamily="heading">
-          Déclarer les heures —{' '}
-          {step === 1 ? 'Étape 1 : Sélection' : step === 2 ? 'Étape 2 : Saisie' : 'Étape 3 : Confirmation'}
+          Récapitulatif des heures —{' '}
+          {step === 1 ? 'Étape 1 : Sélection du mois' : 'Étape 2 : Confirmation email'}
         </ModalHeader>
         <ModalCloseButton />
 
         <ModalBody overflowY="auto">
-          {/* ===== STEP 1: SELECT CLIENTS ===== */}
+          {/* ===== STEP 1: MOIS + HEURES DÉCLARÉES ===== */}
           {step === 1 && (
             <Stack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Mois concerné</FormLabel>
-                <Input type="month" value={mois} onChange={e => setMois(e.target.value)} />
-              </FormControl>
+              <HStack align="flex-end" spacing={3}>
+                <FormControl isRequired flex={1}>
+                  <FormLabel>Mois concerné</FormLabel>
+                  <Input
+                    type="month"
+                    value={mois}
+                    onChange={e => {
+                      setMois(e.target.value);
+                      setHasLoaded(false);
+                      setLoadedEntries([]);
+                      setSelectedClientIds(new Set());
+                    }}
+                  />
+                </FormControl>
+                <Button
+                  colorScheme="brand"
+                  onClick={handleLoad}
+                  isLoading={isLoading}
+                  loadingText="Chargement..."
+                  flexShrink={0}
+                >
+                  Charger
+                </Button>
+              </HStack>
 
-              <Divider />
+              {isLoading && (
+                <Center py={6}>
+                  <Spinner color="brand.500" size="lg" />
+                </Center>
+              )}
 
-              <Text fontWeight="medium" color="gray.700">
-                Clients actifs — Particulier
-              </Text>
+              {hasLoaded && !isLoading && (
+                <>
+                  <Divider />
 
-              {particulierClients.length === 0 ? (
-                <Text color="gray.500" fontSize="sm">
-                  Aucun client Particulier actif trouvé.
-                </Text>
-              ) : (
-                <Stack spacing={2}>
-                  {particulierClients.map(client => (
-                    <HStack
-                      key={client.id}
-                      p={3}
-                      bg={selectedClientIds.has(client.id) ? 'brand.50' : 'gray.50'}
-                      borderRadius="md"
-                      border="1px solid"
-                      borderColor={selectedClientIds.has(client.id) ? 'brand.200' : 'gray.200'}
-                      cursor="pointer"
-                      onClick={() => toggleClient(client.id)}
-                    >
-                      <Checkbox
-                        isChecked={selectedClientIds.has(client.id)}
-                        onChange={() => toggleClient(client.id)}
-                        onClick={e => e.stopPropagation()}
-                        colorScheme="brand"
-                      />
-                      <Stack spacing={0} flex={1}>
-                        <Text fontWeight="medium" fontSize="sm">
-                          {getClientDisplayName(client)}
+                  {loadedEntries.length === 0 ? (
+                    <Text color="gray.500" fontSize="sm" textAlign="center" py={4}>
+                      Aucune heure déclarée pour ce mois.
+                    </Text>
+                  ) : (
+                    <Stack spacing={2}>
+                      <HStack justify="space-between" mb={1}>
+                        <Text fontWeight="medium" color="gray.700">
+                          {loadedEntries.length} client(s) avec des heures déclarées
                         </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          {client.sub_type && (
-                            <Badge size="sm" colorScheme="purple" mr={2}>
-                              {client.sub_type}
-                            </Badge>
-                          )}
-                          {client.tarif_horaire ? `${client.tarif_horaire} €/h` : 'Tarif non renseigné'}
-                          {client.distance_km ? ` · ${client.distance_km} km` : ''}
-                        </Text>
-                      </Stack>
-                    </HStack>
-                  ))}
-                </Stack>
+                        <Checkbox
+                          isChecked={allSelected}
+                          isIndeterminate={someSelected}
+                          onChange={toggleAll}
+                          colorScheme="brand"
+                          fontWeight="medium"
+                          fontSize="sm"
+                        >
+                          Tout sélectionner
+                        </Checkbox>
+                      </HStack>
+
+                      {loadedEntries.map(entry => {
+                        const { client } = entry;
+                        const montantHeures =
+                          entry.heures && entry.tarifHoraire
+                            ? (parseFloat(entry.heures) * parseFloat(entry.tarifHoraire)).toFixed(2)
+                            : null;
+                        const montantKm =
+                          entry.km && entry.baremeKm
+                            ? (parseFloat(entry.km) * parseFloat(entry.baremeKm)).toFixed(2)
+                            : null;
+                        const total =
+                          montantHeures !== null && montantKm !== null
+                            ? (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2)
+                            : montantHeures ?? null;
+
+                        const isChecked = selectedClientIds.has(client.id);
+
+                        return (
+                          <HStack
+                            key={client.id}
+                            p={3}
+                            bg={isChecked ? 'brand.50' : 'gray.50'}
+                            borderRadius="md"
+                            border="1px solid"
+                            borderColor={isChecked ? 'brand.200' : 'gray.200'}
+                            cursor="pointer"
+                            onClick={() => toggleClient(client.id)}
+                            align="flex-start"
+                          >
+                            <Checkbox
+                              isChecked={isChecked}
+                              onChange={() => toggleClient(client.id)}
+                              onClick={e => e.stopPropagation()}
+                              colorScheme="brand"
+                              mt={0.5}
+                            />
+                            <Stack spacing={0} flex={1}>
+                              <HStack justify="space-between">
+                                <Text fontWeight="medium" fontSize="sm">
+                                  {getClientDisplayName(client)}
+                                  {client.sub_type && (
+                                    <Badge ml={2} colorScheme="purple" fontWeight="normal" fontSize="xs">
+                                      {client.sub_type}
+                                    </Badge>
+                                  )}
+                                </Text>
+                                {total && (
+                                  <Text fontSize="sm" fontWeight="bold" color="brand.600">
+                                    {total} €
+                                  </Text>
+                                )}
+                              </HStack>
+                              <HStack spacing={3} mt={1} flexWrap="wrap">
+                                <Text fontSize="xs" color="gray.500">
+                                  {entry.heures} h × {entry.tarifHoraire} €/h
+                                  {montantHeures ? ` = ${montantHeures} €` : ''}
+                                </Text>
+                                {parseFloat(entry.km) > 0 && (
+                                  <Text fontSize="xs" color="gray.500">
+                                    · {entry.km} km × {entry.baremeKm} €/km
+                                    {montantKm ? ` = ${montantKm} €` : ''}
+                                  </Text>
+                                )}
+                                {parseFloat(entry.tempsAReporter) > 0 && (
+                                  <Text fontSize="xs" color="orange.500">
+                                    · Reporter : {entry.tempsAReporter} h
+                                  </Text>
+                                )}
+                              </HStack>
+                            </Stack>
+                          </HStack>
+                        );
+                      })}
+                    </Stack>
+                  )}
+                </>
               )}
             </Stack>
           )}
 
-          {/* ===== STEP 2: FILL HOURS ===== */}
+          {/* ===== STEP 2: CONFIRMATION EMAIL ===== */}
           {step === 2 && (
-            <Stack spacing={5}>
-              <HStack>
-                <FormControl maxW="200px">
-                  <FormLabel>Barème km (€/km)</FormLabel>
-                  <Input
-                    type="number"
-                    step="0.001"
-                    value={baremeKm}
-                    onChange={e => setBaremeKm(e.target.value)}
-                  />
-                </FormControl>
-              </HStack>
-
-              <Divider />
-
-              {selectedClients.map(client => {
-                const entry = entries[client.id] || {
-                  heures: '',
-                  nbDeplacements: '0',
-                  tarifHoraire: '',
-                  tempsAReporter: '',
-                };
-                const km =
-                  client.distance_km && entry.nbDeplacements
-                    ? (parseFloat(entry.nbDeplacements || '0') * client.distance_km).toFixed(1)
-                    : null;
-                const montantHeures =
-                  entry.heures && entry.tarifHoraire
-                    ? (parseFloat(entry.heures) * parseFloat(entry.tarifHoraire)).toFixed(2)
-                    : null;
-                const montantKm =
-                  km && baremeKm ? (parseFloat(km) * parseFloat(baremeKm)).toFixed(2) : null;
-                const total =
-                  montantHeures && montantKm
-                    ? (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2)
-                    : null;
-
-                return (
-                  <Box key={client.id} p={4} border="1px solid" borderColor="gray.200" borderRadius="md">
-                    <Text fontWeight="bold" mb={3} color="brand.600">
-                      {getClientDisplayName(client)}
-                      {client.sub_type && (
-                        <Badge ml={2} colorScheme="purple" fontWeight="normal">
-                          {client.sub_type}
-                        </Badge>
-                      )}
-                    </Text>
-                    <Grid templateColumns="repeat(2, 1fr)" gap={3}>
-                      <GridItem>
-                        <FormControl isRequired>
-                          <FormLabel fontSize="sm">Heures réalisées</FormLabel>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            size="sm"
-                            placeholder="Ex : 12"
-                            value={entry.heures}
-                            onChange={e => updateEntry(client.id, 'heures', e.target.value)}
-                          />
-                        </FormControl>
-                      </GridItem>
-                      <GridItem>
-                        <FormControl isRequired>
-                          <FormLabel fontSize="sm">Tarif horaire net (€/h)</FormLabel>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            size="sm"
-                            placeholder="Ex : 25.50"
-                            value={entry.tarifHoraire}
-                            onChange={e => updateEntry(client.id, 'tarifHoraire', e.target.value)}
-                          />
-                        </FormControl>
-                      </GridItem>
-                      <GridItem>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Nb de déplacements</FormLabel>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="1"
-                            size="sm"
-                            placeholder="Ex : 8"
-                            value={entry.nbDeplacements}
-                            onChange={e => updateEntry(client.id, 'nbDeplacements', e.target.value)}
-                          />
-                        </FormControl>
-                      </GridItem>
-                      <GridItem>
-                        <FormControl>
-                          <FormLabel fontSize="sm">
-                            Km calculés{client.distance_km ? ` (${client.distance_km} km/dépl.)` : ''}
-                          </FormLabel>
-                          <Input
-                            size="sm"
-                            value={km !== null ? `${km} km` : '— (distance non renseignée)'}
-                            isReadOnly
-                            bg="gray.50"
-                            color={km !== null ? 'inherit' : 'gray.400'}
-                          />
-                        </FormControl>
-                      </GridItem>
-                      <GridItem>
-                        <FormControl>
-                          <FormLabel fontSize="sm">Temps à reporter (h)</FormLabel>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.25"
-                            size="sm"
-                            placeholder="Ex : 0.5"
-                            value={entry.tempsAReporter}
-                            onChange={e => updateEntry(client.id, 'tempsAReporter', e.target.value)}
-                          />
-                        </FormControl>
-                      </GridItem>
-                      <GridItem>
-                        <Box p={2} bg="gray.50" borderRadius="md" mt={6} fontSize="sm">
-                          <Text color="gray.600">
-                            Heures : {montantHeures ? `${montantHeures} €` : '—'}
-                          </Text>
-                          <Text color="gray.600">
-                            Km : {montantKm ? `${montantKm} €` : '—'}
-                          </Text>
-                          <Text fontWeight="bold" color="brand.600">
-                            Total : {total ? `${total} €` : '—'}
-                          </Text>
-                        </Box>
-                      </GridItem>
-                    </Grid>
-                  </Box>
-                );
-              })}
-            </Stack>
-          )}
-
-          {/* ===== STEP 3: CONFIRMATION ===== */}
-          {step === 3 && (
             <Stack spacing={4}>
-              <Text color="green.600" fontWeight="medium">
-                ✓ {savedEntries.length} déclaration(s) enregistrée(s) pour{' '}
-                {new Date(mois + '-01').toLocaleDateString('fr-FR', {
+              <Text color="brand.600" fontWeight="medium">
+                Envoi du récapitulatif pour{' '}
+                {new Date(`${mois}-01`).toLocaleDateString('fr-FR', {
                   month: 'long',
                   year: 'numeric',
                 })}
+                {' '}— {selectedEntries.length} client(s) sélectionné(s)
               </Text>
 
               <Divider />
 
               <Stack spacing={3}>
-                {savedEntries.map(e => {
-                  const montantHeures = (parseFloat(e.heures) * parseFloat(e.tarifHoraire)).toFixed(2);
-                  const montantKm = (parseFloat(e.km) * parseFloat(e.baremeKm)).toFixed(2);
+                {selectedEntries.map(e => {
+                  const montantHeures =
+                    e.heures && e.tarifHoraire
+                      ? (parseFloat(e.heures) * parseFloat(e.tarifHoraire)).toFixed(2)
+                      : '0.00';
+                  const montantKm =
+                    e.km && e.baremeKm
+                      ? (parseFloat(e.km) * parseFloat(e.baremeKm)).toFixed(2)
+                      : '0.00';
                   const total = (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2);
                   const emailOptions = getEmailOptions(e.client);
+
                   return (
-                    <Box key={e.client.id} p={3} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
+                    <Box
+                      key={e.client.id}
+                      p={3}
+                      bg="gray.50"
+                      borderRadius="md"
+                      border="1px solid"
+                      borderColor="gray.200"
+                    >
                       <HStack justify="space-between" mb={2}>
                         <Text fontWeight="medium" fontSize="sm">
                           {getClientDisplayName(e.client)}
+                          {e.client.sub_type && (
+                            <Badge ml={2} colorScheme="purple" fontWeight="normal" fontSize="xs">
+                              {e.client.sub_type}
+                            </Badge>
+                          )}
                         </Text>
                         <Text fontSize="sm" color="brand.600" fontWeight="bold">
                           {total} €
@@ -567,8 +524,12 @@ export function DeclarerHeuresModal({
               <Button variant="ghost" onClick={handleClose}>
                 Annuler
               </Button>
-              <Button colorScheme="brand" onClick={goToStep2} isDisabled={selectedClientIds.size === 0}>
-                Suivant ({selectedClientIds.size} sélectionné{selectedClientIds.size > 1 ? 's' : ''})
+              <Button
+                colorScheme="brand"
+                onClick={goToStep2}
+                isDisabled={selectedClientIds.size === 0}
+              >
+                Envoyer par email ({selectedClientIds.size} sélectionné{selectedClientIds.size > 1 ? 's' : ''})
               </Button>
             </>
           )}
@@ -577,15 +538,10 @@ export function DeclarerHeuresModal({
               <Button variant="ghost" onClick={() => setStep(1)}>
                 Retour
               </Button>
-              <Button colorScheme="accent" onClick={handleSaveAll} isLoading={isSubmitting}>
-                Enregistrer tout
+              <Button colorScheme="brand" onClick={handleClose}>
+                Fermer
               </Button>
             </>
-          )}
-          {step === 3 && (
-            <Button colorScheme="brand" onClick={handleClose}>
-              Fermer
-            </Button>
           )}
         </ModalFooter>
       </ModalContent>

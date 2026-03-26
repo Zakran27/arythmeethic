@@ -170,7 +170,7 @@ export default function ClientDetailPage() {
   const [contractDateFin, setContractDateFin] = useState('');
   const [contractSalaireHoraireNet, setContractSalaireHoraireNet] = useState('');
   const [contractTarifEcole, setContractTarifEcole] = useState('');
-  const [contractAnnexeFile, setContractAnnexeFile] = useState<File | null>(null);
+  const [contractAnnexeFiles, setContractAnnexeFiles] = useState<File[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [docsPage, setDocsPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -520,7 +520,7 @@ export default function ClientDetailPage() {
       if (signerPhone) formData.append('signerPhone', signerPhone);
       formData.append('anneeScolaire', selectedAnneeScolaire);
       if (contractTarifEcole) formData.append('tarifHoraireHT', contractTarifEcole);
-      if (contractAnnexeFile) formData.append('annexeArticle3', contractAnnexeFile);
+      contractAnnexeFiles.forEach(f => formData.append('annexes', f));
 
       const response = await fetch('/api/procedures/contractualisation-ecole', {
         method: 'POST',
@@ -556,7 +556,7 @@ export default function ClientDetailPage() {
       setSelectedContractualisationSigner('');
       setSelectedAnneeScolaire('');
       setContractTarifEcole('');
-      setContractAnnexeFile(null);
+      setContractAnnexeFiles([]);
       refetch();
     } catch (err) {
       toast({
@@ -1327,7 +1327,7 @@ export default function ClientDetailPage() {
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
-                    Période de facturation
+                    Délai de paiement
                   </Text>
                   <Text fontWeight="medium">
                     {client.ecole_periode_facturation === 'fin_mois_en_cours'
@@ -1335,6 +1335,14 @@ export default function ClientDetailPage() {
                       : client.ecole_periode_facturation === 'mois_suivant'
                         ? 'Mois suivant'
                         : '—'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Tarif horaire HT
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '—'}
                   </Text>
                 </GridItem>
               </Grid>
@@ -1684,7 +1692,16 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
                     Recueil des informations
                   </Button>
-                  <Button colorScheme="accent" size="sm" onClick={onContractualisationOpen}>
+                  <Button
+                    colorScheme="accent"
+                    size="sm"
+                    onClick={() => {
+                      if (client?.tarif_horaire) {
+                        setContractTarifEcole(client.tarif_horaire.toString());
+                      }
+                      onContractualisationOpen();
+                    }}
+                  >
                     Contractualisation
                   </Button>
                   <Button colorScheme="accent" size="sm" onClick={onCvCasierOpen}>
@@ -2418,7 +2435,7 @@ export default function ClientDetailPage() {
             </FormControl>
 
             <FormControl mb={4}>
-              <FormLabel color="brand.600">Tarif horaire HT (€) — optionnel</FormLabel>
+              <FormLabel color="brand.600">Tarif horaire HT (€)</FormLabel>
               <Input
                 type="number"
                 step="0.01"
@@ -2429,13 +2446,39 @@ export default function ClientDetailPage() {
             </FormControl>
 
             <FormControl mb={4}>
-              <FormLabel color="brand.600">Annexe Article 3 (PDF) — optionnel</FormLabel>
+              <FormLabel color="brand.600">Annexes (PDF) — optionnel</FormLabel>
               <Input
                 type="file"
                 accept=".pdf"
-                onChange={e => setContractAnnexeFile(e.target.files?.[0] ?? null)}
+                multiple
+                onChange={e => {
+                  if (e.target.files) {
+                    setContractAnnexeFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    e.target.value = '';
+                  }
+                }}
                 p={1}
               />
+              {contractAnnexeFiles.length > 0 && (
+                <Stack mt={2} spacing={1}>
+                  {contractAnnexeFiles.map((f, idx) => (
+                    <HStack key={idx} bg="gray.50" p={2} borderRadius="md" justify="space-between">
+                      <HStack spacing={2}>
+                        <Icon as={FiFile} color="gray.500" boxSize={3} />
+                        <Text fontSize="xs" color="gray.600" noOfLines={1}>{f.name}</Text>
+                      </HStack>
+                      <IconButton
+                        aria-label="Supprimer"
+                        icon={<Icon as={FiX} />}
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="red"
+                        onClick={() => setContractAnnexeFiles(prev => prev.filter((_, i) => i !== idx))}
+                      />
+                    </HStack>
+                  ))}
+                </Stack>
+              )}
             </FormControl>
 
             <FormControl isRequired>
@@ -2516,7 +2559,7 @@ export default function ClientDetailPage() {
                 setSelectedContractualisationSigner('');
                 setSelectedAnneeScolaire('');
                 setContractTarifEcole('');
-                setContractAnnexeFile(null);
+                setContractAnnexeFiles([]);
               }}
             >
               Annuler
