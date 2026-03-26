@@ -17,9 +17,9 @@ import { ContactModal } from '@/components/ContactModal';
 import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from 'react';
 
 const PARTICULIER_STEPS = [
-  { title: "Prise d'info via le formulaire en ligne" },
+  { title: "Prise d'informations via le formulaire en ligne" },
   { title: "Appel découverte de 30 min offert" },
-  { title: "RDV Bilan", subtitle: "1h à 1h30 avec le jeune · 30 min de débrief avec les parents" },
+  { title: "RDV Bilan", subtitle: "1h à 1h30 avec le jeune · 30 min de restitution avec les parents" },
   { title: "Contractualisation", subtitle: "Signature d'un contrat · Compte CESU et activation CESU+" },
   { title: "Suivi régulier du jeune" },
   { title: "Déclaration mensuelle CESU", subtitle: "Virement automatique du salaire" },
@@ -28,7 +28,7 @@ const PARTICULIER_STEPS = [
 ];
 
 const ECOLE_STEPS = [
-  { title: "Prise d'info via le formulaire en ligne" },
+  { title: "Prise d'informations via le formulaire en ligne" },
   { title: "Appel visio ou RDV en présentiel sur site" },
   { title: "Contractualisation", subtitle: "Signature d'un contrat de prestation" },
   { title: "Planification" },
@@ -338,7 +338,7 @@ export default function HomePage() {
                   Accompagnement humain et bienveillant
                 </Text>
                 <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.8">
-                  Cours de mathématiques · Compétences psychosociales · Éducation financière
+                  Enseignement de matières techniques · Compétences psychosociales · Éducation financière
                 </Text>
                 <Text fontSize="sm" color="brand.600" opacity={0.65}>
                   📍 Nantes Est · Thouaré-sur-Loire · En établissements
@@ -351,6 +351,17 @@ export default function HomePage() {
                     onClick={onOpen}
                   >
                     Prendre contact
+                  </Button>
+                  <Button
+                    variant="outline"
+                    borderColor="brand.500"
+                    color="brand.500"
+                    size="lg"
+                    px={8}
+                    _hover={{ bg: 'brand.50' }}
+                    onClick={() => document.getElementById('decouvrir')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Découvrez qui je suis
                   </Button>
                 </Flex>
               </Stack>
@@ -516,7 +527,7 @@ export default function HomePage() {
                         {activeTab === 'particulier' ? "Votre parcours d'accompagnement" : "Votre parcours d'intervention"}
                       </Heading>
                       <Text fontSize="xs" color="brand.400" fontWeight="500">
-                        {activeTab === 'particulier' ? '📍 Nantes Est · Thouaré-sur-Loire' : '📍 Nantes (selon récurrence)'}
+                        {activeTab === 'particulier' ? '📍 Nantes et ses alentours · prendre contact pour d\'autres localisations' : '📍 Nantes et ses alentours · prendre contact pour d\'autres localisations'}
                       </Text>
                     </Box>
 
@@ -535,6 +546,78 @@ export default function HomePage() {
               </Box>
             </motion.div>
           </AnimatePresence>
+        </Container>
+      </Box>
+
+      {/* ── MATIÈRES ENSEIGNÉES ── */}
+      <Box bg="sand.50" py={{ base: 16, md: 24 }}>
+        <Container maxW="container.xl">
+          <FadeUp>
+            <Box textAlign="center" mb={10}>
+              <Text
+                fontSize="xs"
+                fontWeight="700"
+                color="accent.500"
+                textTransform="uppercase"
+                letterSpacing="widest"
+                mb={3}
+              >
+                Mon offre
+              </Text>
+              <Heading
+                as="h2"
+                fontSize={{ base: '3xl', md: '4xl' }}
+                color="brand.500"
+                fontFamily="heading"
+                mb={3}
+              >
+                Matières enseignées
+              </Heading>
+            </Box>
+            <Flex flexWrap="wrap" gap={4} justify="center">
+              {[
+                { label: 'Mathématiques', icon: '📐' },
+                { label: 'Dessin industriel', icon: '📏' },
+                { label: 'Rhétorique', icon: '🗣️' },
+                { label: 'Éducation financière', icon: '💰' },
+              ].map(m => (
+                <Box
+                  key={m.label}
+                  bg="white"
+                  borderRadius="xl"
+                  px={6}
+                  py={5}
+                  boxShadow="sm"
+                  border="1px solid"
+                  borderColor="sand.200"
+                  textAlign="center"
+                  minW="160px"
+                >
+                  <Text fontSize="2xl">{m.icon}</Text>
+                  <Text fontWeight="600" color="brand.500" mt={2}>{m.label}</Text>
+                </Box>
+              ))}
+              <Box
+                bg="brand.50"
+                borderRadius="xl"
+                px={6}
+                py={5}
+                boxShadow="sm"
+                border="1px solid"
+                borderColor="brand.100"
+                textAlign="center"
+                minW="160px"
+                cursor="pointer"
+                onClick={onOpen}
+                _hover={{ bg: 'brand.100' }}
+                transition="all 0.2s"
+              >
+                <Text fontSize="2xl">✉️</Text>
+                <Text fontWeight="600" color="brand.500" mt={2}>Et d'autres…</Text>
+                <Text fontSize="xs" color="brand.400" mt={1}>Me contacter pour en savoir plus</Text>
+              </Box>
+            </Flex>
+          </FadeUp>
         </Container>
       </Box>
 
