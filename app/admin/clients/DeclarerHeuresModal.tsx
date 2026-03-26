@@ -35,8 +35,9 @@ interface DeclarerHeuresModalProps {
   defaultBaremeKm?: string;
 }
 
-interface SavedEntry {
+interface LoadedEntry {
   client: Client;
+  mois: string; // YYYY-MM-01
   heures: string;
   tarifHoraire: string;
   km: string;
@@ -63,6 +64,10 @@ function getDefaultEmail(client: Client): string {
   return client.email_parent1 || client.email_parent2 || client.email_jeune || client.email || '';
 }
 
+function moisLabel(mois: string): string {
+  return new Date(mois + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
 export function DeclarerHeuresModal({
   isOpen,
   onClose,
@@ -72,477 +77,306 @@ export function DeclarerHeuresModal({
   const toast = useToast();
 
   const now = new Date();
-  const defaultMois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonth = now.getMonth() === 0
+    ? `${now.getFullYear() - 1}-12`
+    : `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
 
-  const [step, setStep] = useState<1 | 2>(1);
-  const [mois, setMois] = useState(defaultMois);
+  const [dateFrom, setDateFrom] = useState(lastMonth);
+  const [dateTo, setDateTo] = useState(thisMonth);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadedEntries, setLoadedEntries] = useState<SavedEntry[]>([]);
+  const [entries, setEntries] = useState<LoadedEntry[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [selectedClientIds, setSelectedClientIds] = useState<Set<string>>(new Set());
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [selectedEmails, setSelectedEmails] = useState<Record<string, string>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [emails, setEmails] = useState<Record<string, string>>({});
+  const [isSending, setIsSending] = useState(false);
 
   const handleLoad = async () => {
-    if (!mois) {
-      toast({
-        title: 'Mois requis',
-        description: 'Veuillez sélectionner un mois.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
+    if (!dateFrom || !dateTo) {
+      toast({ title: 'Sélectionnez une plage de dates', status: 'warning', duration: 3000, isClosable: true });
       return;
     }
-
     setIsLoading(true);
     setHasLoaded(false);
-    setLoadedEntries([]);
-    setSelectedClientIds(new Set());
-
+    setEntries([]);
+    setSelectedIds(new Set());
+    setEmails({});
     try {
       const supabase = createClient();
-      const moisDate = `${mois}-01`;
       const { data, error } = await supabase
         .from('heures_realisees')
         .select('*')
-        .gte('mois', moisDate)
-        .lte('mois', moisDate)
-        .order('client_id');
+        .gte('mois', `${dateFrom}-01`)
+        .lte('mois', `${dateTo}-01`)
+        .order('mois', { ascending: false });
 
       if (error) throw new Error(error.message);
 
-      const entries: SavedEntry[] = [];
+      const loaded: LoadedEntry[] = [];
+      const initEmails: Record<string, string> = {};
+
       for (const row of data ?? []) {
         const client = clients.find(c => c.id === row.client_id);
         if (!client) continue;
-        entries.push({
+        const key = `${row.client_id}__${row.mois}`;
+        loaded.push({
           client,
+          mois: row.mois,
           heures: row.heures?.toString() ?? '0',
           tarifHoraire: row.tarif_horaire?.toString() ?? '0',
           km: row.km?.toString() ?? '0',
           baremeKm: row.bareme_km?.toString() ?? defaultBaremeKm,
           tempsAReporter: row.temps_a_reporter?.toString() ?? '0',
         });
+        if (!initEmails[key]) initEmails[key] = getDefaultEmail(client);
       }
 
-      setLoadedEntries(entries);
+      setEntries(loaded);
+      setEmails(initEmails);
       setHasLoaded(true);
 
-      if (entries.length === 0) {
-        toast({
-          title: 'Aucune heure trouvée',
-          description: `Aucune déclaration pour ${new Date(moisDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}.`,
-          status: 'info',
-          duration: 4000,
-          isClosable: true,
-        });
+      if (loaded.length === 0) {
+        toast({ title: 'Aucune heure trouvée', description: 'Aucune déclaration sur cette période.', status: 'info', duration: 4000, isClosable: true });
       }
     } catch (err) {
-      toast({
-        title: 'Erreur de chargement',
-        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      toast({ title: 'Erreur de chargement', description: err instanceof Error ? err.message : 'Erreur', status: 'error', duration: 5000, isClosable: true });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const toggleClient = (id: string) => {
-    setSelectedClientIds(prev => {
+  const entryKey = (e: LoadedEntry) => `${e.client.id}__${e.mois}`;
+
+  const toggleEntry = (key: string) => {
+    setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
 
   const toggleAll = () => {
-    if (selectedClientIds.size === loadedEntries.length) {
-      setSelectedClientIds(new Set());
+    if (selectedIds.size === entries.length) {
+      setSelectedIds(new Set());
     } else {
-      setSelectedClientIds(new Set(loadedEntries.map(e => e.client.id)));
+      setSelectedIds(new Set(entries.map(entryKey)));
     }
   };
 
-  const goToStep2 = () => {
-    if (selectedClientIds.size === 0) {
-      toast({
-        title: 'Aucun client sélectionné',
-        description: 'Veuillez sélectionner au moins un client pour le récap email.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+  const handleSend = async () => {
+    const toSend = entries.filter(e => selectedIds.has(entryKey(e)));
+    if (toSend.length === 0) return;
 
-    const initEmails: Record<string, string> = {};
-    for (const id of selectedClientIds) {
-      const entry = loadedEntries.find(e => e.client.id === id);
-      if (entry) initEmails[id] = getDefaultEmail(entry.client);
-    }
-    setSelectedEmails(initEmails);
-    setStep(2);
-  };
-
-  const handleSendEmail = async () => {
-    const entriesToSend = loadedEntries.filter(e => selectedClientIds.has(e.client.id));
-
-    setIsSendingEmail(true);
+    setIsSending(true);
     try {
       const res = await fetch('/api/heures-realisees/recap-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mois,
-          entries: entriesToSend.map(e => ({
-            clientId: e.client.id,
-            clientName: getClientDisplayName(e.client),
-            parentEmail: selectedEmails[e.client.id] || getDefaultEmail(e.client),
-            heures: e.heures,
-            tarifHoraire: e.tarifHoraire,
-            km: e.km,
-            baremeKm: e.baremeKm,
-          })),
+          mois: dateTo,
+          entries: toSend.map(e => {
+            const key = entryKey(e);
+            return {
+              clientId: e.client.id,
+              clientName: getClientDisplayName(e.client),
+              parentEmail: emails[key] || getDefaultEmail(e.client),
+              heures: e.heures,
+              tarifHoraire: e.tarifHoraire,
+              km: e.km,
+              baremeKm: e.baremeKm,
+              mois: e.mois,
+            };
+          }),
         }),
       });
 
       const data = await res.json();
-
-      if (!data.success) {
-        toast({
-          title: 'Erreur envoi email',
-          description: data.message || data.error || 'Une erreur est survenue.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-        return;
-      }
-
       const failed = data.results?.filter((r: { ok: boolean }) => !r.ok) ?? [];
 
-      if (failed.length === 0) {
-        toast({
-          title: 'Emails envoyés',
-          description: `Récapitulatif envoyé à ${entriesToSend.length} destinataire(s).`,
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
+      if (!data.success && data.error) {
+        toast({ title: 'Erreur', description: data.error, status: 'error', duration: 5000, isClosable: true });
+      } else if (failed.length > 0) {
+        toast({ title: `${failed.length} email(s) non envoyé(s)`, description: 'Vérifiez les adresses email.', status: 'warning', duration: 5000, isClosable: true });
       } else {
-        toast({
-          title: `${failed.length} email(s) non envoyé(s)`,
-          description: data.message || 'Vérifiez les adresses email.',
-          status: 'warning',
-          duration: 6000,
-          isClosable: true,
-        });
+        toast({ title: 'Récapitulatif envoyé', description: `${toSend.length} email(s) envoyé(s) avec succès.`, status: 'success', duration: 4000, isClosable: true });
       }
+      handleClose();
     } catch (err) {
-      toast({
-        title: 'Erreur envoi email',
-        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      toast({ title: 'Erreur', description: err instanceof Error ? err.message : 'Erreur', status: 'error', duration: 5000, isClosable: true });
     } finally {
-      setIsSendingEmail(false);
+      setIsSending(false);
     }
   };
 
   const handleClose = () => {
-    setStep(1);
-    setMois(defaultMois);
+    setDateFrom(lastMonth);
+    setDateTo(thisMonth);
     setIsLoading(false);
-    setLoadedEntries([]);
+    setEntries([]);
     setHasLoaded(false);
-    setSelectedClientIds(new Set());
-    setSelectedEmails({});
+    setSelectedIds(new Set());
+    setEmails({});
     onClose();
   };
 
-  const allSelected = loadedEntries.length > 0 && selectedClientIds.size === loadedEntries.length;
-  const someSelected = selectedClientIds.size > 0 && !allSelected;
-
-  const selectedEntries = loadedEntries.filter(e => selectedClientIds.has(e.client.id));
+  const allSelected = entries.length > 0 && selectedIds.size === entries.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} size="xl" scrollBehavior="inside">
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader color="brand.500" fontFamily="heading">
-          Récapitulatif des heures —{' '}
-          {step === 1 ? 'Étape 1 : Sélection du mois' : 'Étape 2 : Confirmation email'}
+          Récapitulatif des heures
         </ModalHeader>
         <ModalCloseButton />
 
         <ModalBody overflowY="auto">
-          {/* ===== STEP 1: MOIS + HEURES DÉCLARÉES ===== */}
-          {step === 1 && (
-            <Stack spacing={4}>
-              <HStack align="flex-end" spacing={3}>
-                <FormControl isRequired flex={1}>
-                  <FormLabel>Mois concerné</FormLabel>
-                  <Input
-                    type="month"
-                    value={mois}
-                    onChange={e => {
-                      setMois(e.target.value);
-                      setHasLoaded(false);
-                      setLoadedEntries([]);
-                      setSelectedClientIds(new Set());
-                    }}
-                  />
-                </FormControl>
-                <Button
-                  colorScheme="brand"
-                  onClick={handleLoad}
-                  isLoading={isLoading}
-                  loadingText="Chargement..."
-                  flexShrink={0}
-                >
-                  Charger
-                </Button>
-              </HStack>
-
-              {isLoading && (
-                <Center py={6}>
-                  <Spinner color="brand.500" size="lg" />
-                </Center>
-              )}
-
-              {hasLoaded && !isLoading && (
-                <>
-                  <Divider />
-
-                  {loadedEntries.length === 0 ? (
-                    <Text color="gray.500" fontSize="sm" textAlign="center" py={4}>
-                      Aucune heure déclarée pour ce mois.
-                    </Text>
-                  ) : (
-                    <Stack spacing={2}>
-                      <HStack justify="space-between" mb={1}>
-                        <Text fontWeight="medium" color="gray.700">
-                          {loadedEntries.length} client(s) avec des heures déclarées
-                        </Text>
-                        <Checkbox
-                          isChecked={allSelected}
-                          isIndeterminate={someSelected}
-                          onChange={toggleAll}
-                          colorScheme="brand"
-                          fontWeight="medium"
-                          fontSize="sm"
-                        >
-                          Tout sélectionner
-                        </Checkbox>
-                      </HStack>
-
-                      {loadedEntries.map(entry => {
-                        const { client } = entry;
-                        const montantHeures =
-                          entry.heures && entry.tarifHoraire
-                            ? (parseFloat(entry.heures) * parseFloat(entry.tarifHoraire)).toFixed(2)
-                            : null;
-                        const montantKm =
-                          entry.km && entry.baremeKm
-                            ? (parseFloat(entry.km) * parseFloat(entry.baremeKm)).toFixed(2)
-                            : null;
-                        const total =
-                          montantHeures !== null && montantKm !== null
-                            ? (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2)
-                            : montantHeures ?? null;
-
-                        const isChecked = selectedClientIds.has(client.id);
-
-                        return (
-                          <HStack
-                            key={client.id}
-                            p={3}
-                            bg={isChecked ? 'brand.50' : 'gray.50'}
-                            borderRadius="md"
-                            border="1px solid"
-                            borderColor={isChecked ? 'brand.200' : 'gray.200'}
-                            cursor="pointer"
-                            onClick={() => toggleClient(client.id)}
-                            align="flex-start"
-                          >
-                            <Checkbox
-                              isChecked={isChecked}
-                              onChange={() => toggleClient(client.id)}
-                              onClick={e => e.stopPropagation()}
-                              colorScheme="brand"
-                              mt={0.5}
-                            />
-                            <Stack spacing={0} flex={1}>
-                              <HStack justify="space-between">
-                                <Text fontWeight="medium" fontSize="sm">
-                                  {getClientDisplayName(client)}
-                                  {client.sub_type && (
-                                    <Badge ml={2} colorScheme="purple" fontWeight="normal" fontSize="xs">
-                                      {client.sub_type}
-                                    </Badge>
-                                  )}
-                                </Text>
-                                {total && (
-                                  <Text fontSize="sm" fontWeight="bold" color="brand.600">
-                                    {total} €
-                                  </Text>
-                                )}
-                              </HStack>
-                              <HStack spacing={3} mt={1} flexWrap="wrap">
-                                <Text fontSize="xs" color="gray.500">
-                                  {entry.heures} h × {entry.tarifHoraire} €/h
-                                  {montantHeures ? ` = ${montantHeures} €` : ''}
-                                </Text>
-                                {parseFloat(entry.km) > 0 && (
-                                  <Text fontSize="xs" color="gray.500">
-                                    · {entry.km} km × {entry.baremeKm} €/km
-                                    {montantKm ? ` = ${montantKm} €` : ''}
-                                  </Text>
-                                )}
-                                {parseFloat(entry.tempsAReporter) > 0 && (
-                                  <Text fontSize="xs" color="orange.500">
-                                    · Reporter : {entry.tempsAReporter} h
-                                  </Text>
-                                )}
-                              </HStack>
-                            </Stack>
-                          </HStack>
-                        );
-                      })}
-                    </Stack>
-                  )}
-                </>
-              )}
-            </Stack>
-          )}
-
-          {/* ===== STEP 2: CONFIRMATION EMAIL ===== */}
-          {step === 2 && (
-            <Stack spacing={4}>
-              <Text color="brand.600" fontWeight="medium">
-                Envoi du récapitulatif pour{' '}
-                {new Date(`${mois}-01`).toLocaleDateString('fr-FR', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
-                {' '}— {selectedEntries.length} client(s) sélectionné(s)
-              </Text>
-
-              <Divider />
-
-              <Stack spacing={3}>
-                {selectedEntries.map(e => {
-                  const montantHeures =
-                    e.heures && e.tarifHoraire
-                      ? (parseFloat(e.heures) * parseFloat(e.tarifHoraire)).toFixed(2)
-                      : '0.00';
-                  const montantKm =
-                    e.km && e.baremeKm
-                      ? (parseFloat(e.km) * parseFloat(e.baremeKm)).toFixed(2)
-                      : '0.00';
-                  const total = (parseFloat(montantHeures) + parseFloat(montantKm)).toFixed(2);
-                  const emailOptions = getEmailOptions(e.client);
-
-                  return (
-                    <Box
-                      key={e.client.id}
-                      p={3}
-                      bg="gray.50"
-                      borderRadius="md"
-                      border="1px solid"
-                      borderColor="gray.200"
-                    >
-                      <HStack justify="space-between" mb={2}>
-                        <Text fontWeight="medium" fontSize="sm">
-                          {getClientDisplayName(e.client)}
-                          {e.client.sub_type && (
-                            <Badge ml={2} colorScheme="purple" fontWeight="normal" fontSize="xs">
-                              {e.client.sub_type}
-                            </Badge>
-                          )}
-                        </Text>
-                        <Text fontSize="sm" color="brand.600" fontWeight="bold">
-                          {total} €
-                        </Text>
-                      </HStack>
-                      <FormControl>
-                        <FormLabel fontSize="xs" color="gray.500" mb={1}>
-                          Envoyer à
-                        </FormLabel>
-                        {emailOptions.length > 0 ? (
-                          <Select
-                            size="sm"
-                            value={selectedEmails[e.client.id] || ''}
-                            onChange={ev =>
-                              setSelectedEmails(prev => ({ ...prev, [e.client.id]: ev.target.value }))
-                            }
-                          >
-                            {emailOptions.map(opt => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </Select>
-                        ) : (
-                          <Text fontSize="xs" color="red.400">
-                            Aucune adresse email renseignée
-                          </Text>
-                        )}
-                      </FormControl>
-                    </Box>
-                  );
-                })}
-              </Stack>
-
-              <Divider />
-
+          <Stack spacing={4}>
+            {/* Plage de dates */}
+            <HStack align="flex-end" spacing={3}>
+              <FormControl flex={1}>
+                <FormLabel fontSize="sm">Du</FormLabel>
+                <Input
+                  type="month"
+                  value={dateFrom}
+                  onChange={e => { setDateFrom(e.target.value); setHasLoaded(false); setEntries([]); }}
+                />
+              </FormControl>
+              <FormControl flex={1}>
+                <FormLabel fontSize="sm">Au</FormLabel>
+                <Input
+                  type="month"
+                  value={dateTo}
+                  onChange={e => { setDateTo(e.target.value); setHasLoaded(false); setEntries([]); }}
+                />
+              </FormControl>
               <Button
-                colorScheme="accent"
-                onClick={handleSendEmail}
-                isLoading={isSendingEmail}
-                loadingText="Envoi en cours..."
+                colorScheme="brand"
+                onClick={handleLoad}
+                isLoading={isLoading}
+                loadingText="Chargement..."
+                flexShrink={0}
+                mb={0}
               >
-                Envoyer récapitulatif par email
+                Rechercher
               </Button>
-            </Stack>
-          )}
+            </HStack>
+
+            {/* Résultats */}
+            {isLoading && (
+              <Center py={8}>
+                <Spinner color="brand.500" size="lg" />
+              </Center>
+            )}
+
+            {hasLoaded && !isLoading && entries.length > 0 && (
+              <>
+                <Divider />
+                <HStack justify="space-between">
+                  <Text fontWeight="medium" color="gray.700" fontSize="sm">
+                    {entries.length} déclaration(s) trouvée(s)
+                  </Text>
+                  <Checkbox
+                    isChecked={allSelected}
+                    isIndeterminate={someSelected}
+                    onChange={toggleAll}
+                    colorScheme="brand"
+                    fontSize="sm"
+                  >
+                    Tout sélectionner
+                  </Checkbox>
+                </HStack>
+
+                <Stack spacing={3}>
+                  {entries.map(entry => {
+                    const key = entryKey(entry);
+                    const isChecked = selectedIds.has(key);
+                    const montantH = (parseFloat(entry.heures) * parseFloat(entry.tarifHoraire)).toFixed(2);
+                    const montantKm = (parseFloat(entry.km) * parseFloat(entry.baremeKm)).toFixed(2);
+                    const total = (parseFloat(montantH) + parseFloat(montantKm)).toFixed(2);
+                    const emailOptions = getEmailOptions(entry.client);
+
+                    return (
+                      <Box
+                        key={key}
+                        p={3}
+                        bg={isChecked ? 'brand.50' : 'gray.50'}
+                        borderRadius="md"
+                        border="1px solid"
+                        borderColor={isChecked ? 'brand.200' : 'gray.200'}
+                        cursor="pointer"
+                        onClick={() => toggleEntry(key)}
+                      >
+                        <HStack align="flex-start" spacing={3}>
+                          <Checkbox
+                            isChecked={isChecked}
+                            onChange={() => toggleEntry(key)}
+                            onClick={e => e.stopPropagation()}
+                            colorScheme="brand"
+                            mt={1}
+                          />
+                          <Stack spacing={1} flex={1}>
+                            <HStack justify="space-between">
+                              <HStack spacing={2}>
+                                <Text fontWeight="medium" fontSize="sm">
+                                  {getClientDisplayName(entry.client)}
+                                </Text>
+                                {entry.client.sub_type && (
+                                  <Badge colorScheme="purple" fontSize="xs">{entry.client.sub_type}</Badge>
+                                )}
+                                <Badge colorScheme="gray" fontSize="xs">{moisLabel(entry.mois)}</Badge>
+                              </HStack>
+                              <Text fontSize="sm" fontWeight="bold" color="brand.600">{total} €</Text>
+                            </HStack>
+                            <Text fontSize="xs" color="gray.500">
+                              {entry.heures} h × {entry.tarifHoraire} €/h = {montantH} €
+                              {parseFloat(entry.km) > 0 && ` · ${entry.km} km × ${entry.baremeKm} €/km = ${montantKm} €`}
+                              {parseFloat(entry.tempsAReporter) > 0 && ` · Reporter : ${entry.tempsAReporter} h`}
+                            </Text>
+
+                            {isChecked && (
+                              <FormControl onClick={e => e.stopPropagation()} mt={1}>
+                                <FormLabel fontSize="xs" color="gray.500" mb={1}>Envoyer à</FormLabel>
+                                {emailOptions.length > 0 ? (
+                                  <Select
+                                    size="sm"
+                                    value={emails[key] || ''}
+                                    onChange={ev => setEmails(prev => ({ ...prev, [key]: ev.target.value }))}
+                                  >
+                                    {emailOptions.map(opt => (
+                                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                  </Select>
+                                ) : (
+                                  <Text fontSize="xs" color="red.400">Aucune adresse email renseignée</Text>
+                                )}
+                              </FormControl>
+                            )}
+                          </Stack>
+                        </HStack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              </>
+            )}
+          </Stack>
         </ModalBody>
 
         <ModalFooter gap={3}>
-          {step === 1 && (
-            <>
-              <Button variant="ghost" onClick={handleClose}>
-                Annuler
-              </Button>
-              <Button
-                colorScheme="brand"
-                onClick={goToStep2}
-                isDisabled={selectedClientIds.size === 0}
-              >
-                Envoyer par email ({selectedClientIds.size} sélectionné{selectedClientIds.size > 1 ? 's' : ''})
-              </Button>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <Button variant="ghost" onClick={() => setStep(1)}>
-                Retour
-              </Button>
-              <Button colorScheme="brand" onClick={handleClose}>
-                Fermer
-              </Button>
-            </>
-          )}
+          <Button variant="ghost" onClick={handleClose}>
+            Annuler
+          </Button>
+          <Button
+            colorScheme="accent"
+            onClick={handleSend}
+            isLoading={isSending}
+            loadingText="Envoi en cours..."
+            isDisabled={selectedIds.size === 0}
+          >
+            Envoyer le récapitulatif{selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>
