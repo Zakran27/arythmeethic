@@ -607,7 +607,7 @@ export default function HomePage() {
                   color="brand.500"
                   fontFamily="heading"
                 >
-                  Ce que disent mes clients
+                  Ils m'ont fait confiance
                 </Heading>
               </Box>
               <ReviewsCarousel />
