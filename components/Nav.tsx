@@ -3,7 +3,13 @@
 import { Box, Flex, Button, Container, HStack, Text, Image } from '@chakra-ui/react';
 import Link from 'next/link';
 
-export function Nav() {
+type ServiceTab = 'particulier' | 'accompagnement' | 'ecole';
+
+interface NavProps {
+  onServiceClick?: (tab: ServiceTab) => void;
+}
+
+export function Nav({ onServiceClick }: NavProps) {
   return (
     <Box bg="white" borderBottom="1px" borderColor="grey.300">
       <Container maxW="container.xl">
@@ -27,7 +33,42 @@ export function Nav() {
               </Text>
             </HStack>
           </Link>
-          <HStack spacing={4}>
+          <HStack spacing={2}>
+            {onServiceClick && (
+              <HStack spacing={1} display={{ base: 'none', lg: 'flex' }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="brand.500"
+                  fontWeight="500"
+                  _hover={{ bg: 'sand.100', color: 'brand.600' }}
+                  onClick={() => onServiceClick('particulier')}
+                >
+                  Cours particuliers
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="brand.500"
+                  fontWeight="500"
+                  _hover={{ bg: 'sand.100', color: 'brand.600' }}
+                  onClick={() => onServiceClick('accompagnement')}
+                >
+                  Accompagnement
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="brand.500"
+                  fontWeight="500"
+                  _hover={{ bg: 'sand.100', color: 'brand.600' }}
+                  onClick={() => onServiceClick('ecole')}
+                  whiteSpace="nowrap"
+                >
+                  Établissements & associations
+                </Button>
+              </HStack>
+            )}
             <Link href="/admin/login">
               <Button colorScheme="accent" size={{ base: 'sm', md: 'md' }}>
                 Connexion

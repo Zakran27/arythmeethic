@@ -280,7 +280,14 @@ export default function HomePage() {
   const [defaultClientType, setDefaultClientType] = useState<'student' | 'parent' | 'school'>(
     'student'
   );
-  const [activeTab, setActiveTab] = useState<'particulier' | 'ecole'>('particulier');
+  const [activeTab, setActiveTab] = useState<'particulier' | 'accompagnement' | 'ecole'>('particulier');
+
+  const handleNavServiceClick = (tab: 'particulier' | 'accompagnement' | 'ecole') => {
+    setActiveTab(tab);
+    setTimeout(() => {
+      document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
+  };
 
   const handleContactClick = (type: 'student' | 'parent' | 'school') => {
     setDefaultClientType(type);
@@ -289,7 +296,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Nav />
+      <Nav onServiceClick={handleNavServiceClick} />
       <ContactModal isOpen={isOpen} onClose={onClose} defaultClientType={defaultClientType} />
 
       {/* ── HERO ── */}
@@ -406,7 +413,7 @@ export default function HomePage() {
       </Box>
 
       {/* ── SERVICES ── */}
-      <Box bg="white" py={{ base: 16, md: 24 }}>
+      <Box id="services" bg="white" py={{ base: 16, md: 24 }}>
         <Container maxW="container.xl">
           <FadeUp>
             <Box textAlign="center" mb={10}>
@@ -440,33 +447,29 @@ export default function HomePage() {
                   borderRadius="full"
                   p="4px"
                   spacing={1}
+                  flexWrap={{ base: 'wrap', md: 'nowrap' }}
+                  justify="center"
                 >
-                  <Button
-                    borderRadius="full"
-                    size="sm"
-                    bg={activeTab === 'particulier' ? 'brand.500' : 'transparent'}
-                    color={activeTab === 'particulier' ? 'white' : 'brand.500'}
-                    _hover={{ bg: activeTab === 'particulier' ? 'brand.600' : 'sand.200' }}
-                    onClick={() => setActiveTab('particulier')}
-                    fontWeight="600"
-                    px={6}
-                    transition="all 0.2s"
-                  >
-                    Jeunes & Parents
-                  </Button>
-                  <Button
-                    borderRadius="full"
-                    size="sm"
-                    bg={activeTab === 'ecole' ? 'brand.500' : 'transparent'}
-                    color={activeTab === 'ecole' ? 'white' : 'brand.500'}
-                    _hover={{ bg: activeTab === 'ecole' ? 'brand.600' : 'sand.200' }}
-                    onClick={() => setActiveTab('ecole')}
-                    fontWeight="600"
-                    px={6}
-                    transition="all 0.2s"
-                  >
-                    Établissements
-                  </Button>
+                  {([
+                    { key: 'particulier', label: 'Cours particuliers' },
+                    { key: 'accompagnement', label: 'Accompagnement' },
+                    { key: 'ecole', label: 'Établissements & associations' },
+                  ] as const).map(({ key, label }) => (
+                    <Button
+                      key={key}
+                      borderRadius="full"
+                      size="sm"
+                      bg={activeTab === key ? 'brand.500' : 'transparent'}
+                      color={activeTab === key ? 'white' : 'brand.500'}
+                      _hover={{ bg: activeTab === key ? 'brand.600' : 'sand.200' }}
+                      onClick={() => setActiveTab(key)}
+                      fontWeight="600"
+                      px={5}
+                      transition="all 0.2s"
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </HStack>
               </Flex>
             </Box>
@@ -481,69 +484,256 @@ export default function HomePage() {
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
-              <Box
-                borderRadius="2xl"
-                overflow="hidden"
-                boxShadow="md"
-                border="1px solid"
-                borderColor="sand.200"
-                bg="white"
-                maxW="860px"
-                mx="auto"
-              >
-                <Flex direction={{ base: 'column', lg: 'row' }}>
-                  {/* Photo */}
-                  <Box
-                    w={{ base: '100%', lg: '42%' }}
-                    h={{ base: '240px', lg: 'auto' }}
-                    minH={{ lg: '520px' }}
-                    overflow="hidden"
-                    flexShrink={0}
-                  >
-                    <Image
-                      src={activeTab === 'particulier' ? '/DSC08964.JPG' : '/DSC08853.JPG'}
-                      alt={activeTab === 'particulier' ? 'Cours particuliers' : 'Interventions en établissements'}
-                      w="100%"
-                      h="100%"
-                      objectFit="cover"
-                      objectPosition={activeTab === 'particulier' ? 'center 45%' : 'center'}
-                    />
-                  </Box>
+              {/* ── Cours particuliers ── */}
+              {activeTab === 'particulier' && (
+                <Box
+                  borderRadius="2xl"
+                  overflow="hidden"
+                  boxShadow="md"
+                  border="1px solid"
+                  borderColor="sand.200"
+                  bg="white"
+                  maxW="860px"
+                  mx="auto"
+                >
+                  <Flex direction={{ base: 'column', lg: 'row' }}>
+                    <Box
+                      w={{ base: '100%', lg: '42%' }}
+                      h={{ base: '240px', lg: 'auto' }}
+                      minH={{ lg: '520px' }}
+                      overflow="hidden"
+                      flexShrink={0}
+                    >
+                      <Image
+                        src="/DSC08964.JPG"
+                        alt="Cours particuliers"
+                        w="100%"
+                        h="100%"
+                        objectFit="cover"
+                        objectPosition="center 45%"
+                      />
+                    </Box>
+                    <Box p={{ base: 6, md: 8 }} flex={1}>
+                      <Box mb={5}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="700"
+                          color="accent.500"
+                          textTransform="uppercase"
+                          letterSpacing="widest"
+                          mb={1}
+                        >
+                          Collège & lycée
+                        </Text>
+                        <Heading size="md" color="brand.500" fontFamily="heading" mb={2}>
+                          Cours particuliers
+                        </Heading>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                          Chaque élève est unique et possède un fonctionnement qui lui est propre. En cours particuliers
+                          de mathématiques, mon objectif est d&apos;identifier ce fonctionnement afin de créer des
+                          conditions d&apos;apprentissage sereines, efficaces… et même agréables.
+                        </Text>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                          Dès la première rencontre, je prends le temps de comprendre la personnalité, le parcours et
+                          les besoins du jeune que j&apos;accompagne. Manque de confiance, méthode de travail à
+                          construire, besoin d&apos;entraînement ou de sens : nous avançons ensemble pas à pas pour
+                          redonner confiance, clarifier les notions et installer des bases solides et durables.
+                        </Text>
+                        <Text fontSize="xs" color="brand.400" fontWeight="500">
+                          📍 Nantes et ses alentours · prendre contact pour d&apos;autres localisations
+                        </Text>
+                      </Box>
+                      <Stack spacing={0}>
+                        {PARTICULIER_STEPS.map((step, i, arr) => (
+                          <ProcessStep key={i} step={step} index={i} isLast={i === arr.length - 1} />
+                        ))}
+                      </Stack>
+                    </Box>
+                  </Flex>
+                </Box>
+              )}
 
-                  {/* Steps */}
-                  <Box p={{ base: 6, md: 8 }} flex={1}>
-                    <Box mb={6}>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="700"
-                        color="accent.500"
-                        textTransform="uppercase"
-                        letterSpacing="widest"
-                        mb={1}
-                      >
-                        {activeTab === 'particulier' ? 'Clients particuliers' : 'Clients professionnels'}
-                      </Text>
-                      <Heading size="md" color="brand.500" fontFamily="heading" mb={1}>
-                        {activeTab === 'particulier' ? "Votre parcours d'accompagnement" : "Votre parcours d'intervention"}
-                      </Heading>
-                      <Text fontSize="xs" color="brand.400" fontWeight="500">
-                        {activeTab === 'particulier' ? '📍 Nantes et ses alentours · prendre contact pour d\'autres localisations' : '📍 Nantes et ses alentours · prendre contact pour d\'autres localisations'}
-                      </Text>
+              {/* ── Accompagnement ── */}
+              {activeTab === 'accompagnement' && (
+                <Box maxW="860px" mx="auto">
+                  <Flex direction={{ base: 'column', lg: 'row' }} gap={6}>
+                    {/* Entrée en école d'ingénieur */}
+                    <Box
+                      flex={1}
+                      borderRadius="2xl"
+                      boxShadow="md"
+                      border="1px solid"
+                      borderColor="sand.200"
+                      bg="white"
+                      overflow="hidden"
+                    >
+                      <Box h="200px" overflow="hidden">
+                        <Image
+                          src="/DSC08964.JPG"
+                          alt="Accompagnement entrée en école d'ingénieur"
+                          w="100%"
+                          h="100%"
+                          objectFit="cover"
+                          objectPosition="center 30%"
+                        />
+                      </Box>
+                      <Box p={{ base: 6, md: 7 }}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="700"
+                          color="accent.500"
+                          textTransform="uppercase"
+                          letterSpacing="widest"
+                          mb={1}
+                        >
+                          Prépa & concours
+                        </Text>
+                        <Heading size="sm" color="brand.500" fontFamily="heading" mb={3}>
+                          Accompagnement entrée en école d&apos;ingénieur
+                        </Heading>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={3}>
+                          Entrer en école d&apos;ingénieur est un projet ambitieux qui peut susciter autant
+                          d&apos;enthousiasme que d&apos;incertitudes. Je propose un accompagnement modulable, adapté
+                          aux besoins de chacun : préparation aux épreuves de mathématiques, entraînement aux
+                          entretiens individuels, travail sur la confiance en soi et la gestion du stress.
+                        </Text>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                          Apprendre à identifier ses atouts et à les valoriser est un véritable levier de réussite.
+                          Mon objectif est d&apos;aider votre jeune à aborder ces changements sereinement, avec
+                          confiance et clarté.
+                        </Text>
+                        <Button
+                          colorScheme="accent"
+                          size="sm"
+                          onClick={() => handleContactClick('student')}
+                        >
+                          Prendre contact
+                        </Button>
+                      </Box>
                     </Box>
 
-                    <Stack spacing={0}>
-                      {(activeTab === 'particulier' ? PARTICULIER_STEPS : ECOLE_STEPS).map((step, i, arr) => (
-                        <ProcessStep
-                          key={i}
-                          step={step}
-                          index={i}
-                          isLast={i === arr.length - 1}
+                    {/* Parcours Envol */}
+                    <Box
+                      flex={1}
+                      borderRadius="2xl"
+                      boxShadow="md"
+                      border="1px solid"
+                      borderColor="sand.200"
+                      bg="white"
+                      overflow="hidden"
+                    >
+                      <Box h="200px" overflow="hidden">
+                        <Image
+                          src="/DSC08853.JPG"
+                          alt="Parcours Envol"
+                          w="100%"
+                          h="100%"
+                          objectFit="cover"
                         />
-                      ))}
-                    </Stack>
-                  </Box>
-                </Flex>
-              </Box>
+                      </Box>
+                      <Box p={{ base: 6, md: 7 }}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="700"
+                          color="accent.500"
+                          textTransform="uppercase"
+                          letterSpacing="widest"
+                          mb={1}
+                        >
+                          Fin de lycée & autonomie
+                        </Text>
+                        <Heading size="sm" color="brand.500" fontFamily="heading" mb={3}>
+                          Parcours Envol
+                        </Heading>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={3}>
+                          La fin du lycée marque une étape clé : celle de l&apos;envol et des premiers pas vers
+                          l&apos;autonomie. Je propose un accompagnement complet autour de trois piliers essentiels :
+                          la connaissance de soi, l&apos;éducation financière et la cuisine du quotidien.
+                        </Text>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                          L&apos;objectif est d&apos;aider votre jeune à devenir autonome, organisé et serein dans sa
+                          nouvelle vie, pour prendre son envol avec confiance, liberté et plaisir.
+                        </Text>
+                        <Button
+                          colorScheme="accent"
+                          size="sm"
+                          onClick={() => handleContactClick('parent')}
+                        >
+                          Prendre contact
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Flex>
+                </Box>
+              )}
+
+              {/* ── Établissements & associations ── */}
+              {activeTab === 'ecole' && (
+                <Box
+                  borderRadius="2xl"
+                  overflow="hidden"
+                  boxShadow="md"
+                  border="1px solid"
+                  borderColor="sand.200"
+                  bg="white"
+                  maxW="860px"
+                  mx="auto"
+                >
+                  <Flex direction={{ base: 'column', lg: 'row' }}>
+                    <Box
+                      w={{ base: '100%', lg: '42%' }}
+                      h={{ base: '240px', lg: 'auto' }}
+                      minH={{ lg: '520px' }}
+                      overflow="hidden"
+                      flexShrink={0}
+                    >
+                      <Image
+                        src="/DSC08853.JPG"
+                        alt="Interventions en établissements et associations étudiantes"
+                        w="100%"
+                        h="100%"
+                        objectFit="cover"
+                      />
+                    </Box>
+                    <Box p={{ base: 6, md: 8 }} flex={1}>
+                      <Box mb={5}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="700"
+                          color="accent.500"
+                          textTransform="uppercase"
+                          letterSpacing="widest"
+                          mb={1}
+                        >
+                          Clients professionnels
+                        </Text>
+                        <Heading size="md" color="brand.500" fontFamily="heading" mb={2}>
+                          Établissements et associations étudiantes
+                        </Heading>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={3}>
+                          La santé mentale et l&apos;accompagnement à l&apos;autonomie sont aujourd&apos;hui des enjeux
+                          majeurs pour les établissements scolaires et les associations étudiantes. Je propose des
+                          prestations clés en main ainsi que des ateliers sur mesure, construits selon vos besoins et
+                          votre projet.
+                        </Text>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                          L&apos;objectif est de développer les compétences psychosociales : émotionnelles, cognitives,
+                          sociales, interpersonnelles et de communication, dans un espace de parole libre et
+                          sécurisant.
+                        </Text>
+                        <Text fontSize="xs" color="brand.400" fontWeight="500" mb={5}>
+                          📍 Nantes et ses alentours · prendre contact pour d&apos;autres localisations
+                        </Text>
+                      </Box>
+                      <Stack spacing={0}>
+                        {ECOLE_STEPS.map((step, i, arr) => (
+                          <ProcessStep key={i} step={step} index={i} isLast={i === arr.length - 1} />
+                        ))}
+                      </Stack>
+                    </Box>
+                  </Flex>
+                </Box>
+              )}
             </motion.div>
           </AnimatePresence>
         </Container>
