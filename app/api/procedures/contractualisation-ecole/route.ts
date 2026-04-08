@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { generateContractPDF } from '@/lib/pdf-contract-generator';
 
-const DOCUSEAL_API_URL = 'https://api.docuseal.eu';
+const DOCUSEAL_API_URL = 'https://api.docuseal.com';
 
 // PDF page dimensions (must match lib/pdf-contract-generator.ts)
 const PAGE_W = 595;
