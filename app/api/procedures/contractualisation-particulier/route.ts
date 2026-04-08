@@ -2,168 +2,92 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { generateContractParticulierPDF } from '@/lib/pdf-contract-particulier-generator';
 
-// Yousign API configuration
-const YOUSIGN_API_URL = process.env.YOUSIGN_API_URL || 'https://api-sandbox.yousign.app/v3';
-const YOUSIGN_API_KEY = process.env.YOUSIGN_API_KEY;
+const DOCUSEAL_API_URL = 'https://api.docuseal.eu';
 
-// Format phone number to E.164 international format for Yousign
-function formatPhoneNumber(phone: string | undefined): string | undefined {
-  if (!phone) return undefined;
+// PDF page dimensions (must match lib/pdf-contract-particulier-generator.ts)
+const PAGE_W = 595;
+const PAGE_H = 842;
+const FIELD_W = 0.25; // ~150px
+const FIELD_H = 0.09; // ~75px
 
-  // Remove all non-digit characters
-  const digits = phone.replace(/\D/g, '');
-
-  // French number starting with 0 (e.g., 0612345678 -> +33612345678)
-  if (digits.startsWith('0') && digits.length === 10) {
-    return '+33' + digits.substring(1);
-  }
-
-  // Already has country code 33 without + (e.g., 33612345678 -> +33612345678)
-  if (digits.startsWith('33') && digits.length === 11) {
-    return '+' + digits;
-  }
-
-  // Already in correct format with + (unlikely after removing non-digits, but handle it)
-  if (digits.length === 11 && digits.startsWith('33')) {
-    return '+' + digits;
-  }
-
-  // Return undefined if format not recognized (Yousign will work without phone)
-  return undefined;
+// Convert pdf-lib absolute coords (bottom-left origin) to DocuSeal normalized ratios (top-left origin)
+function toDocusealCoords(x: number, y: number) {
+  return {
+    x: x / PAGE_W,
+    y: 1 - y / PAGE_H - FIELD_H,
+    w: FIELD_W,
+    h: FIELD_H,
+  };
 }
 
-interface SignerInfo {
-  firstName: string;
-  lastName: string;
+interface DocusealSigner {
+  role: string;
   email: string;
-  phone?: string;
+  name: string;
+  fields: { page: number; x: number; y: number; w: number; h: number };
 }
 
-async function createSignatureRequest(name: string): Promise<{ id: string }> {
-  const response = await fetch(`${YOUSIGN_API_URL}/signature_requests`, {
+async function createDocusealSubmission(params: {
+  pdfBuffer: Buffer;
+  filename: string;
+  signers: DocusealSigner[];
+}): Promise<{ submissionId: string }> {
+  const apiKey = process.env.DOCUSEAL_API_KEY;
+  if (!apiKey) throw new Error('DOCUSEAL_API_KEY non configurée');
+
+  const body = {
+    send_email: true,
+    submitters: params.signers.map(s => ({
+      role: s.role,
+      email: s.email,
+      name: s.name,
+    })),
+    documents: [
+      {
+        name: params.filename,
+        file: params.pdfBuffer.toString('base64'),
+        fields: params.signers.map(s => ({
+          name: `signature_${s.role.toLowerCase()}`,
+          role: s.role,
+          type: 'signature',
+          required: true,
+          page: s.fields.page,
+          x: s.fields.x,
+          y: s.fields.y,
+          w: s.fields.w,
+          h: s.fields.h,
+        })),
+      },
+    ],
+  };
+
+  const res = await fetch(`${DOCUSEAL_API_URL}/submissions/pdf`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${YOUSIGN_API_KEY}`,
+      'X-Auth-Token': apiKey,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      name,
-      delivery_mode: 'email',
-      timezone: 'Europe/Paris',
-    }),
+    body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Yousign create signature request error:', error);
-    throw new Error(`Failed to create signature request: ${error}`);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`DocuSeal error: ${err}`);
   }
 
-  return response.json();
-}
-
-async function uploadDocument(
-  signatureRequestId: string,
-  pdfBuffer: Buffer,
-  filename: string
-): Promise<{ id: string }> {
-  const formData = new FormData();
-  // Convert Buffer to Uint8Array for Blob compatibility
-  const uint8Array = new Uint8Array(pdfBuffer);
-  formData.append('file', new Blob([uint8Array], { type: 'application/pdf' }), filename);
-  formData.append('nature', 'signable_document');
-
-  const response = await fetch(
-    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/documents`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
-      },
-      body: formData,
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Yousign upload document error:', error);
-    throw new Error(`Failed to upload document: ${error}`);
-  }
-
-  return response.json();
-}
-
-async function addSigner(
-  signatureRequestId: string,
-  documentId: string,
-  signer: SignerInfo,
-  signatureField: { page: number; x: number; y: number }
-): Promise<{ id: string }> {
-  const response = await fetch(
-    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/signers`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        info: {
-          first_name: signer.firstName,
-          last_name: signer.lastName,
-          email: signer.email,
-          phone_number: signer.phone || undefined,
-          locale: 'fr',
-        },
-        signature_level: 'electronic_signature',
-        signature_authentication_mode: 'no_otp',
-        fields: [
-          {
-            type: 'signature',
-            document_id: documentId,
-            page: signatureField.page,
-            x: signatureField.x,
-            y: signatureField.y,
-          },
-        ],
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Yousign add signer error:', error);
-    throw new Error(`Failed to add signer: ${error}`);
-  }
-
-  return response.json();
-}
-
-async function activateSignatureRequest(signatureRequestId: string): Promise<void> {
-  const response = await fetch(
-    `${YOUSIGN_API_URL}/signature_requests/${signatureRequestId}/activate`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${YOUSIGN_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    console.error('Yousign activate error:', error);
-    throw new Error(`Failed to activate signature request: ${error}`);
-  }
+  const data = await res.json();
+  // DocuSeal returns an array; each item has submission_id and id
+  const submissionId = Array.isArray(data)
+    ? (data[0]?.submission_id ?? data[0]?.id)
+    : (data.submission_id ?? data.id);
+  return { submissionId: String(submissionId) };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Check API key
-    if (!YOUSIGN_API_KEY) {
+    if (!process.env.DOCUSEAL_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'Configuration Yousign manquante' },
+        { success: false, error: 'Configuration DocuSeal manquante' },
         { status: 500 }
       );
     }
@@ -174,7 +98,6 @@ export async function POST(request: NextRequest) {
       signerEmail,
       signerFirstName,
       signerLastName,
-      signerPhone,
       anneeScolaire,
       dateDebut,
       dateFin,
@@ -199,7 +122,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
-    // Fetch the client
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
@@ -210,7 +132,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Client non trouvé' }, { status: 404 });
     }
 
-    // Verify it's a Particulier client
     if (client.type_client !== 'Particulier') {
       return NextResponse.json(
         { success: false, error: 'Cette procédure est réservée aux particuliers' },
@@ -218,7 +139,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get procedure type for CONTRACTUALISATION
     const { data: procedureType, error: ptError } = await supabase
       .from('procedure_types')
       .select('id')
@@ -232,7 +152,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate the contract PDF
+    // Generate contract PDF
     let pdfBuffer: Buffer;
     let signaturePage: number;
     let signatureX: number;
@@ -249,7 +169,7 @@ export async function POST(request: NextRequest) {
         signerFirstName,
         signerLastName,
         signerEmail,
-        signerPhone,
+        signerPhone: body.signerPhone,
       });
       pdfBuffer = result.buffer;
       signaturePage = result.signaturePage;
@@ -286,55 +206,35 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // 1. Create signature request
-      const signatureName = `Contractualisation - ${client.first_name} ${client.last_name}`;
-      const signatureRequest = await createSignatureRequest(signatureName);
-      console.log('Signature request created:', signatureRequest.id);
+      // Florence is salarié (left), client is employeur (right)
+      const clientCoords = toDocusealCoords(signatureX, signatureY);
+      const florenceCoords = toDocusealCoords(florenceSignatureX, florenceSignatureY);
 
-      // 2. Upload document
-      const document = await uploadDocument(
-        signatureRequest.id,
+      const { submissionId } = await createDocusealSubmission({
         pdfBuffer,
-        `contractualisation_${client.id}.pdf`
-      );
-      console.log('Document uploaded:', document.id);
+        filename: `contractualisation_${client.id}.pdf`,
+        signers: [
+          {
+            role: 'Florence',
+            email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
+            name: 'Florence LOUAZEL',
+            fields: { page: signaturePage, ...florenceCoords },
+          },
+          {
+            role: 'Client',
+            email: signerEmail,
+            name: `${signerFirstName} ${signerLastName}`,
+            fields: { page: signaturePage, ...clientCoords },
+          },
+        ],
+      });
+      console.log('DocuSeal submission created:', submissionId);
 
-      // 3. Add client signer with signature field (right — employeur)
-      const signer = await addSigner(
-        signatureRequest.id,
-        document.id,
-        {
-          firstName: signerFirstName,
-          lastName: signerLastName,
-          email: signerEmail,
-          phone: formatPhoneNumber(signerPhone),
-        },
-        { page: signaturePage, x: signatureX, y: signatureY }
-      );
-      console.log('Signer added:', signer.id);
-
-      // 3b. Add Florence as second signer (left — salarié)
-      const florenceSigner = await addSigner(
-        signatureRequest.id,
-        document.id,
-        {
-          firstName: 'Florence',
-          lastName: 'LOUAZEL',
-          email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
-        },
-        { page: signaturePage, x: florenceSignatureX, y: florenceSignatureY }
-      );
-      console.log('Florence signer added:', florenceSigner.id);
-
-      // 4. Activate the signature request
-      await activateSignatureRequest(signatureRequest.id);
-      console.log('Signature request activated');
-
-      // Update procedure with Yousign ID and change status
+      // Store submission ID and update status
       const { error: updateError } = await supabase
         .from('procedures')
         .update({
-          yousign_procedure_id: signatureRequest.id,
+          yousign_procedure_id: submissionId,
           status: 'SIGN_REQUESTED',
         })
         .eq('id', newProcedure.id);
@@ -343,20 +243,18 @@ export async function POST(request: NextRequest) {
         console.error('Error updating procedure:', updateError);
       }
 
-      // Add status history entry
       await supabase.from('procedure_status_history').insert({
         procedure_id: newProcedure.id,
         status: 'SIGNATURE_DEMANDEE',
       });
 
-      // Log to audit
       await supabase.from('audit_log').insert({
         source: 'admin',
         event: 'CONTRACTUALISATION_LAUNCHED',
         payload: {
           clientId,
           procedureId: newProcedure.id,
-          yousignRequestId: signatureRequest.id,
+          docusealSubmissionId: submissionId,
           signerEmail,
         },
       });
@@ -365,18 +263,17 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Demande de signature envoyée avec succès',
         procedureId: newProcedure.id,
-        yousignRequestId: signatureRequest.id,
+        docusealSubmissionId: submissionId,
         dbUpdateError: updateError ? true : false,
       });
-    } catch (yousignError) {
-      // If Yousign fails, update the procedure to reflect the error
+    } catch (docusealError) {
       await supabase.from('procedures').update({ status: 'DRAFT' }).eq('id', newProcedure.id);
 
-      console.error('Yousign error:', yousignError);
+      console.error('DocuSeal error:', docusealError);
       return NextResponse.json(
         {
           success: false,
-          error: `Erreur Yousign: ${yousignError instanceof Error ? yousignError.message : 'Unknown error'}`,
+          error: `Erreur DocuSeal: ${docusealError instanceof Error ? docusealError.message : 'Unknown error'}`,
         },
         { status: 500 }
       );
