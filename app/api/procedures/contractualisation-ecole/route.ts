@@ -38,7 +38,7 @@ async function createDocusealSubmission(params: {
 
   const body = {
     send_email: true,
-    order: 'random',
+    order: 'preserved',
     submitters: params.signers.map(s => ({
       role: s.role,
       email: s.email,
