@@ -37,7 +37,7 @@ async function createDocusealSubmission(params: {
 
   const body = {
     send_email: true,
-    order: 'random',
+    order: 'preserved',
     submitters: params.signers.map(s => ({
       role: s.role,
       email: s.email,
@@ -216,16 +216,16 @@ export async function POST(request: NextRequest) {
         filename: `contractualisation_${client.id}.pdf`,
         signers: [
           {
-            role: 'Florence',
-            email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
-            name: 'Florence LOUAZEL',
-            fields: { page: signaturePage, ...florenceCoords },
-          },
-          {
             role: 'Client',
             email: signerEmail,
             name: `${signerFirstName} ${signerLastName}`,
             fields: { page: signaturePage, ...clientCoords },
+          },
+          {
+            role: 'Florence',
+            email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
+            name: 'Florence LOUAZEL',
+            fields: { page: signaturePage, ...florenceCoords },
           },
         ],
       });
