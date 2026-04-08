@@ -2416,7 +2416,7 @@ export default function ClientDetailPage() {
             </Text>
             <Text mt={3} mb={4}>
               Une demande de signature électronique sera envoyée au signataire sélectionné via
-              Yousign.
+              DocuSeal.
             </Text>
 
             <FormControl isRequired mb={4}>
@@ -2546,7 +2546,7 @@ export default function ClientDetailPage() {
             </FormControl>
 
             <Text mt={4} fontSize="sm" color="gray.600">
-              Le signataire recevra un email de Yousign avec un lien sécurisé pour signer le
+              Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
               document.
             </Text>
           </ModalBody>
@@ -2605,7 +2605,7 @@ export default function ClientDetailPage() {
               </Text>
               <Text fontSize="sm" color="gray.600">
                 Une demande de signature électronique sera envoyée au signataire sélectionné via
-                Yousign.
+                DocuSeal.
               </Text>
 
               <FormControl isRequired>
@@ -2690,7 +2690,7 @@ export default function ClientDetailPage() {
               </FormControl>
 
               <Text fontSize="sm" color="gray.600">
-                Le signataire recevra un email de Yousign avec un lien sécurisé pour signer le
+                Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
                 contrat de travail CDD.
               </Text>
             </VStack>
