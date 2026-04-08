@@ -597,18 +597,11 @@ export default function HomePage() {
                           aux besoins de chacun : préparation aux épreuves de mathématiques, entraînement aux
                           entretiens individuels, travail sur la confiance en soi et la gestion du stress.
                         </Text>
-                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8">
                           Apprendre à identifier ses atouts et à les valoriser est un véritable levier de réussite.
                           Mon objectif est d&apos;aider votre jeune à aborder ces changements sereinement, avec
                           confiance et clarté.
                         </Text>
-                        <Button
-                          colorScheme="accent"
-                          size="sm"
-                          onClick={() => handleContactClick('student')}
-                        >
-                          Prendre contact
-                        </Button>
                       </Box>
                     </Box>
 
@@ -650,17 +643,10 @@ export default function HomePage() {
                           l&apos;autonomie. Je propose un accompagnement complet autour de trois piliers essentiels :
                           la connaissance de soi, l&apos;éducation financière et la cuisine du quotidien.
                         </Text>
-                        <Text fontSize="sm" color="brand.600" lineHeight="1.8" mb={4}>
+                        <Text fontSize="sm" color="brand.600" lineHeight="1.8">
                           L&apos;objectif est d&apos;aider votre jeune à devenir autonome, organisé et serein dans sa
                           nouvelle vie, pour prendre son envol avec confiance, liberté et plaisir.
                         </Text>
-                        <Button
-                          colorScheme="accent"
-                          size="sm"
-                          onClick={() => handleContactClick('parent')}
-                        >
-                          Prendre contact
-                        </Button>
                       </Box>
                     </Box>
                   </Flex>
