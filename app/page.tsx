@@ -569,7 +569,7 @@ export default function HomePage() {
                     >
                       <Box h="200px" overflow="hidden">
                         <Image
-                          src="/DSC08964.JPG"
+                          src="/DSC08837.JPG"
                           alt="Accompagnement entrée en école d'ingénieur"
                           w="100%"
                           h="100%"
@@ -624,7 +624,7 @@ export default function HomePage() {
                     >
                       <Box h="200px" overflow="hidden">
                         <Image
-                          src="/DSC08853.JPG"
+                          src="/DSC08929.JPG"
                           alt="Parcours Envol"
                           w="100%"
                           h="100%"
