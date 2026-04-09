@@ -128,32 +128,75 @@ export async function POST(request: NextRequest) {
       }
 
       const htmlContent = `
-        <p>Bonjour,</p>
-        <p>Veuillez trouver ci-joint le récapitulatif des heures pour <strong>${entry.clientName}</strong> — <strong>${moisLabel}</strong>.</p>
-        <table style="border-collapse:collapse;width:100%;max-width:500px;font-family:sans-serif;font-size:14px;">
-          <thead>
-            <tr style="background:#f5ede4;">
-              <th style="padding:8px;text-align:left;border:1px solid #ddd;">Poste</th>
-              <th style="padding:8px;text-align:right;border:1px solid #ddd;">Montant</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="padding:8px;border:1px solid #ddd;">Heures réalisées (${entry.heures}h × ${entry.tarifHoraire} €/h)</td>
-              <td style="padding:8px;text-align:right;border:1px solid #ddd;">${montantHeures} €</td>
-            </tr>
-            <tr>
-              <td style="padding:8px;border:1px solid #ddd;">Frais de déplacement (${entry.km} km × ${entry.baremeKm} €/km)</td>
-              <td style="padding:8px;text-align:right;border:1px solid #ddd;">${montantKm} €</td>
-            </tr>
-            <tr style="font-weight:bold;background:#f5ede4;">
-              <td style="padding:8px;border:1px solid #ddd;">Total</td>
-              <td style="padding:8px;text-align:right;border:1px solid #ddd;">${total} €</td>
-            </tr>
-          </tbody>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif; background-color: #fafafa;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fafafa; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center; background: linear-gradient(to bottom, #f9f3ee, #efe3d7); border-radius: 16px 16px 0 0;">
+              <h1 style="margin: 0; color: #6e3a25; font-family: 'Georgia', serif; font-size: 28px; font-weight: 600;">A Rythme Ethic</h1>
+              <p style="margin: 10px 0 0 0; color: #c3826e; font-size: 16px;">Accompagnement humain et bienveillant</p>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">Bonjour,</p>
+              <p style="margin: 0 0 24px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
+                Veuillez trouver ci-joint le récapitulatif des heures pour <strong>${entry.clientName}</strong> — <strong>${moisLabel}</strong>.
+              </p>
+              <!-- Table -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 15px;">
+                <thead>
+                  <tr style="background: linear-gradient(to bottom, #f9f3ee, #efe3d7);">
+                    <th style="padding: 12px 16px; text-align: left; color: #6e3a25; font-weight: 600; border-bottom: 2px solid #e2cbb8;">Poste</th>
+                    <th style="padding: 12px 16px; text-align: right; color: #6e3a25; font-weight: 600; border-bottom: 2px solid #e2cbb8;">Montant</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">Heures réalisées (${entry.heures} h × ${entry.tarifHoraire} €/h)</td>
+                    <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${montantHeures} €</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">Frais de déplacement (${entry.km} km × ${entry.baremeKm} €/km)</td>
+                    <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${montantKm} €</td>
+                  </tr>
+                  <tr style="background-color: #f9f3ee;">
+                    <td style="padding: 14px 16px; color: #6e3a25; font-weight: 700;">Total</td>
+                    <td style="padding: 14px 16px; text-align: right; color: #6e3a25; font-weight: 700;">${total} €</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="margin: 28px 0 0 0; color: #a97761; font-size: 14px; line-height: 1.6;">
+                Le récapitulatif complet est également disponible en pièce jointe (PDF).
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #f9f3ee; border-radius: 0 0 16px 16px; text-align: center;">
+              <p style="margin: 0; color: #6e3a25; font-size: 14px; font-weight: 600;">Florence Louazel</p>
+              <p style="margin: 5px 0 0 0; color: #a97761; font-size: 13px;">A Rythme Ethic</p>
+            </td>
+          </tr>
         </table>
-        <p style="margin-top:20px;">Cordialement,<br/><strong>Florence Louazel — A Rythme Ethic</strong></p>
-      `;
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+      `.trim();
 
       const emailPayload = {
         sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
