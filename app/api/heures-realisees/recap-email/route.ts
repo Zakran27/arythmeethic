@@ -155,6 +155,23 @@ export async function POST(request: NextRequest) {
         <p style="margin-top:20px;">Cordialement,<br/><strong>Florence Louazel — A Rythme Ethic</strong></p>
       `;
 
+      const emailPayload = {
+        sender: { name: 'A Rythme Ethic', email: 'florence.louazel@ARythmeEthic.onmicrosoft.com' },
+        to: [{ email: entry.parentEmail }],
+        subject: `Récapitulatif heures — ${entry.clientName} — ${moisLabel}`,
+        htmlContent,
+        attachment: [
+          {
+            content: pdfBase64,
+            name: `recap_heures_${entry.clientName.replace(/\s+/g, '_')}_${mois}.pdf`,
+          },
+        ],
+      };
+
+      console.log(`[Brevo] Envoi pour ${entry.clientName} → ${entry.parentEmail}`);
+      console.log(`[Brevo] Expéditeur: ${emailPayload.sender.email}`);
+      console.log(`[Brevo] Sujet: ${emailPayload.subject}`);
+
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -162,25 +179,18 @@ export async function POST(request: NextRequest) {
           'api-key': brevoApiKey,
           'content-type': 'application/json',
         },
-        body: JSON.stringify({
-          sender: { name: 'A Rythme Ethic', email: 'florence.louazel@ARythmeEthic.onmicrosoft.com' },
-          to: [{ email: entry.parentEmail }],
-          subject: `Récapitulatif heures — ${entry.clientName} — ${moisLabel}`,
-          htmlContent,
-          attachment: [
-            {
-              content: pdfBase64,
-              name: `recap_heures_${entry.clientName.replace(/\s+/g, '_')}_${mois}.pdf`,
-            },
-          ],
-        }),
+        body: JSON.stringify(emailPayload),
       });
 
+      console.log(`[Brevo] Status HTTP: ${res.status} ${res.statusText}`);
+
       if (res.ok) {
+        const okBody = await res.json().catch(() => ({}));
+        console.log(`[Brevo] Succès:`, JSON.stringify(okBody));
         results.push({ clientId: entry.clientId, ok: true });
       } else {
         const errBody = await res.text();
-        console.error('Brevo error for', entry.clientId, ':', errBody);
+        console.error(`[Brevo] Erreur pour ${entry.clientId} (${entry.clientName}):`, errBody);
         results.push({ clientId: entry.clientId, ok: false, error: errBody });
       }
     }
