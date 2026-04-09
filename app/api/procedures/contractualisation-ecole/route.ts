@@ -27,12 +27,109 @@ interface DocusealSigner {
   fields: { page: number; x: number; y: number; w: number; h: number };
 }
 
+interface DocusealSubmitterResult {
+  role: string;
+  email: string;
+  name: string;
+  embedSrc: string;
+}
+
+async function sendSignatureEmail({
+  to,
+  toName,
+  role,
+  clientName,
+  signingLink,
+}: {
+  to: string;
+  toName: string;
+  role: 'Client' | 'Florence';
+  clientName: string;
+  signingLink: string;
+}) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.warn('[Brevo] BREVO_API_KEY non configurée, email signature non envoyé');
+    return;
+  }
+
+  const intro =
+    role === 'Florence'
+      ? `<strong>${clientName}</strong> a été invité(e) à signer le contrat de prestation. Voici votre lien pour contresigner.`
+      : `Florence Louazel vous invite à signer le contrat de prestation A Rythme Ethic.`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+</head>
+<body style="margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica','Arial',sans-serif;background-color:#fafafa;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fafafa;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <tr>
+          <td style="padding:40px 40px 20px 40px;text-align:center;background:linear-gradient(to bottom,#f9f3ee,#efe3d7);border-radius:16px 16px 0 0;">
+            <h1 style="margin:0;color:#6e3a25;font-family:'Georgia',serif;font-size:28px;font-weight:600;">A Rythme Ethic</h1>
+            <p style="margin:10px 0 0 0;color:#c3826e;font-size:16px;">Accompagnement humain et bienveillant</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${toName},</p>
+            <p style="margin:0 0 30px 0;color:#7b4a31;font-size:16px;line-height:1.6;">${intro}</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:20px 0;">
+                  <a href="${signingLink}" style="display:inline-block;background-color:#2ba1bd;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-size:16px;font-weight:500;">
+                    Signer le document
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:20px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">
+              Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/>
+              <a href="${signingLink}" style="color:#2ba1bd;word-break:break-all;">${signingLink}</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:30px 40px;background-color:#f9f3ee;border-radius:0 0 16px 16px;text-align:center;">
+            <p style="margin:0;color:#6e3a25;font-size:14px;font-weight:600;">Florence Louazel</p>
+            <p style="margin:5px 0 0 0;color:#a97761;font-size:13px;">A Rythme Ethic</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`.trim();
+
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
+      to: [{ email: to, name: toName }],
+      subject: `A Rythme Ethic — Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`,
+      htmlContent,
+    }),
+  });
+  console.log(`[Brevo] Email signature envoyé à ${to} — status: ${res.status}`);
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('[Brevo] Erreur:', err);
+  }
+}
+
 async function createDocusealSubmission(params: {
   pdfBuffer: Buffer;
   filename: string;
   annexes: { buffer: Buffer; name: string }[];
   signers: DocusealSigner[];
-}): Promise<{ submissionId: string }> {
+}): Promise<{ submissionId: string; signers: DocusealSubmitterResult[] }> {
   const apiKey = process.env.DOCUSEAL_API_KEY;
   if (!apiKey) throw new Error('DOCUSEAL_API_KEY non configurée');
 
@@ -102,7 +199,17 @@ async function createDocusealSubmission(params: {
   const submissionId = Array.isArray(data)
     ? (data[0]?.submission_id ?? data[0]?.id)
     : (data.submission_id ?? data.id);
-  return { submissionId: String(submissionId) };
+
+  const submitters: DocusealSubmitterResult[] = (data.submitters ?? []).map((s: {
+    role: string; email: string; name: string; embed_src: string;
+  }) => ({
+    role: s.role,
+    email: s.email,
+    name: s.name,
+    embedSrc: s.embed_src,
+  }));
+
+  return { submissionId: String(submissionId), signers: submitters };
 }
 
 export async function POST(request: NextRequest) {
@@ -228,7 +335,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const { submissionId } = await createDocusealSubmission({
+      const { submissionId, signers: submitters } = await createDocusealSubmission({
         pdfBuffer,
         filename: `contractualisation_${client.id}.pdf`,
         annexes: annexeBuffers,
@@ -248,6 +355,18 @@ export async function POST(request: NextRequest) {
         ],
       });
       console.log('DocuSeal submission created:', submissionId);
+
+      // Send signature emails via Brevo
+      const clientName = `${signerFirstName} ${signerLastName}`;
+      for (const s of submitters) {
+        await sendSignatureEmail({
+          to: s.email,
+          toName: s.name,
+          role: s.role as 'Client' | 'Florence',
+          clientName,
+          signingLink: s.embedSrc,
+        });
+      }
 
       // Store submission ID and update status
       const { error: updateError } = await supabase

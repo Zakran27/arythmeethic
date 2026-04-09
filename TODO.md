@@ -1,5 +1,3 @@
 # TODO
 
-- [ ] Montrer la landing page
-- [ ] Tester Brevo — récap des heures
-- [ ] Tester la contractualisation (particulier + école)
+- [ ] Téléchargement du contrat signé (PDF) — bouton dans l'admin pour les procédures terminées
