@@ -10,6 +10,13 @@ export const metadata: Metadata = {
     shortcut: '/logo.jpg',
     apple: '/logo.jpg',
   },
+  openGraph: {
+    title: 'A Rythme Ethic',
+    description: 'Accompagnement personnalisé pour élèves, parents et établissements scolaires',
+    images: [{ url: '/logo.jpg', width: 400, height: 400 }],
+    locale: 'fr_FR',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
