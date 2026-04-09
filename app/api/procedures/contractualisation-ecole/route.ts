@@ -54,11 +54,15 @@ async function createDocusealSubmission(params: {
           role: s.role,
           type: 'signature',
           required: true,
-          page: s.fields.page,
-          x: s.fields.x,
-          y: s.fields.y,
-          w: s.fields.w,
-          h: s.fields.h,
+          areas: [
+            {
+              page: s.fields.page,
+              x: s.fields.x,
+              y: s.fields.y,
+              w: s.fields.w,
+              h: s.fields.h,
+            },
+          ],
         })),
       },
       ...params.annexes.map(a => ({
@@ -69,6 +73,12 @@ async function createDocusealSubmission(params: {
     ],
   };
 
+  console.log('[DocuSeal] POST', `${DOCUSEAL_API_URL}/submissions/pdf`);
+  console.log('[DocuSeal] API key présente:', !!apiKey, '| longueur:', apiKey.length);
+  console.log('[DocuSeal] Signataires:', params.signers.map(s => ({ role: s.role, email: s.email })));
+  console.log('[DocuSeal] Champs:', JSON.stringify(body.documents[0].fields, null, 2));
+  console.log('[DocuSeal] Annexes:', params.annexes.map(a => a.name));
+
   const res = await fetch(`${DOCUSEAL_API_URL}/submissions/pdf`, {
     method: 'POST',
     headers: {
@@ -78,13 +88,17 @@ async function createDocusealSubmission(params: {
     body: JSON.stringify(body),
   });
 
+  console.log('[DocuSeal] Status HTTP:', res.status, res.statusText);
+
   if (!res.ok) {
     const err = await res.text();
+    console.error('[DocuSeal] Erreur réponse:', err);
     throw new Error(`DocuSeal error: ${err}`);
   }
 
   const data = await res.json();
-  // DocuSeal returns an array; each item has submission_id and id
+  console.log('[DocuSeal] Réponse:', JSON.stringify(data, null, 2));
+
   const submissionId = Array.isArray(data)
     ? (data[0]?.submission_id ?? data[0]?.id)
     : (data.submission_id ?? data.id);
