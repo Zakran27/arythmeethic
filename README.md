@@ -2,7 +2,7 @@
 
 Website for a friend offering private math tutoring and school interventions.
 
-🌐 **Live Site:** [arythmeethic.vercel.app](https://arythmeethic.vercel.app/)
+🌐 **Live Site:** [arythmeethic.fr](https://www.arythmeethic.fr/)
 
 ## Tech Stack
 
