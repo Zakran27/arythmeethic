@@ -117,7 +117,7 @@ export async function generateContractParticulierPDF(
   br(4);
   write('Nom de naissance : LOUAZEL', 10);
   write("Nom d'usage : LOUAZEL   Prenom : FLORENCE", 10);
-  write('E-mail : florence.louazel@ARythmeEthic.onmicrosoft.com', 10);
+  write('E-mail : florence.louazel@arythmeethic.fr', 10);
   write('Adresse : 3 RUE ARTHUR RIMBAUD', 10);
   write('Ville : 44470   Code postal : 44 470', 10);
   write('N de telephone : 06 46 75 37 36', 10);

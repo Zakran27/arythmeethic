@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceRoleClient();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';
 
     // Get all Particulier clients with status 'Client' who haven't responded yet this year
     const currentYear = new Date().getFullYear();

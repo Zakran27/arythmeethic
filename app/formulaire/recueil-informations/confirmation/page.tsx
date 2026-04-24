@@ -58,7 +58,7 @@ export default function ConfirmationPage() {
             <Text fontSize="sm" color="brand.600">
               Une question ? Contactez-nous à{' '}
               <Text as="span" color="accent.500">
-                Florence.LOUAZEL@arythmeethic.onmicrosoft.com
+                florence.louazel@arythmeethic.fr
               </Text>
             </Text>
           </Box>

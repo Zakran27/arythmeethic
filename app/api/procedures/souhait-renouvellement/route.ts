@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the form URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';
     const formUrl = `${baseUrl}/formulaire/renouvellement?token=${renewalToken}`;
 
     // Determine the email to send to (use override if provided, else: parent1 > jeune > main email)
