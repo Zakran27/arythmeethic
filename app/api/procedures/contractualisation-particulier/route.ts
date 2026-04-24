@@ -343,7 +343,7 @@ export async function POST(request: NextRequest) {
           },
           {
             role: 'Florence',
-            email: 'florence.louazel@ARythmeEthic.onmicrosoft.com',
+            email: 'florence.louazel@arythmeethic.fr',
             name: 'Florence LOUAZEL',
             fields: { page: signaturePage, ...florenceCoords },
           },

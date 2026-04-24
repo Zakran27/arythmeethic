@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the form URL based on client type
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';
     const isEcole = client.type_client === 'École';
     const formUrl = isEcole
       ? `${baseUrl}/formulaire/recueil-informations-ecole?token=${formToken}`

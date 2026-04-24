@@ -163,7 +163,7 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createServiceRoleClient();
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';
 
     // Get procedure type for finding procedures
     const { data: procedureType } = await supabase

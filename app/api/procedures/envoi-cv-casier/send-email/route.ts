@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the download URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.vercel.app';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';
     const downloadUrl = `${baseUrl}/download/${procedure.download_token}`;
 
     // Format expiration date
