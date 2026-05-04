@@ -13,7 +13,7 @@ export function Nav({ onServiceClick }: NavProps) {
   return (
     <Box bg="white" borderBottom="1px" borderColor="grey.300">
       <Container maxW="container.xl">
-        <Flex h={16} alignItems="center" justifyContent="space-between">
+        <Flex h={{ base: 16, md: 20 }} alignItems="center" justifyContent="space-between">
           <Link href="/">
             <HStack
               spacing={3}
@@ -21,7 +21,12 @@ export function Nav({ onServiceClick }: NavProps) {
               _hover={{ opacity: 0.8 }}
               transition="opacity 0.2s"
             >
-              <Image src="/logo.jpg" alt="A Rythme Ethic" h="40px" borderRadius="md" />
+              <Image
+                src="/logo.jpg"
+                alt="A Rythme Ethic"
+                h={{ base: '48px', md: '64px' }}
+                borderRadius="md"
+              />
               <Text
                 fontSize="xl"
                 fontWeight="600"
