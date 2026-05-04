@@ -364,7 +364,7 @@ export default function HomePage() {
                       flexShrink={0}
                     >
                       <Image
-                        src="/DSC08964.JPG"
+                        src="/concours.jpg"
                         alt="Cours particuliers"
                         w="100%"
                         h="100%"
@@ -428,7 +428,7 @@ export default function HomePage() {
                     >
                       <Box h="200px" overflow="hidden">
                         <Image
-                          src="/DSC08837.JPG"
+                          src="/autonomie.jpg"
                           alt="Accompagnement entrée en école d'ingénieur"
                           w="100%"
                           h="100%"
@@ -566,6 +566,21 @@ export default function HomePage() {
                           sociales, interpersonnelles et de communication, dans un espace de parole libre et
                           sécurisant.
                         </Text>
+                        <Box
+                          bg="sand.50"
+                          border="1px solid"
+                          borderColor="sand.200"
+                          borderRadius="md"
+                          px={3}
+                          py={2}
+                          mb={4}
+                        >
+                          <Text fontSize="xs" color="brand.600" lineHeight="1.6">
+                            💡 Les ateliers de compétences psychosociales peuvent être financés par la{' '}
+                            <Text as="span" fontWeight="600" color="brand.500">CVEC</Text> (Contribution
+                            de Vie Étudiante et de Campus).
+                          </Text>
+                        </Box>
                         <Text fontSize="xs" color="brand.400" fontWeight="500" mb={5}>
                           📍 Nantes et ses alentours · prendre contact pour d&apos;autres localisations
                         </Text>
@@ -670,6 +685,88 @@ export default function HomePage() {
                 <Text fontSize="xs" color="brand.400" mt={1}>Me contacter pour en savoir plus</Text>
               </Box>
             </Flex>
+          </FadeUp>
+        </Container>
+      </Box>
+
+      {/* ── ILS M'ONT FAIT CONFIANCE ── */}
+      <Box bg="white" py={{ base: 12, md: 16 }} borderTop="1px solid" borderColor="sand.100">
+        <Container maxW="container.xl">
+          <FadeUp>
+            <Box textAlign="center" mb={8}>
+              <Text
+                fontSize="xs"
+                fontWeight="700"
+                color="accent.500"
+                textTransform="uppercase"
+                letterSpacing="widest"
+                mb={3}
+              >
+                Références
+              </Text>
+              <Heading
+                as="h2"
+                fontSize={{ base: '2xl', md: '3xl' }}
+                color="brand.500"
+                fontFamily="heading"
+              >
+                Ils m&apos;ont fait confiance
+              </Heading>
+            </Box>
+            <Box
+              overflow="hidden"
+              position="relative"
+              maxW="900px"
+              mx="auto"
+              sx={{
+                maskImage:
+                  'linear-gradient(to right, transparent 0, black 80px, black calc(100% - 80px), transparent 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to right, transparent 0, black 80px, black calc(100% - 80px), transparent 100%)',
+              }}
+            >
+              <Box
+                display="flex"
+                width="max-content"
+                sx={{
+                  animation: 'logoScroll 22s linear infinite',
+                  '@keyframes logoScroll': {
+                    from: { transform: 'translateX(0)' },
+                    to: { transform: 'translateX(-50%)' },
+                  },
+                }}
+              >
+                {[
+                  { src: '/ECAM.jpg', alt: 'ECAM Louis de Broglie' },
+                  { src: '/ISEN.jpg', alt: 'ISEN Yncréa Ouest' },
+                  { src: '/St_Felix.png', alt: 'Saint-Félix La Salle' },
+                ]
+                  .concat([
+                    { src: '/ECAM.jpg', alt: 'ECAM Louis de Broglie' },
+                    { src: '/ISEN.jpg', alt: 'ISEN Yncréa Ouest' },
+                    { src: '/St_Felix.png', alt: 'Saint-Félix La Salle' },
+                  ])
+                  .map((logo, idx) => (
+                    <Flex
+                      key={idx}
+                      align="center"
+                      justify="center"
+                      flexShrink={0}
+                      px={{ base: 8, md: 14 }}
+                      h={{ base: '80px', md: '110px' }}
+                    >
+                      <Image
+                        src={logo.src}
+                        alt={logo.alt}
+                        maxH="100%"
+                        maxW={{ base: '140px', md: '180px' }}
+                        objectFit="contain"
+                        opacity={0.85}
+                      />
+                    </Flex>
+                  ))}
+              </Box>
+            </Box>
           </FadeUp>
         </Container>
       </Box>

@@ -91,7 +91,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   br(20);
 
   // ===== PARTIES =====
-  write('Entre les soussignes :', 11, true);
+  write('Entre les soussignés :', 11, true);
   br(8);
 
   write(
@@ -100,12 +100,12 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   );
   write(`  ${client.address_line1 || ''}`, 10);
   write(`  ${client.postal_code || ''} - ${client.city || ''}`, 10);
-  write(`  N SIRET ${client.ecole_siret || ''}`, 10);
+  write(`  N° SIRET ${client.ecole_siret || ''}`, 10);
   write(
-    `  Organisme de formation enregistre sous le numero ${client.ecole_nda || ''} aupres du Prefet`,
+    `  Organisme de formation enregistré sous le numéro ${client.ecole_nda || ''} auprès du Préfet`,
     10
   );
-  write(`  de la region ${client.ecole_nda_region || ''}`, 10);
+  write(`  de la région ${client.ecole_nda_region || ''}`, 10);
   br(8);
 
   write('Et', 10);
@@ -113,89 +113,89 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
 
   write('2 – Le sous-traitant : A Rythme Ethic – Entreprise individuelle', 10, true);
   write('  3 rue Arthur Rimbaud', 10);
-  write('  44 470 THOUARE SUR LOIRE', 10);
-  write('  N SIRET 990 194 763 00019', 10);
+  write('  44 470 THOUARÉ SUR LOIRE', 10);
+  write('  N° SIRET 990 194 763 00019', 10);
   write(
-    '  Organisme de formation enregistre sous le numero 52 44 12563 44 aupres du Prefet de la',
+    '  Organisme de formation enregistré sous le numéro 52 44 12563 44 auprès du Préfet de la',
     10
   );
-  write('  region Pays de la Loire', 10);
+  write('  région Pays de la Loire', 10);
   br(14);
 
-  write('Il a ete convenu ce qui suit :', 10);
+  write('Il a été convenu ce qui suit :', 10);
   br(14);
 
   // ===== ARTICLE 1 =====
   write('Article 1 : Nature du contrat', 11, true);
   br(6);
   write(
-    "Le present contrat est conclu dans le cadre d'une prestation de formation realisee par le sous-",
+    "Le présent contrat est conclu dans le cadre d'une prestation de formation réalisée par le sous-",
     9
   );
-  write("traitant au benefice du donneur d'ordre.", 9);
+  write("traitant au bénéfice du donneur d'ordre.", 9);
   write(
-    'Le sous-traitant intervient en toute independance, sans exclusivite, et organise librement ses',
+    'Le sous-traitant intervient en toute indépendance, sans exclusivité, et organise librement ses',
     9
   );
-  write("methodes pedagogiques dans le respect du cadre fixe par le donneur d'ordre.", 9);
+  write("méthodes pédagogiques dans le respect du cadre fixé par le donneur d'ordre.", 9);
   br(12);
 
   // ===== ARTICLE 2 =====
   write('Article 2 : Objet du contrat', 11, true);
   br(6);
-  write(`  Enseignement dont le theme est : ${client.ecole_module_nom || ''}`, 9);
-  write(`  Formation a destination ${client.ecole_classes_noms || ''}`, 9);
+  write(`  Enseignement dont le thème est : ${client.ecole_module_nom || ''}`, 9);
+  write(`  Formation à destination ${client.ecole_classes_noms || ''}`, 9);
   write(
-    `  Periode : annee scolaire ${anneeScolaire} a compter du 1er septembre et jusqu'au 31 aout`,
+    `  Période : année scolaire ${anneeScolaire} à compter du 1er septembre et jusqu'au 31 août`,
     9
   );
-  write(`  de l'annee suivante`, 9);
+  write(`  de l'année suivante`, 9);
   write(
-    `  Volume horaire de face a face pedagogique : ${client.ecole_module_heures || ''} heures`,
+    `  Volume horaire de face à face pédagogique : ${client.ecole_module_heures || ''} heures`,
     9
   );
-  write(`  Nombre previsionnel d'apprenants : ${client.ecole_groupe_taille || ''}`, 9);
+  write(`  Nombre prévisionnel d'apprenants : ${client.ecole_groupe_taille || ''}`, 9);
   write(`  Intervenant(e) : Florence LOUAZEL`, 9);
   write(
-    `  Diplome de l'intervenant(e) : Diplome d'ingenieur generaliste – ECAM Louis de Broglie`,
+    `  Diplôme de l'intervenant(e) : Diplôme d'ingénieur généraliste – ECAM Louis de Broglie`,
     9
   );
   br(8);
   writeRed(
-    "Toute reevaluation fera l'objet d'un avenant precisantle nouveau tarif horaire HT et prendra",
+    "Toute réévaluation fera l'objet d'un avenant précisant le nouveau tarif horaire HT et prendra",
     9
   );
-  writeRed('effet apres signature des deux parties.', 9);
+  writeRed('effet après signature des deux parties.', 9);
   br(12);
 
   // ===== ARTICLE 3 =====
   write(
-    'Article 3 : Contenu des actions/modalites/moyens techniques et pedagogiques mobilises',
+    'Article 3 : Contenu des actions / modalités / moyens techniques et pédagogiques mobilisés',
     11,
     true
   );
   br(6);
-  write('Objectifs pedagogiques generaux :', 9, false, 0, true);
+  write('Objectifs pédagogiques généraux :', 9, false, 0, true);
   br(20);
-  write('Actions et modalites pedagogiques :', 9, false, 0, true);
+  write('Actions et modalités pédagogiques :', 9, false, 0, true);
   br(20);
-  write('Moyens techniques mobilises :', 9, false, 0, true);
+  write('Moyens techniques mobilisés :', 9, false, 0, true);
   br(20);
   write(
-    'Le sous-traitant est tenu a une obligation de moyens dans la realisation de la formation.',
+    'Le sous-traitant est tenu à une obligation de moyens dans la réalisation de la formation.',
     9
   );
   br(12);
 
   // ===== ARTICLE 4 =====
-  write('Article 4 : Duree du contrat', 11, true);
+  write('Article 4 : Durée du contrat', 11, true);
   br(6);
   write(
-    "Le present contrat est strictement limite a la prestation de formation visee a l'article 2.",
+    "Le présent contrat est strictement limité à la prestation de formation visée à l'article 2.",
     9
   );
   write(
-    "Il cesse de plein droit a son terme. Le present contrat ne fait l'objet d'aucune reconduction tacite.",
+    "Il cesse de plein droit à son terme. Le présent contrat ne fait l'objet d'aucune reconduction tacite.",
     9
   );
   br(12);
@@ -203,39 +203,39 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   // ===== ARTICLE 5 =====
   write('Article 5 : Obligations du sous-traitant', 11, true);
   br(6);
-  write("Le sous-traitant s'engage a :", 9);
+  write("Le sous-traitant s'engage à :", 9);
   write(
     "  - Communiquer au donneur d'ordre une copie de son attestation d'immatriculation au registre",
     9
   );
   write('    national des entreprises ;', 9);
-  write('  - Preparer les cours ;', 9);
+  write('  - Préparer les cours ;', 9);
   write(
-    "  - Animer les cours dans le respect des objectifs fixes par le donneur d'ordre et le syllabus ;",
+    "  - Animer les cours dans le respect des objectifs fixés par le donneur d'ordre et le syllabus ;",
     9
   );
   write(
-    '  - Mettre a disposition des apprenants les supports pedagogiques via une plateforme en ligne ;',
+    '  - Mettre à disposition des apprenants les supports pédagogiques via une plateforme en ligne ;',
     9
   );
-  write("  - La validation de la presence des eleves sur l'ERP du donneur d'ordre ;", 9);
-  write("  - Realiser les evaluations ecrites ou orales selon l'usage dans l'etablissement ;", 9);
+  write("  - La validation de la présence des élèves sur l'ERP du donneur d'ordre ;", 9);
+  write("  - Réaliser les évaluations écrites ou orales selon l'usage dans l'établissement ;", 9);
   write("  - Corriger les copies et saisir les notes sur l'ERP du donneur d'ordre.", 9);
   br(6);
   write(
-    'Le sous-traitant peut se faire remplacer par un intervenant de qualification equivalente, sous',
+    'Le sous-traitant peut se faire remplacer par un intervenant de qualification équivalente, sous',
     9
   );
-  write("reserve d'information prealable du donneur d'ordre.", 9);
+  write("réserve d'information préalable du donneur d'ordre.", 9);
   br(6);
   write(
-    'Ces obligations sont executees librement par le sous-traitant, sans controle hierarchique ni',
+    'Ces obligations sont exécutées librement par le sous-traitant, sans contrôle hiérarchique ni',
     9
   );
   write("pouvoir disciplinaire du donneur d'ordre.", 9);
   br(6);
   write(
-    "L'utilisation des outils du donneur d'ordre est strictement limitee aux necessites pedagogiques et",
+    "L'utilisation des outils du donneur d'ordre est strictement limitée aux nécessités pédagogiques et",
     9
   );
   write('administratives de la mission et ne saurait constituer un indice de subordination.', 9);
@@ -244,137 +244,137 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   // ===== ARTICLE 6 =====
   write("Article 6 : Obligations du donneur d'ordre", 11, true);
   br(6);
-  write("Le donneur d'ordre s'engage a :", 9);
-  write("  - Confier au sous-traitant la formation prevue a l'article 2 ;", 9);
+  write("Le donneur d'ordre s'engage à :", 9);
+  write("  - Confier au sous-traitant la formation prévue à l'article 2 ;", 9);
   write('  - Prendre en charge la gestion administrative et logistique de la formation ;', 9);
   write(
     '  - Transmettre au sous-traitant une copie des questionnaires de satisfaction remplis par les',
     9
   );
-  write("    eleves a l'issue de la formation ;", 9);
+  write("    élèves à l'issue de la formation ;", 9);
   write(
-    "  - Prevenir le sous-traitant au moins 8 jours a l'avance en cas d'annulation ou de report.",
+    "  - Prévenir le sous-traitant au moins 8 jours à l'avance en cas d'annulation ou de report.",
     9
   );
   br(6);
   write(
-    "Pour des raisons de contraintes d'organisation, les dates d'intervention peuvent etre modifiees",
+    "Pour des raisons de contraintes d'organisation, les dates d'intervention peuvent être modifiées",
     9
   );
-  write('selon des modalites convenues et validees par les deux parties.', 9);
+  write('selon des modalités convenues et validées par les deux parties.', 9);
   br(6);
   write(
-    "Toute annulation moins de 10 jours avant l'intervention donnera lieu a facturation de 25 % des",
+    "Toute annulation moins de 10 jours avant l'intervention donnera lieu à facturation de 25 % des",
     9
   );
   write(
-    "heures prevues si aucun report n'est envisageable. Le report devra intervenir dans un delai",
+    "heures prévues si aucun report n'est envisageable. Le report devra intervenir dans un délai",
     9
   );
   write(
-    'maximum de deux (2) mois a compter de la date initialement prevue. A defaut, la facturation',
+    'maximum de deux (2) mois à compter de la date initialement prévue. À défaut, la facturation',
     9
   );
-  write("prevue s'appliquera.", 9);
+  write("prévue s'appliquera.", 9);
   br(12);
 
   // ===== ARTICLE 7 =====
-  write('Article 7 : Modalites financieres', 11, true);
+  write('Article 7 : Modalités financières', 11, true);
   br(6);
   write(
-    `Le sous-traitant percevra une remuneration de ${tarifHoraireHT.toFixed(2)} euros HT par heure de face a face pedagogique.`,
+    `Le sous-traitant percevra une rémunération de ${tarifHoraireHT.toFixed(2)} euros HT par heure de face à face pédagogique.`,
     9
   );
   br(6);
   if (client.ecole_frais_km_prix) {
     write(
-      `Des frais de deplacement seront appliques pour ${Number(client.ecole_frais_km_prix).toFixed(3)} euros/kilometre.`,
+      `Des frais de déplacement seront appliqués pour ${Number(client.ecole_frais_km_prix).toFixed(3)} euros/kilomètre.`,
       9
     );
     br(6);
   }
   write(
-    "Le sous-traitant s'engage a editer une facture mensuelle pour les heures reellement effectuees",
+    "Le sous-traitant s'engage à éditer une facture mensuelle pour les heures réellement effectuées",
     9
   );
-  write('durant le mois, pendant toute la duree du contrat.', 9);
+  write('durant le mois, pendant toute la durée du contrat.', 9);
   br(4);
-  write('Le paiement sera effectue selon les modalites suivantes :', 9);
-  write('  paiement sous 30 jours a la reception de la facture ;', 9);
+  write('Le paiement sera effectué selon les modalités suivantes :', 9);
+  write('  paiement sous 30 jours à la réception de la facture ;', 9);
   write('  paiement par virement.', 9);
   br(6);
   write(
-    'En cas de defaut de paiement, des penalites de retard seront appliquees pour chaque jour de',
+    'En cas de défaut de paiement, des pénalités de retard seront appliquées pour chaque jour de',
     9
   );
   write(
-    'retard (calculees a partir du lendemain de la date de reglement indiquee sur la facture) ainsi',
+    'retard (calculées à partir du lendemain de la date de règlement indiquée sur la facture) ainsi',
     9
   );
-  write("qu'une indemnite forfaitaire de recouvrement.", 9);
+  write("qu'une indemnité forfaitaire de recouvrement.", 9);
   write(
-    "Les penalites de retard sont calculees au taux de trois (3) fois le taux d'interet legal, ainsi",
+    "Les pénalités de retard sont calculées au taux de trois (3) fois le taux d'intérêt légal, ainsi",
     9
   );
   write(
-    "qu'une indemnite forfaitaire pour frais de recouvrement de 40 euros, conformement a l'article",
+    "qu'une indemnité forfaitaire pour frais de recouvrement de 40 euros, conformément à l'article",
     9
   );
   write('L.441-10 du Code de commerce.', 9);
   br(12);
 
   // ===== ARTICLE 8 =====
-  write('Article 8 : Resiliation anticipee', 11, true);
+  write('Article 8 : Résiliation anticipée', 11, true);
   br(6);
   write(
-    "En cas de manquement grave a l'une des obligations contractuelles ou en cas de force majeure",
+    "En cas de manquement grave à l'une des obligations contractuelles ou en cas de force majeure",
     9
   );
   write(
-    'dument reconnue, chaque partie pourra resilier le present contrat de maniere anticipee, par',
+    'dûment reconnue, chaque partie pourra résilier le présent contrat de manière anticipée, par',
     9
   );
-  write('lettre recommandee avec accuse de reception, moyennant un preavis de 2 semaines.', 9);
+  write('lettre recommandée avec accusé de réception, moyennant un préavis de 2 semaines.', 9);
   write(
-    "Les prestations effectuees jusqu'a la date de resiliation devront etre integralement reglees. Les",
+    "Les prestations effectuées jusqu'à la date de résiliation devront être intégralement réglées. Les",
     9
   );
-  write('sommes deja percues par le sous-traitant lui demeureront acquises.', 9);
+  write('sommes déjà perçues par le sous-traitant lui demeureront acquises.', 9);
   br(12);
 
   // ===== ARTICLE 9 =====
   write('Article 9 : Litige', 11, true);
   br(6);
   write(
-    "En cas de litige relatif a l'interpretation ou l'execution du present contrat, les parties",
+    "En cas de litige relatif à l'interprétation ou l'exécution du présent contrat, les parties",
     9
   );
   write(
-    "s'efforceront de le resoudre a l'amiable. A defaut, le litige sera porte devant les tribunaux",
+    "s'efforceront de le résoudre à l'amiable. À défaut, le litige sera porté devant les tribunaux",
     9
   );
-  write('competents du ressort du siege social du sous-traitant.', 9);
+  write('compétents du ressort du siège social du sous-traitant.', 9);
   br(12);
 
   // ===== ARTICLE 10 =====
-  write('Article 10 : Protection des donnees personnelles', 11, true);
+  write('Article 10 : Protection des données personnelles', 11, true);
   br(6);
   write(
-    "Le sous-traitant s'engage a respecter les obligations issues du Reglement General sur la",
+    "Le sous-traitant s'engage à respecter les obligations issues du Règlement Général sur la",
     9
   );
   write(
-    "Protection des Donnees (RGPD). Il ne conservera ni n'utilisera les donnees personnelles",
+    "Protection des Données (RGPD). Il ne conservera ni n'utilisera les données personnelles",
     9
   );
-  write('auxquelles il pourrait avoir acces en dehors du strict cadre de sa mission.', 9);
+  write('auxquelles il pourrait avoir accès en dehors du strict cadre de sa mission.', 9);
   br(12);
 
   // ===== ARTICLE 11 =====
   write('Article 11 : Dispositions diverses', 11, true);
   br(6);
   write(
-    '  Le present contrat ne cree entre les parties aucun lien de subordination, le sous-traitant',
+    '  Le présent contrat ne crée entre les parties aucun lien de subordination, le sous-traitant',
     9
   );
   write(
@@ -382,114 +382,114 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     9
   );
   write(
-    "  Toute modification eventuelle de la presente convention fera l'objet d'un avenant signe par",
+    "  Toute modification éventuelle de la présente convention fera l'objet d'un avenant signé par",
     9
   );
   write('  les parties ;', 9);
   write(
-    "  Le sous-traitant dispose d'une propriete intellectuelle et/ou artistique sur le contenu de",
+    "  Le sous-traitant dispose d'une propriété intellectuelle et/ou artistique sur le contenu de",
     9
   );
   write('  sa formation ;', 9);
   write(
-    "  Le donneur d'ordre beneficie d'un droit d'usage strictement limite a l'execution du present",
+    "  Le donneur d'ordre bénéficie d'un droit d'usage strictement limité à l'exécution du présent",
     9
   );
-  write("  contrat, a l'exclusion de toute exploitation ulterieure.", 9);
+  write("  contrat, à l'exclusion de toute exploitation ultérieure.", 9);
   br(12);
 
   // ===== ARTICLE 12 =====
-  write('Article 12 : Confidentialite', 11, true);
+  write('Article 12 : Confidentialité', 11, true);
   br(6);
   write(
-    "Le sous-traitant s'engage a conserver strictement confidentielles toutes les informations,",
+    "Le sous-traitant s'engage à conserver strictement confidentielles toutes les informations,",
     9
   );
   write(
-    'documents et donnees de toute nature dont il pourrait avoir connaissance dans le cadre de',
+    'documents et données de toute nature dont il pourrait avoir connaissance dans le cadre de',
     9
   );
   write(
-    "l'execution du present contrat, et notamment les informations pedagogiques, administratives,",
+    "l'exécution du présent contrat, et notamment les informations pédagogiques, administratives,",
     9
   );
-  write("commerciales ou strategiques du donneur d'ordre.", 9);
+  write("commerciales ou stratégiques du donneur d'ordre.", 9);
   write(
-    "Cette obligation de confidentialite s'applique pendant toute la duree du contrat et subsiste",
+    "Cette obligation de confidentialité s'applique pendant toute la durée du contrat et subsiste",
     9
   );
-  write('pendant une duree de cinq (5) ans apres son expiration ou sa resiliation.', 9);
+  write('pendant une durée de cinq (5) ans après son expiration ou sa résiliation.', 9);
   br(6);
-  write('Ne sont pas considerees comme confidentielles les informations :', 9);
-  write('  tombees dans le domaine public sans faute du sous-traitant ;', 9);
-  write('  deja connues du sous-traitant avant leur communication ;', 9);
-  write('  obtenues legalement aupres de tiers.', 9);
+  write('Ne sont pas considérées comme confidentielles les informations :', 9);
+  write('  tombées dans le domaine public sans faute du sous-traitant ;', 9);
+  write('  déjà connues du sous-traitant avant leur communication ;', 9);
+  write('  obtenues légalement auprès de tiers.', 9);
   br(12);
 
   // ===== ARTICLE 13 =====
-  write('Article 13 : Assurance – Responsabilite civile professionnelle', 11, true);
+  write('Article 13 : Assurance – Responsabilité civile professionnelle', 11, true);
   br(6);
   write(
-    "Le sous-traitant declare etre titulaire d'une assurance de responsabilite civile professionnelle",
+    "Le sous-traitant déclare être titulaire d'une assurance de responsabilité civile professionnelle",
     9
   );
   write(
-    "couvrant les dommages corporels, materiels et immaterialels pouvant resulter de l'execution de",
+    "couvrant les dommages corporels, matériels et immatériels pouvant résulter de l'exécution de",
     9
   );
   write('la prestation de formation.', 9);
   write(
-    "Une attestation d'assurance en cours de validite pourra etre fournie au donneur d'ordre sur",
+    "Une attestation d'assurance en cours de validité pourra être fournie au donneur d'ordre sur",
     9
   );
   write('simple demande.', 9);
   write(
-    'La responsabilite du sous-traitant est limitee aux dommages directs prouves et ne saurait en',
+    'La responsabilité du sous-traitant est limitée aux dommages directs prouvés et ne saurait en',
     9
   );
   write(
-    "aucun cas couvrir les dommages indirects, pertes d'exploitation ou prejudices commerciaux.",
+    "aucun cas couvrir les dommages indirects, pertes d'exploitation ou préjudices commerciaux.",
     9
   );
   br(12);
 
   // ===== ARTICLE 14 =====
-  write('Article 14 : Non-exclusivite', 11, true);
+  write('Article 14 : Non-exclusivité', 11, true);
   br(6);
-  write("Le present contrat n'emporte aucune obligation d'exclusivite.", 9);
+  write("Le présent contrat n'emporte aucune obligation d'exclusivité.", 9);
   write(
-    "Le sous-traitant demeure libre de fournir des prestations similaires ou concurrentes a d'autres",
+    "Le sous-traitant demeure libre de fournir des prestations similaires ou concurrentes à d'autres",
     9
   );
   write(
-    'etablissements, organismes ou entreprises, y compris pendant la duree du present contrat, sous',
+    'établissements, organismes ou entreprises, y compris pendant la durée du présent contrat, sous',
     9
   );
-  write('reserve du respect de ses obligations de confidentialite et de loyaute.', 9);
+  write('réserve du respect de ses obligations de confidentialité et de loyauté.', 9);
   br(12);
 
   // ===== ARTICLE 15 =====
   write('Article 15 : Force majeure', 11, true);
   br(6);
   write(
-    "Aucune des parties ne pourra etre tenue responsable de l'inexecution ou du retard dans",
+    "Aucune des parties ne pourra être tenue responsable de l'inexécution ou du retard dans",
     9
   );
   write(
-    "l'execution de l'une quelconque de ses obligations lorsque cette inexecution resulte d'un cas de",
+    "l'exécution de l'une quelconque de ses obligations lorsque cette inexécution résulte d'un cas de",
     9
   );
   write("force majeure au sens de l'article 1218 du Code civil.", 9);
   write(
-    'Sont notamment consideres comme cas de force majeure : les catastrophes naturelles, incendies,',
+    'Sont notamment considérés comme cas de force majeure : les catastrophes naturelles, incendies,',
     9
   );
   write(
-    'pandemies, greves, conflits sociaux, interruptions des reseaux de communication ou de transport,',
+    'pandémies, grèves, conflits sociaux, interruptions des réseaux de communication ou de transport,',
     9
   );
   write(
-    'decisions administratives, ou toute autre circonstance independante de la volonte des parties.',
+    'décisions administratives, ou toute autre circonstance indépendante de la volonté des parties.',
     9
   );
   write(
@@ -497,7 +497,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     9
   );
   write(
-    "delais. L'execution du contrat sera suspendue pendant la duree du cas de force majeure.",
+    "délais. L'exécution du contrat sera suspendue pendant la durée du cas de force majeure.",
     9
   );
   br(12);
@@ -505,19 +505,19 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   // ===== ARTICLE 16 =====
   write('Article 16 : Cession du contrat', 11, true);
   br(6);
-  write("Le present contrat est conclu intuitu personae a l'egard du sous-traitant.", 9);
+  write("Le présent contrat est conclu intuitu personae à l'égard du sous-traitant.", 9);
   write(
-    "Il ne pourra etre cede, transfere ou apporte, en tout ou partie, par le donneur d'ordre, a",
+    "Il ne pourra être cédé, transféré ou apporté, en tout ou partie, par le donneur d'ordre, à",
     9
   );
-  write("quelque titre que ce soit, sans l'accord prealable et ecrit du sous-traitant.", 9);
+  write("quelque titre que ce soit, sans l'accord préalable et écrit du sous-traitant.", 9);
   br(24);
 
   // ===== SIGNATURES =====
   if (y < 160) newPage();
 
   const today = new Date().toLocaleDateString('fr-FR');
-  write(`Fait a Thouare-sur-Loire le ${today}`, 10, true);
+  write(`Fait à Thouaré-sur-Loire le ${today}`, 10, true);
   br(28);
 
   // "Le donneur d'ordre," on the left, "Le sous-traitant," on the right — same y
@@ -525,7 +525,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write("Le donneur d'ordre,", 9);
   writeRight('Le sous-traitant,', 9, sigLabelY);
   br(4);
-  write('[Nom, prenom, qualite, signature, tampon]', 9, false, 0, true);
+  write('[Nom, prénom, qualité, signature, tampon]', 9, false, 0, true);
 
   // Yousign fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
   const signaturePage = pdfDoc.getPageCount();

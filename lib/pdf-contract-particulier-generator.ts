@@ -96,32 +96,32 @@ export async function generateContractParticulierPDF(
   };
 
   // ===== TITRE =====
-  write('Contrat de travail a duree determinee (CDD)', 14, true);
-  write('Salarie du particulier employeur - Code IDCC : 3239', 11);
+  write('Contrat de travail à durée déterminée (CDD)', 14, true);
+  write('Salarié du particulier employeur - Code IDCC : 3239', 11);
   br(20);
 
   // ===== PARTICULIER EMPLOYEUR =====
   write('Entre le particulier employeur :', 11, true);
   br(4);
   write(`Nom de naissance : ${signerLastName}`, 10);
-  write(`Nom d'usage : ${signerLastName}   Prenom : ${signerFirstName}`, 10);
+  write(`Nom d'usage : ${signerLastName}   Prénom : ${signerFirstName}`, 10);
   write(`E-mail : ${signerEmail}`, 10);
   write(`Adresse : ${client.adresse_cours || client.address_line1 || ''}`, 10);
   write(`Ville : ${client.city || ''}   Code postal : ${client.postal_code || ''}`, 10);
-  write(`N de telephone : ${signerPhone || ''}`, 10);
-  write(`N de CESU : ${client.numero_cesu || ''}`, 10);
+  write(`N° de téléphone : ${signerPhone || ''}`, 10);
+  write(`N° de CESU : ${client.numero_cesu || ''}`, 10);
   br(14);
 
-  // ===== SALARIE (FLORENCE) =====
-  write('Et le salarie :', 11, true);
+  // ===== SALARIÉ (FLORENCE) =====
+  write('Et le salarié :', 11, true);
   br(4);
   write('Nom de naissance : LOUAZEL', 10);
-  write("Nom d'usage : LOUAZEL   Prenom : FLORENCE", 10);
+  write("Nom d'usage : LOUAZEL   Prénom : FLORENCE", 10);
   write('E-mail : florence.louazel@arythmeethic.fr', 10);
   write('Adresse : 3 RUE ARTHUR RIMBAUD', 10);
-  write('Ville : 44470   Code postal : 44 470', 10);
-  write('N de telephone : 06 46 75 37 36', 10);
-  write('N de Securite sociale : 2 97 04 35 238 643 63', 10);
+  write('Ville : THOUARÉ-SUR-LOIRE   Code postal : 44 470', 10);
+  write('N° de téléphone : 06 46 75 37 36', 10);
+  write('N° de Sécurité sociale : 2 97 04 35 238 643 63', 10);
   br(18);
 
   // ===== SECTION 1 : ENGAGEMENT =====
@@ -130,22 +130,22 @@ export async function generateContractParticulierPDF(
 
   write('Convention collective', 10, true);
   write(
-    'Ce contrat est regi par les dispositions de la Convention collective nationale de la branche du',
+    'Ce contrat est régi par les dispositions de la Convention collective nationale de la branche du',
     9
   );
   write(
-    "secteur des particuliers employeurs et de l'emploi a domicile. Le salarie est informe de la",
+    "secteur des particuliers employeurs et de l'emploi à domicile. Le salarié est informé de la",
     9
   );
-  write('possibilite de consulter le texte sur le site www.legifrance.gouv.fr.', 9);
+  write('possibilité de consulter le texte sur le site www.legifrance.gouv.fr.', 9);
   br(8);
 
-  write('Retraite complementaire et prevoyance', 10, true);
-  write('Les institutions competentes en matiere de retraite et de prevoyance sont :', 9);
+  write('Retraite complémentaire et prévoyance', 10, true);
+  write('Les institutions compétentes en matière de retraite et de prévoyance sont :', 9);
   write('  Ircem AGIRC/ARRCO', 9);
-  write('  Ircem prevoyance', 9);
+  write('  Ircem prévoyance', 9);
   write(
-    '  Toutes deux domiciliees : 261 avenue des Nations-Unies - BP 593 - 59 060 ROUBAIX Cedex.',
+    '  Toutes deux domiciliées : 261 avenue des Nations-Unies - BP 593 - 59 060 ROUBAIX Cedex.',
     9
   );
   br(14);
@@ -154,14 +154,14 @@ export async function generateContractParticulierPDF(
   write("2. Date d'effet du contrat", 12, true);
   br(6);
   write(
-    `Le CDD est conclu en raison d'un besoin en cours particuliers durant l'annee scolaire ${anneeScolaire}.`,
+    `Le CDD est conclu en raison d'un besoin en cours particuliers durant l'année scolaire ${anneeScolaire}.`,
     9
   );
   br(8);
 
-  write('Duree du contrat', 10, true);
+  write('Durée du contrat', 10, true);
   write(
-    `Le contrat est conclu a partir du ${formatDate(dateDebut)} jusqu'au ${formatDate(dateFin)}.`,
+    `Le contrat est conclu à partir du ${formatDate(dateDebut)} jusqu'au ${formatDate(dateFin)}.`,
     9
   );
   br(8);
@@ -179,113 +179,113 @@ export async function generateContractParticulierPDF(
   // ===== SECTION 4 : NATURE DE L'EMPLOI =====
   write("4. Nature de l'emploi", 12, true);
   br(6);
-  write("Le salarie occupe un emploi d'enseignante a domicile en mathematiques.", 9);
+  write("Le salarié occupe un emploi d'enseignante à domicile en mathématiques.", 9);
   br(14);
 
-  // ===== SECTION 5 : DUREE ET HORAIRES =====
-  write('5. Duree et horaires de travail', 12, true);
+  // ===== SECTION 5 : DURÉE ET HORAIRES =====
+  write('5. Durée et horaires de travail', 12, true);
   br(6);
   write(
-    "La duree de travail est dite irreguliere au sens de l'article 132 de la Convention collective",
+    "La durée de travail est dite irrégulière au sens de l'article 132 de la Convention collective",
     9
   );
   write(
-    "nationale de la branche du secteur des particuliers employeurs et de l'emploi a domicile.",
+    "nationale de la branche du secteur des particuliers employeurs et de l'emploi à domicile.",
     9
   );
-  write('La duree est comprise entre 0 heure et 48 heures maximum par semaine.', 9);
+  write('La durée est comprise entre 0 heure et 48 heures maximum par semaine.', 9);
   write(
-    "Le particulier employeur informe par ecrit dans le respect d'un delai de prevenance de",
-    9
-  );
-  write(
-    '5 jours calendaires des jours et des horaires de travail. Le planning est remis au salarie par sms.',
+    "Le particulier employeur informe par écrit dans le respect d'un délai de prévenance de",
     9
   );
   write(
-    "Lorsque le salarie a plusieurs particuliers employeurs, il s'engage a ne pas exceder la duree",
+    '5 jours calendaires des jours et des horaires de travail. Le planning est remis au salarié par sms.',
     9
   );
-  write('maximale de travail hebdomadaire prevue par la Convention collective.', 9);
+  write(
+    "Lorsque le salarié a plusieurs particuliers employeurs, il s'engage à ne pas excéder la durée",
+    9
+  );
+  write('maximale de travail hebdomadaire prévue par la Convention collective.', 9);
   br(10);
 
   write('Repos hebdomadaire', 10, true);
   write(
-    "La periode de repos hebdomadaire est fixee au dimanche, auquel s'ajoute le repos quotidien de 11 heures.",
+    "La période de repos hebdomadaire est fixée au dimanche, à laquelle s'ajoute le repos quotidien de 11 heures.",
     9
   );
   write(
-    'Le travail lors de la periode de repos hebdomadaire est remunere au taux horaire du, majore de 25 %.',
+    'Le travail lors de la période de repos hebdomadaire est rémunéré au taux horaire majoré de 25 %.',
     9
   );
   br(14);
 
-  // ===== SECTION 6 : JOURS FERIES =====
-  write('6. Jours feries', 12, true);
+  // ===== SECTION 6 : JOURS FÉRIÉS =====
+  write('6. Jours fériés', 12, true);
   br(6);
-  write('Le 1er mai est chome.', 9);
+  write('Le 1er mai est chômé.', 9);
   br(4);
   write(
-    'Les jours feries ordinaires suivants sont chomes : 1er janvier, Lundi de Paques, 8 mai,',
+    'Les jours fériés ordinaires suivants sont chômés : 1er janvier, Lundi de Pâques, 8 mai,',
     9
   );
   write(
-    "Jeudi de l'Ascension, Lundi de Pentecote, 14 juillet, 15 aout, 1er novembre, 11 novembre, 25 decembre.",
+    "Jeudi de l'Ascension, Lundi de Pentecôte, 14 juillet, 15 août, 1er novembre, 11 novembre, 25 décembre.",
     9
   );
   br(4);
   write(
-    'Le jour ferie chome qui tombe un jour habituellement travaille par le salarie est remunere.',
+    'Le jour férié chômé qui tombe un jour habituellement travaillé par le salarié est rémunéré.',
     9
   );
   write(
-    'En contrepartie du travail un jour ferie ordinaire, le salarie percoit une remuneration majoree de 10 %',
+    'En contrepartie du travail un jour férié ordinaire, le salarié perçoit une rémunération majorée de 10 %',
     9
   );
-  write('calculee sur la base du salaire habituel fixe au present contrat.', 9);
+  write('calculée sur la base du salaire habituel fixé au présent contrat.', 9);
   br(14);
 
-  // ===== SECTION 7 : REMUNERATION =====
-  write('7. Remuneration', 12, true);
+  // ===== SECTION 7 : RÉMUNÉRATION =====
+  write('7. Rémunération', 12, true);
   br(6);
   write(
-    `Le salaire net est majore de 10 % au titre des conges payes. Le salaire net horaire de base est de : ${salaireHoraireNet.toFixed(2)} EUR.`,
+    `Le salaire net est majoré de 10 % au titre des congés payés. Le salaire net horaire de base est de : ${salaireHoraireNet.toFixed(2)} €.`,
     9
   );
   br(8);
 
-  write('Remuneration ou recuperation des heures supplementaires', 10, true);
+  write('Rémunération ou récupération des heures supplémentaires', 10, true);
   write(
-    'Les heures de travail excedant une duree hebdomadaire de 40 heures sont remunerees au taux horaire',
+    'Les heures de travail excédant une durée hebdomadaire de 40 heures sont rémunérées au taux horaire',
     9
   );
-  write("normal majore de 25 % au-dela de la 40e heure et jusqu'a la 48e heure incluse,", 9);
+  write("normal majoré de 25 % au-delà de la 40e heure et jusqu'à la 48e heure incluse,", 9);
   write('et de 50 % pour la 49e heure et la 50e heure de travail.', 9);
   br(8);
 
-  write('Indemnites kilometriques', 10, true);
+  write('Indemnités kilométriques', 10, true);
   write(
-    'Si le salarie est amene a utiliser son vehicule personnel pour les besoins de son activite',
+    'Si le salarié est amené à utiliser son véhicule personnel pour les besoins de son activité',
     9
   );
   write(
-    "professionnelle, il beneficie d'une indemnite kilometrique sur la base suivante : 0,636 EUR/km.",
+    "professionnelle, il bénéficie d'une indemnité kilométrique sur la base suivante : 0,636 €/km.",
     9
   );
   br(14);
 
-  // ===== SECTION 8 : CONFIDENTIALITE =====
-  write('8. Confidentialite', 12, true);
+  // ===== SECTION 8 : CONFIDENTIALITÉ =====
+  write('8. Confidentialité', 12, true);
   br(6);
   write(
-    "Les parties s'engagent a conserver confidentielles les informations personnelles transmises entre elles",
+    "Les parties s'engagent à conserver confidentielles les informations personnelles transmises entre elles",
     9
   );
   write(
-    "dans le cadre de l'execution du present contrat. Elles prennent les mesures necessaires pour garantir",
+    "dans le cadre de l'exécution du présent contrat. Elles prennent les mesures nécessaires pour garantir",
     9
   );
-  write('cette confidentialite.', 9);
+  write('cette confidentialité.', 9);
   br(24);
 
   // ===== SIGNATURES =====
@@ -293,11 +293,11 @@ export async function generateContractParticulierPDF(
 
   const today = new Date().toLocaleDateString('fr-FR');
   write(`Date : ${today}`, 9);
-  write('Fait a Thouare-sur-Loire', 9);
+  write('Fait à Thouaré-sur-Loire', 9);
   br(28);
 
   const sigLabelY = y;
-  write('Signature salarie :', 9);
+  write('Signature salarié :', 9);
   writeRight('Signature employeur :', 9, sigLabelY);
 
   // Yousign fields: Florence (salarié) on left, client (employeur) on right
