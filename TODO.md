@@ -9,8 +9,13 @@
 
 ## Site vitrine — Contenu & UX
 - [ ] **Logo Arythme Ethic** — agrandir le logo dans la nav (composants/Nav.tsx), attention au rendu mobile (vérifier breakpoints Chakra `base`/`md`)
-- [ ] **Photos cours particuliers & accompagnement** — remplacer les photos actuelles par des photos libres de droits (Unsplash, Pexels). Visibles dans `app/page.tsx` aux sections "Cours particuliers" (~l.368) et "Accompagnement" (~l.432)
-- [ ] **Bandeau "Ils m'ont fait confiance"** — ajouter une nouvelle section entre "Mon Offre" (~l.600) et "En vidéo" (~l.690) dans `app/page.tsx`. Carousel défilement automatique avec logos d'écoles (logos à fournir par Florence)
+- [ ] **Photos cours particuliers & accompagnement** — remplacer les photos actuelles dans `app/page.tsx` :
+  - Section "Cours particuliers" (~l.368) → utiliser `/public/concours.jpg`
+  - Section "Accompagnement" (~l.432) → utiliser `/public/autonomie.jpg`
+- [ ] **Bandeau "Ils m'ont fait confiance"** — ajouter une nouvelle section entre "Mon Offre" (~l.600) et "En vidéo" (~l.690) dans `app/page.tsx`. Carousel défilement automatique avec les logos suivants (déjà dans `/public/`) :
+  - `/public/ECAM.jpg`
+  - `/public/ISEN.jpg`
+  - `/public/St_Felix.png`
 - [ ] **Mention CVEC** — dans la section "Clients professionnels — Établissements et associations" (~l.553 dans `app/page.tsx`), préciser que les ateliers de compétences psychosociales peuvent être financés par la CVEC
 
 ## Avis Google
