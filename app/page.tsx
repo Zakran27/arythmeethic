@@ -184,7 +184,7 @@ export default function HomePage() {
                 <Image
                   src="/logo.jpg"
                   alt="A Rythme Ethic"
-                  h="72px"
+                  h={{ base: '120px', md: '160px', lg: '200px' }}
                   borderRadius="lg"
                   alignSelf="flex-start"
                 />
