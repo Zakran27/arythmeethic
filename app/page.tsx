@@ -364,7 +364,7 @@ export default function HomePage() {
                       flexShrink={0}
                     >
                       <Image
-                        src="/concours.jpg"
+                        src="/DSC08964.JPG"
                         alt="Cours particuliers"
                         w="100%"
                         h="100%"
@@ -428,7 +428,7 @@ export default function HomePage() {
                     >
                       <Box h="200px" overflow="hidden">
                         <Image
-                          src="/autonomie.jpg"
+                          src="/concours.jpg"
                           alt="Accompagnement entrée en école d'ingénieur"
                           w="100%"
                           h="100%"
@@ -476,7 +476,7 @@ export default function HomePage() {
                     >
                       <Box h="200px" overflow="hidden">
                         <Image
-                          src="/DSC08929.JPG"
+                          src="/autonomie.jpg"
                           alt="Parcours Envol"
                           w="100%"
                           h="100%"
