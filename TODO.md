@@ -1,27 +1,19 @@
 # TODO
 
 ## Backoffice / Contractualisation
-- [ ] Téléchargement du contrat signé (PDF) — bouton dans l'admin pour les procédures terminées
-- [ ] Ajouter une preview embed du PDF dans la modale de lancement de contractualisation
+- [x] Téléchargement du contrat signé (PDF) — bouton dans l'admin (fetch live DocuSeal)
+- [x] Preview embed du PDF dans la modale de lancement de contractualisation
 - [ ] Tester avec une autre adresse mail pour vérifier le fonctionnement des emails de signature
 
 ## Site vitrine — Contenu & UX
 *(toutes les tâches ci-dessous sont terminées — section conservée pour mémoire)*
 
 ## Avis Google
-- [ ] **Carousel d'avis Google** — afficher les vrais avis Google avec un carousel défilement auto. Pistes :
-  - Google Places API (Place Details endpoint, retourne jusqu'à 5 avis) — clé API + restriction par domaine, payant au-delà du quota gratuit
-  - Service tiers type Elfsight, Trustmary, ReviewsOnMyWebsite (widget intégrable, abonnement mensuel)
-  - Scrape manuel + stockage Supabase + rafraîchissement périodique (gratuit mais fragile)
-  - **Recommandé :** Google Places API via une route Next.js qui cache les résultats côté serveur (revalidate 24h) pour éviter les coûts
+- [x] **Avis Google** — collés manuellement via le back-office (`/admin/avis`), stockés dans Supabase (`google_reviews`), affichés en carousel sur la home
 
 ## Référencement (SEO)
-- [ ] Améliorer le référencement :
-  - Métadonnées (title, description, og:image) via API `metadata` Next.js sur chaque page
-  - Sitemap automatique via `app/sitemap.ts`
-  - `robots.txt` via `app/robots.ts`
-  - Soumettre à Google Search Console (vérification du domaine + sitemap)
-  - Données structurées JSON-LD (LocalBusiness, Person)
+- [x] Métadonnées enrichies (`app/layout.tsx`), sitemap (`app/sitemap.ts`), robots (`app/robots.ts`), JSON-LD LocalBusiness
+- [ ] Soumettre à Google Search Console (vérification du domaine + sitemap) — action manuelle Florence/Thomas
 
 ## Autonomie de Florence
 - [ ] **Permettre à Florence de modifier le site vitrine seule** — pistes à explorer :

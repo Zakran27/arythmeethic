@@ -527,7 +527,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   br(4);
   write('[Nom, prénom, qualité, signature, tampon]', 9, false, 0, true);
 
-  // Yousign fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
+  // DocuSeal fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
   const signaturePage = pdfDoc.getPageCount();
   const signatureX = MARGIN; // left column — donneur d'ordre
   const signatureY = sigLabelY - 80;

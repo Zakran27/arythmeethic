@@ -154,7 +154,7 @@ export interface Procedure {
   client_id: string;
   procedure_type_id: string;
   status: ProcStatus;
-  yousign_procedure_id?: string;
+  docuseal_submission_id?: string;
   deadline_at?: string;
   signed_at?: string;
   created_at: string;

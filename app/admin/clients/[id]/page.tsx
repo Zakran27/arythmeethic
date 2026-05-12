@@ -200,6 +200,130 @@ export default function ClientDetailPage() {
 
   const schoolYearOptions = getSchoolYearOptions();
 
+  const contractProcedures = useMemo(
+    () =>
+      procedures.filter(
+        p => p.procedure_type?.code === 'CONTRACTUALISATION' && p.docuseal_submission_id
+      ),
+    [procedures]
+  );
+
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [ecolePreviewUrl, setEcolePreviewUrl] = useState<string | null>(null);
+  const [particulierPreviewUrl, setParticulierPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (ecolePreviewUrl) URL.revokeObjectURL(ecolePreviewUrl);
+      if (particulierPreviewUrl) URL.revokeObjectURL(particulierPreviewUrl);
+    };
+  }, [ecolePreviewUrl, particulierPreviewUrl]);
+
+  const handlePreviewEcole = async () => {
+    if (!selectedAnneeScolaire) {
+      toast({ title: 'Année scolaire requise', status: 'warning', duration: 2500 });
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const res = await fetch('/api/procedures/contractualisation-ecole/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          anneeScolaire: selectedAnneeScolaire,
+          tarifHoraireHT: contractTarifEcole || null,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erreur');
+      const blob = await res.blob();
+      if (ecolePreviewUrl) URL.revokeObjectURL(ecolePreviewUrl);
+      setEcolePreviewUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      toast({ title: 'Aperçu impossible', description: String(e), status: 'error', duration: 3500 });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handlePreviewParticulier = async () => {
+    if (
+      !selectedContractualisationParticulierSigner ||
+      !selectedAnneeScolaire ||
+      !contractDateDebut ||
+      !contractDateFin ||
+      !contractSalaireHoraireNet
+    ) {
+      toast({ title: 'Tous les champs sont requis', status: 'warning', duration: 2500 });
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const [signerEmail, signerFirstName, signerLastName, signerPhone] =
+        selectedContractualisationParticulierSigner.split('|');
+      const res = await fetch('/api/procedures/contractualisation-particulier/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          anneeScolaire: selectedAnneeScolaire,
+          dateDebut: contractDateDebut,
+          dateFin: contractDateFin,
+          salaireHoraireNet: contractSalaireHoraireNet,
+          signerEmail,
+          signerFirstName,
+          signerLastName,
+          signerPhone,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Erreur');
+      const blob = await res.blob();
+      if (particulierPreviewUrl) URL.revokeObjectURL(particulierPreviewUrl);
+      setParticulierPreviewUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      toast({ title: 'Aperçu impossible', description: String(e), status: 'error', duration: 3500 });
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+  const handleDownloadSignedPdf = useCallback(
+    async (procedureId: string) => {
+      setDownloadingPdf(procedureId);
+      try {
+        const res = await fetch(`/api/procedures/${procedureId}/signed-pdf`);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          toast({
+            title: 'Téléchargement impossible',
+            description:
+              res.status === 409
+                ? 'Le contrat n\'est pas encore signé par toutes les parties.'
+                : data.error || 'Erreur',
+            status: res.status === 409 ? 'info' : 'error',
+            duration: 4000,
+          });
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contrat_signe_${procedureId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        toast({ title: 'Erreur', description: String(e), status: 'error', duration: 4000 });
+      } finally {
+        setDownloadingPdf(null);
+      }
+    },
+    [toast]
+  );
+
   // Pagination for procedure history
   const paginatedHistory = useMemo(() => {
     const start = (historyPage - 1) * ITEMS_PER_PAGE;
@@ -1820,6 +1944,59 @@ export default function ClientDetailPage() {
         </CardBody>
       </Card>
 
+      {contractProcedures.length > 0 && (
+        <Card bg="white">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
+                Contrats signés ({contractProcedures.length})
+              </Heading>
+              <Stack spacing={2}>
+                {contractProcedures.map(p => (
+                  <Stack
+                    key={p.id}
+                    direction={{ base: 'column', md: 'row' }}
+                    py={2}
+                    px={3}
+                    bg="gray.50"
+                    borderRadius="md"
+                    justify="space-between"
+                    align={{ base: 'flex-start', md: 'center' }}
+                    spacing={2}
+                  >
+                    <Stack spacing={0} flex={1} minW={0}>
+                      <Text fontWeight="medium" fontSize="sm">
+                        {p.procedure_type?.label || 'Contractualisation'}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        {new Date(p.created_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </Text>
+                    </Stack>
+                    <Button
+                      size="sm"
+                      colorScheme="accent"
+                      variant="outline"
+                      isLoading={downloadingPdf === p.id}
+                      onClick={() => handleDownloadSignedPdf(p.id)}
+                    >
+                      Télécharger le contrat signé
+                    </Button>
+                  </Stack>
+                ))}
+              </Stack>
+              <Text fontSize="xs" color="gray.500">
+                Le PDF est récupéré directement depuis DocuSeal. Si toutes les parties n&apos;ont pas
+                encore signé, le téléchargement sera indisponible.
+              </Text>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       <Card bg="white">
         <CardBody>
           <Stack spacing={4}>
@@ -2549,6 +2726,42 @@ export default function ClientDetailPage() {
               Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
               document.
             </Text>
+
+            <Box mt={4}>
+              <Button
+                size="sm"
+                variant="outline"
+                colorScheme="brand"
+                onClick={handlePreviewEcole}
+                isLoading={previewLoading}
+                isDisabled={!selectedAnneeScolaire}
+              >
+                Aperçu du contrat (PDF)
+              </Button>
+              {ecolePreviewUrl && (
+                <Box mt={3}>
+                  <Box
+                    as="iframe"
+                    src={ecolePreviewUrl}
+                    w="100%"
+                    h={{ base: '320px', md: '500px' }}
+                    border="1px solid"
+                    borderColor="gray.200"
+                    borderRadius="md"
+                    title="Aperçu du contrat"
+                  />
+                  <Button
+                    mt={2}
+                    size="xs"
+                    variant="link"
+                    colorScheme="accent"
+                    onClick={() => window.open(ecolePreviewUrl, '_blank')}
+                  >
+                    Ouvrir dans un nouvel onglet
+                  </Button>
+                </Box>
+              )}
+            </Box>
           </ModalBody>
           <ModalFooter>
             <Button
@@ -2560,6 +2773,10 @@ export default function ClientDetailPage() {
                 setSelectedAnneeScolaire('');
                 setContractTarifEcole('');
                 setContractAnnexeFiles([]);
+                if (ecolePreviewUrl) {
+                  URL.revokeObjectURL(ecolePreviewUrl);
+                  setEcolePreviewUrl(null);
+                }
               }}
             >
               Annuler
@@ -2693,6 +2910,48 @@ export default function ClientDetailPage() {
                 Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
                 contrat de travail CDD.
               </Text>
+
+              <Box>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  colorScheme="brand"
+                  onClick={handlePreviewParticulier}
+                  isLoading={previewLoading}
+                  isDisabled={
+                    !selectedContractualisationParticulierSigner ||
+                    !selectedAnneeScolaire ||
+                    !contractDateDebut ||
+                    !contractDateFin ||
+                    !contractSalaireHoraireNet
+                  }
+                >
+                  Aperçu du contrat (PDF)
+                </Button>
+                {particulierPreviewUrl && (
+                  <Box mt={3}>
+                    <Box
+                      as="iframe"
+                      src={particulierPreviewUrl}
+                      w="100%"
+                      h={{ base: '320px', md: '500px' }}
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="md"
+                      title="Aperçu du contrat"
+                    />
+                    <Button
+                      mt={2}
+                      size="xs"
+                      variant="link"
+                      colorScheme="accent"
+                      onClick={() => window.open(particulierPreviewUrl, '_blank')}
+                    >
+                      Ouvrir dans un nouvel onglet
+                    </Button>
+                  </Box>
+                )}
+              </Box>
             </VStack>
           </ModalBody>
           <ModalFooter>
@@ -2706,6 +2965,10 @@ export default function ClientDetailPage() {
                 setContractDateDebut('');
                 setContractDateFin('');
                 setContractSalaireHoraireNet('');
+                if (particulierPreviewUrl) {
+                  URL.revokeObjectURL(particulierPreviewUrl);
+                  setParticulierPreviewUrl(null);
+                }
               }}
             >
               Annuler
