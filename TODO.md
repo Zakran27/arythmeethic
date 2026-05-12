@@ -3,7 +3,7 @@
 ## Backoffice / Contractualisation
 - [x] Téléchargement du contrat signé (PDF) - bouton dans l'admin (fetch live DocuSeal)
 - [x] Preview embed du PDF dans la modale de lancement de contractualisation
-- [ ] Tester avec une autre adresse mail pour vérifier le fonctionnement des emails de signature
+- [x] Tester avec une autre adresse mail pour vérifier le fonctionnement des emails de signature
 
 ## Site vitrine - Contenu & UX
 *(toutes les tâches ci-dessous sont terminées - section conservée pour mémoire)*
