@@ -115,7 +115,7 @@ async function sendSignatureEmail({
       htmlContent,
     }),
   });
-  console.log(`[Brevo] Email signature envoyé à ${to} — status: ${res.status}`);
+  console.log(`[Brevo] Email signature envoyé à ${to} - status: ${res.status}`);
   if (!res.ok) {
     const err = await res.text();
     console.error('[Brevo] Erreur:', err);

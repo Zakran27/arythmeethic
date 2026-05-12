@@ -520,7 +520,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write(`Fait à Thouaré-sur-Loire le ${today}`, 10, true);
   br(28);
 
-  // "Le donneur d'ordre," on the left, "Le sous-traitant," on the right — same y
+  // "Le donneur d'ordre," on the left, "Le sous-traitant," on the right - same y
   const sigLabelY = y;
   write("Le donneur d'ordre,", 9);
   writeRight('Le sous-traitant,', 9, sigLabelY);
@@ -529,9 +529,9 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
 
   // DocuSeal fields: client (donneur d'ordre) on left, Florence (sous-traitant) on right
   const signaturePage = pdfDoc.getPageCount();
-  const signatureX = MARGIN; // left column — donneur d'ordre
+  const signatureX = MARGIN; // left column - donneur d'ordre
   const signatureY = sigLabelY - 80;
-  const florenceSignatureX = MARGIN + 250; // right column — sous-traitant
+  const florenceSignatureX = MARGIN + 250; // right column - sous-traitant
   const florenceSignatureY = sigLabelY - 80;
 
   const pdfBytes = await pdfDoc.save();

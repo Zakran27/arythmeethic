@@ -88,7 +88,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <Flex minH="100vh" maxW="100vw" overflow="hidden">
-      {/* ── Sidebar — desktop only ── */}
+      {/* ── Sidebar - desktop only ── */}
       <Box
         display={{ base: 'none', md: 'flex' }}
         w={SIDEBAR_W}
@@ -169,7 +169,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           zIndex={99}
         >
           <HStack justify="space-between">
-            {/* Burger — mobile only */}
+            {/* Burger - mobile only */}
             <IconButton
               display={{ base: 'flex', md: 'none' }}
               aria-label="Menu"
@@ -185,7 +185,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               size="sm"
             />
 
-            {/* Logo — mobile only (center) */}
+            {/* Logo - mobile only (center) */}
             <HStack
               display={{ base: 'flex', md: 'none' }}
               spacing={2}
@@ -202,7 +202,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             {/* Spacer on mobile to push Déconnexion right */}
             <Box display={{ base: 'block', md: 'none' }} flex={1} />
 
-            {/* Déconnexion — desktop */}
+            {/* Déconnexion - desktop */}
             <Button
               display={{ base: 'none', md: 'flex' }}
               size="sm"

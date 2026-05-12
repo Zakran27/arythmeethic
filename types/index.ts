@@ -129,7 +129,7 @@ export interface Client {
   // Facturation
   ecole_facturation_date_max_paiement?: number;
   ecole_periode_facturation?: 'fin_mois_en_cours' | 'mois_suivant';
-  // Particulier — tarif, distance, démarche
+  // Particulier - tarif, distance, démarche
   tarif_horaire?: number;
   distance_km?: number;
   demarche_volontaire?: boolean;

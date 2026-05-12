@@ -1,4 +1,4 @@
-# Section Avis — Documentation
+# Section Avis - Documentation
 
 ## Emplacement dans la page
 

@@ -385,7 +385,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
 
-              {/* Step 1 — Type d'accompagnement */}
+              {/* Step 1 - Type d'accompagnement */}
               <FormControl isRequired>
                 <FormLabel>Type d'accompagnement</FormLabel>
                 <Select
@@ -399,7 +399,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                 </Select>
               </FormControl>
 
-              {/* Step 2 — "Vous êtes" uniquement pour cours/accompagnement */}
+              {/* Step 2 - "Vous êtes" uniquement pour cours/accompagnement */}
               {['cours_particulier', 'accompagnement_uniquement'].includes(formData.serviceType) && (
                 <FormControl isRequired>
                   <FormLabel>Vous êtes</FormLabel>
@@ -417,7 +417,7 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               {/* Champs spécifiques au profil */}
               {renderFormFields()}
 
-              {/* Boutons — visibles uniquement quand le formulaire est prêt */}
+              {/* Boutons - visibles uniquement quand le formulaire est prêt */}
               {showButtons && (
                 <Stack direction="row" spacing={3} pt={2}>
                   <Button onClick={onClose} variant="ghost" flex={1}>

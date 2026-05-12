@@ -302,9 +302,9 @@ export async function generateContractParticulierPDF(
 
   // DocuSeal fields: Florence (salarié) on left, client (employeur) on right
   const signaturePage = pdfDoc.getPageCount();
-  const signatureX = MARGIN + 250; // right column — employeur
+  const signatureX = MARGIN + 250; // right column - employeur
   const signatureY = sigLabelY - 80;
-  const florenceSignatureX = MARGIN; // left column — salarié
+  const florenceSignatureX = MARGIN; // left column - salarié
   const florenceSignatureY = sigLabelY - 80;
 
   const pdfBytes = await pdfDoc.save();

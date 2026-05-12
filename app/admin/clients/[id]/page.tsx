@@ -933,7 +933,7 @@ export default function ClientDetailPage() {
                       ? 'Jeune / Élève'
                       : client.sub_type === 'Parent'
                         ? 'Parent'
-                        : '—'}
+                        : '-'}
                   </Text>
                 </GridItem>
               )}
@@ -942,7 +942,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Niveau
                   </Text>
-                  <Text fontWeight="medium">{client.niveau_eleve || '—'}</Text>
+                  <Text fontWeight="medium">{client.niveau_eleve || '-'}</Text>
                 </GridItem>
               )}
               {isParticulier && (
@@ -950,7 +950,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Type de demande
                   </Text>
-                  <Text fontWeight="medium">{client.demande_type || '—'}</Text>
+                  <Text fontWeight="medium">{client.demande_type || '-'}</Text>
                 </GridItem>
               )}
             </Grid>
@@ -975,20 +975,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.first_name_jeune || client.last_name_jeune
                       ? `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_jeune || '—'}</Text>
+                  <Text fontWeight="medium">{client.phone_jeune || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.email_jeune || '—'}</Text>
+                  <Text fontWeight="medium">{client.email_jeune || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1008,20 +1008,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.first_name_parent1 || client.last_name_parent1
                       ? `${client.first_name_parent1 || ''} ${client.last_name_parent1 || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_parent1 || '—'}</Text>
+                  <Text fontWeight="medium">{client.phone_parent1 || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.email_parent1 || '—'}</Text>
+                  <Text fontWeight="medium">{client.email_parent1 || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1041,20 +1041,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.first_name_parent2 || client.last_name_parent2
                       ? `${client.first_name_parent2 || ''} ${client.last_name_parent2 || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_parent2 || '—'}</Text>
+                  <Text fontWeight="medium">{client.phone_parent2 || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.email_parent2 || '—'}</Text>
+                  <Text fontWeight="medium">{client.email_parent2 || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1083,7 +1083,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone1 || '—'}</Text>
+                  <Text fontWeight="medium">{client.phone1 || '-'}</Text>
                 </GridItem>
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                   <Text fontSize="sm" color="gray.500">
@@ -1121,20 +1121,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.ecole_resp_modules_prenom || client.ecole_resp_modules_nom
                       ? `${client.ecole_resp_modules_prenom || ''} ${client.ecole_resp_modules_nom || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_modules_phone || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_modules_phone || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_modules_email || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_modules_email || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1154,20 +1154,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.ecole_resp_autorisation_prenom || client.ecole_resp_autorisation_nom
                       ? `${client.ecole_resp_autorisation_prenom || ''} ${client.ecole_resp_autorisation_nom || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_autorisation_email || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_autorisation_email || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1187,20 +1187,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.ecole_resp_facturation_prenom || client.ecole_resp_facturation_nom
                       ? `${client.ecole_resp_facturation_prenom || ''} ${client.ecole_resp_facturation_nom || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_facturation_email || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_facturation_email || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1220,20 +1220,20 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.ecole_resp_planning_prenom || client.ecole_resp_planning_nom
                       ? `${client.ecole_resp_planning_prenom || ''} ${client.ecole_resp_planning_nom || ''}`.trim()
-                      : '—'}
+                      : '-'}
                   </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_planning_phone || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_planning_phone || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_planning_email || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_resp_planning_email || '-'}</Text>
                 </Box>
               </Stack>
             </CardBody>
@@ -1254,25 +1254,25 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     N° SIRET
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_siret || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_siret || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     N° NDA
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_nda || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_nda || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Région d'obtention NDA
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_nda_region || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_nda_region || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Statut juridique
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_statut_juridique || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_statut_juridique || '-'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1294,14 +1294,14 @@ export default function ClientDetailPage() {
                     Frais du midi
                   </Text>
                   <Text fontWeight="medium">
-                    {client.ecole_frais_midi_montant ? `${client.ecole_frais_midi_montant} €` : '—'}
+                    {client.ecole_frais_midi_montant ? `${client.ecole_frais_midi_montant} €` : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Conditions
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_frais_midi_conditions || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_frais_midi_conditions || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
@@ -1319,7 +1319,7 @@ export default function ClientDetailPage() {
                     Prix au kilomètre
                   </Text>
                   <Text fontWeight="medium">
-                    {client.ecole_frais_km_prix ? `${client.ecole_frais_km_prix} €/km` : '—'}
+                    {client.ecole_frais_km_prix ? `${client.ecole_frais_km_prix} €/km` : '-'}
                   </Text>
                 </GridItem>
               </Grid>
@@ -1341,13 +1341,13 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Nom du module
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_module_nom || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_module_nom || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Nombre d'heures
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_module_heures || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_module_heures || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
@@ -1358,39 +1358,39 @@ export default function ClientDetailPage() {
                       ? 'Initiale / Alternance'
                       : client.ecole_formation_type === 'continue'
                         ? 'Continue'
-                        : '—'}
+                        : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Classe(s)
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_classes_noms || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_classes_noms || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Taille du groupe
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_groupe_taille || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_groupe_taille || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Évaluations min.
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_evaluation_nombre_min || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_evaluation_nombre_min || '-'}</Text>
                 </GridItem>
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                   <Text fontSize="sm" color="gray.500">
                     Période
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_module_periode || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_module_periode || '-'}</Text>
                 </GridItem>
               </Grid>
               <Box>
                 <Text fontSize="sm" color="gray.500">
                   Modalités d'évaluation
                 </Text>
-                <Text fontWeight="medium">{client.ecole_evaluation_modalites || '—'}</Text>
+                <Text fontWeight="medium">{client.ecole_evaluation_modalites || '-'}</Text>
               </Box>
             </Stack>
           </CardBody>
@@ -1410,19 +1410,19 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Prénom
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_enseignant_prenom || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_prenom || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Nom
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_enseignant_nom || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_nom || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Email
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_enseignant_email || '—'}</Text>
+                  <Text fontWeight="medium">{client.ecole_enseignant_email || '-'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1446,7 +1446,7 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.ecole_facturation_date_max_paiement
                       ? `Le ${client.ecole_facturation_date_max_paiement} du mois`
-                      : '—'}
+                      : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -1458,7 +1458,7 @@ export default function ClientDetailPage() {
                       ? 'Fin du mois en cours'
                       : client.ecole_periode_facturation === 'mois_suivant'
                         ? 'Mois suivant'
-                        : '—'}
+                        : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -1466,7 +1466,7 @@ export default function ClientDetailPage() {
                     Tarif horaire HT
                   </Text>
                   <Text fontWeight="medium">
-                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '—'}
+                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '-'}
                   </Text>
                 </GridItem>
               </Grid>
@@ -1487,7 +1487,7 @@ export default function ClientDetailPage() {
                 <Text fontSize="sm" color="gray.500">
                   Notes élèves saisies par
                 </Text>
-                <Text fontWeight="medium">{client.ecole_notes_saisies_par || '—'}</Text>
+                <Text fontWeight="medium">{client.ecole_notes_saisies_par || '-'}</Text>
               </Box>
 
               {client.ecole_notes_saisies_par === 'Personne tierce' && (
@@ -1503,20 +1503,20 @@ export default function ClientDetailPage() {
                       <Text fontWeight="medium">
                         {client.ecole_resp_notes_prenom || client.ecole_resp_notes_nom
                           ? `${client.ecole_resp_notes_prenom || ''} ${client.ecole_resp_notes_nom || ''}`.trim()
-                          : '—'}
+                          : '-'}
                       </Text>
                     </GridItem>
                     <GridItem>
                       <Text fontSize="sm" color="gray.500">
                         Téléphone
                       </Text>
-                      <Text fontWeight="medium">{client.ecole_resp_notes_phone || '—'}</Text>
+                      <Text fontWeight="medium">{client.ecole_resp_notes_phone || '-'}</Text>
                     </GridItem>
                     <GridItem colSpan={{ base: 1, md: 2 }}>
                       <Text fontSize="sm" color="gray.500">
                         Email
                       </Text>
-                      <Text fontWeight="medium">{client.ecole_resp_notes_email || '—'}</Text>
+                      <Text fontWeight="medium">{client.ecole_resp_notes_email || '-'}</Text>
                     </GridItem>
                   </Grid>
                 </>
@@ -1539,32 +1539,32 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Établissement scolaire
                   </Text>
-                  <Text fontWeight="medium">{client.etablissement_scolaire || '—'}</Text>
+                  <Text fontWeight="medium">{client.etablissement_scolaire || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Moyenne maths
                   </Text>
-                  <Text fontWeight="medium">{client.moyenne_maths || '—'}</Text>
+                  <Text fontWeight="medium">{client.moyenne_maths || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Moyenne générale
                   </Text>
-                  <Text fontWeight="medium">{client.moyenne_generale || '—'}</Text>
+                  <Text fontWeight="medium">{client.moyenne_generale || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Numéro CESU
                   </Text>
-                  <Text fontWeight="medium">{client.numero_cesu || '—'}</Text>
+                  <Text fontWeight="medium">{client.numero_cesu || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
                     Tarif horaire net
                   </Text>
                   <Text fontWeight="medium">
-                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '—'}
+                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '-'}
                   </Text>
                 </GridItem>
               </Grid>
@@ -1586,7 +1586,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Adresse des cours
                   </Text>
-                  <Text fontWeight="medium">{client.adresse_cours || '—'}</Text>
+                  <Text fontWeight="medium">{client.adresse_cours || '-'}</Text>
                 </GridItem>
                 <GridItem>
                   <Text fontSize="sm" color="gray.500">
@@ -1595,7 +1595,7 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.jours_disponibles && client.jours_disponibles.length > 0
                       ? client.jours_disponibles.join(', ')
-                      : '—'}
+                      : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -1603,7 +1603,7 @@ export default function ClientDetailPage() {
                     Distance domicile → cours
                   </Text>
                   <Text fontWeight="medium">
-                    {client.distance_km != null ? `${client.distance_km} km` : '—'}
+                    {client.distance_km != null ? `${client.distance_km} km` : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -1649,7 +1649,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Commentaire
                   </Text>
-                  <Text fontWeight="medium">{client.renouvellement_commentaire || '—'}</Text>
+                  <Text fontWeight="medium">{client.renouvellement_commentaire || '-'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1666,7 +1666,7 @@ export default function ClientDetailPage() {
                 Adresse
               </Heading>
               <Text fontWeight="medium">
-                {client.address_line1 || '—'}
+                {client.address_line1 || '-'}
                 {client.postal_code && (
                   <>
                     <br />
@@ -1782,7 +1782,7 @@ export default function ClientDetailPage() {
                               {total.toFixed(2)} €
                             </Td>
                             <Td isNumeric color={h.temps_a_reporter ? 'orange.500' : 'gray.400'}>
-                              {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '—'}
+                              {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '-'}
                             </Td>
                           </Tr>
                         );
@@ -2627,7 +2627,7 @@ export default function ClientDetailPage() {
             </FormControl>
 
             <FormControl mb={4}>
-              <FormLabel color="brand.600">Annexes (PDF) — optionnel</FormLabel>
+              <FormLabel color="brand.600">Annexes (PDF) - optionnel</FormLabel>
               <Input
                 type="file"
                 accept=".pdf"

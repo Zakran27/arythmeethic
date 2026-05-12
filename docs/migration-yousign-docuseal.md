@@ -13,8 +13,8 @@ Yousign exige un plan à ~106 €/mois pour accéder à l'API. DocuSeal Pro coû
 
 ### Ce qui n'a pas changé
 
-- Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) — inchangés
-- Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) — inchangés
+- Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) - inchangés
+- Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) - inchangés
 - La base de données : la colonne `yousign_procedure_id` a été renommée en `docuseal_submission_id` (migration appliquée), `yousign_file_id` supprimée
 
 ### Résumé technique
@@ -28,7 +28,7 @@ Les coordonnées de signature sont converties :
 
 ---
 
-## Variables d'environnement — Actions requises
+## Variables d'environnement - Actions requises
 
 ### Dans Vercel (Project Settings → Environment Variables)
 

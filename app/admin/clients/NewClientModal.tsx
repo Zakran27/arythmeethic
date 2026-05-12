@@ -74,7 +74,7 @@ const initialFormData = {
   ecole_resp_notes_phone: '',
   // École - Statut juridique
   ecole_statut_juridique: '',
-  // Particulier — tarif, distance, démarche
+  // Particulier - tarif, distance, démarche
   tarif_horaire: '',
   distance_km: '',
   demarche_volontaire: false,
