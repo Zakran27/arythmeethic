@@ -2582,6 +2582,8 @@ export default function ClientDetailPage() {
           setContractTarifEcole('');
         }}
         isCentered
+        size={{ base: 'md', md: '4xl' }}
+        scrollBehavior="inside"
       >
         <ModalOverlay />
         <ModalContent>
@@ -2808,7 +2810,8 @@ export default function ClientDetailPage() {
           setContractSalaireHoraireNet('');
         }}
         isCentered
-        size="lg"
+        size={{ base: 'lg', md: '4xl' }}
+        scrollBehavior="inside"
       >
         <ModalOverlay />
         <ModalContent>
@@ -2936,7 +2939,7 @@ export default function ClientDetailPage() {
                       as="iframe"
                       src={particulierPreviewUrl}
                       w="100%"
-                      h={{ base: '320px', md: '500px' }}
+                      h={{ base: '320px', md: '700px' }}
                       border="1px solid"
                       borderColor="gray.200"
                       borderRadius="md"
