@@ -111,7 +111,7 @@ async function sendSignatureEmail({
     body: JSON.stringify({
       sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
       to: [{ email: to, name: toName }],
-      subject: `A Rythme Ethic — Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`,
+      subject: `A Rythme Ethic - Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`,
       htmlContent,
     }),
   });
@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
           },
           {
             role: 'Florence',
-            email: 'florence.louazel@arythmeethic.fr',
+            email: 'zakran27@gmail.com', // TODO: remettre florence.louazel@arythmeethic.fr après tests
             name: 'Florence LOUAZEL',
             fields: { page: signaturePage, ...florenceCoords },
           },

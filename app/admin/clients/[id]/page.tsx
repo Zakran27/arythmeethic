@@ -226,14 +226,14 @@ export default function ClientDetailPage() {
     }
     setPreviewLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('clientId', clientId);
+      formData.append('anneeScolaire', selectedAnneeScolaire);
+      if (contractTarifEcole) formData.append('tarifHoraireHT', contractTarifEcole);
+      contractAnnexeFiles.forEach(f => formData.append('annexes', f));
       const res = await fetch('/api/procedures/contractualisation-ecole/preview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientId,
-          anneeScolaire: selectedAnneeScolaire,
-          tarifHoraireHT: contractTarifEcole || null,
-        }),
+        body: formData,
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Erreur');
       const blob = await res.blob();
@@ -1969,10 +1969,12 @@ export default function ClientDetailPage() {
                         {p.procedure_type?.label || 'Contractualisation'}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
-                        {new Date(p.created_at).toLocaleDateString('fr-FR', {
+                        {new Date(p.created_at).toLocaleString('fr-FR', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
                         })}
                       </Text>
                     </Stack>
