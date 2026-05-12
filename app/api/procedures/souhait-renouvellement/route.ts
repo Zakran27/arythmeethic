@@ -63,11 +63,6 @@ function generateRenewalEmailHtml(
   <meta name="supported-color-schemes" content="light only">
   <style>
     :root { color-scheme: light only; }
-    @media (prefers-color-scheme: dark) {
-      body, p, h1, h2, h3 { background-color: #fafafa !important; }
-      .email-wrapper { background-color: #fafafa !important; }
-      .email-content { background-color: #ffffff !important; }
-    }
   </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif; background-color: #fafafa;">
