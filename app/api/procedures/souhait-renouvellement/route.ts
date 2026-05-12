@@ -64,7 +64,7 @@ function generateRenewalEmailHtml(
   <style>
     :root { color-scheme: light only; }
     @media (prefers-color-scheme: dark) {
-      body, table, td, div, p, span, h1, h2, h3 { background-color: #fafafa !important; }
+      body, p, h1, h2, h3 { background-color: #fafafa !important; }
       .email-wrapper { background-color: #fafafa !important; }
       .email-content { background-color: #ffffff !important; }
     }
