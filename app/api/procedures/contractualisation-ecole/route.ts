@@ -83,9 +83,7 @@ async function sendSignatureEmail({
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center" style="padding:20px 0;">
-                  <a href="${signingLink}" style="display:inline-block;background-color:#2ba1bd;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-size:16px;font-weight:500;">
-                    Signer le document
-                  </a>
+                  <a href="${signingLink}" style="display: inline-block; background-color: #2ba1bd !important; color: #ffffff !important; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 500; mso-padding-alt: 0;"><span style="color: #ffffff !important; mso-text-raise: 0;">Signer le document</span></a>
                 </td>
               </tr>
             </table>

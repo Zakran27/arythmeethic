@@ -71,7 +71,7 @@ function generateRenewalEmailHtml(
   <style>
     :root { color-scheme: light only; }
     @media (prefers-color-scheme: dark) {
-      body, table, td, div, p, span, h1, h2, h3, a { background-color: #fafafa !important; }
+      body, table, td, div, p, span, h1, h2, h3 { background-color: #fafafa !important; }
       .email-wrapper { background-color: #fafafa !important; }
       .email-content { background-color: #ffffff !important; }
     }
@@ -114,9 +114,7 @@ function generateRenewalEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="${formUrl}" style="display: inline-block; background-color: #2ba1bd; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 500;">
-                      Donner ma réponse
-                    </a>
+                    <a href="${formUrl}" style="display: inline-block; background-color: #2ba1bd !important; color: #ffffff !important; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-size: 16px; font-weight: 500; mso-padding-alt: 0;"><span style="color: #ffffff !important; mso-text-raise: 0;">Donner ma réponse</span></a>
                   </td>
                 </tr>
               </table>
