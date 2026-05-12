@@ -6,12 +6,6 @@ import {
   Heading,
   HStack,
   Stack,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Text,
   Modal,
   ModalOverlay,
@@ -35,8 +29,9 @@ import {
   Card,
   CardBody,
 } from '@chakra-ui/react';
-import { FiEdit2, FiTrash2, FiPlus, FiStar } from 'react-icons/fi';
+import { FiTrash2, FiStar } from 'react-icons/fi';
 import { useEffect, useState } from 'react';
+import { DataTable } from '@/components/DataTable';
 
 interface Review {
   id: string;
@@ -75,6 +70,21 @@ const emptyForm: FormState = {
   display_order: 0,
   is_published: true,
 };
+
+function Stars({ n }: { n: number }) {
+  return (
+    <HStack spacing={0.5}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <FiStar
+          key={i}
+          fill={i < n ? '#f59e0b' : 'none'}
+          color={i < n ? '#f59e0b' : '#d1d5db'}
+          size={14}
+        />
+      ))}
+    </HStack>
+  );
+}
 
 export default function AvisPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -167,19 +177,6 @@ export default function AvisPage() {
     if ((await res.json()).success) fetchReviews();
   };
 
-  const renderStars = (n: number) => (
-    <HStack spacing={0.5}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <FiStar
-          key={i}
-          fill={i < n ? '#f59e0b' : 'none'}
-          color={i < n ? '#f59e0b' : '#d1d5db'}
-          size={14}
-        />
-      ))}
-    </HStack>
-  );
-
   return (
     <Stack spacing={6}>
       <Stack
@@ -188,125 +185,96 @@ export default function AvisPage() {
         align={{ base: 'stretch', md: 'center' }}
         spacing={3}
       >
-        <Box>
-          <Heading color="brand.500" fontFamily="heading">
-            Avis Google
-          </Heading>
-          <Text fontSize="sm" color="gray.500" mt={1}>
-            Avis collés manuellement depuis la fiche Google de Florence.
-          </Text>
-        </Box>
-        <Button colorScheme="accent" leftIcon={<FiPlus />} onClick={openCreate}>
-          Ajouter un avis
+        <Heading color="brand.500" fontFamily="heading">
+          Avis Google
+        </Heading>
+        <Button colorScheme="accent" onClick={openCreate}>
+          + Nouvel avis
         </Button>
       </Stack>
 
       {loading ? (
         <Box textAlign="center" py={10}>
-          <Spinner />
+          <Spinner size="xl" color="accent.500" />
         </Box>
       ) : reviews.length === 0 ? (
-        <Card>
+        <Card bg="white">
           <CardBody>
-            <Text textAlign="center" color="gray.500" py={6}>
-              Aucun avis pour le moment.
+            <Text color="brand.600" textAlign="center">
+              Aucun avis pour le moment
             </Text>
           </CardBody>
         </Card>
       ) : (
-        <>
-          {/* Desktop : tableau */}
-          <Box display={{ base: 'none', md: 'block' }} bg="white" borderRadius="md" overflow="hidden">
-            <Table size="sm">
-              <Thead bg="gray.50">
-                <Tr>
-                  <Th>Ordre</Th>
-                  <Th>Auteur</Th>
-                  <Th>Note</Th>
-                  <Th>Commentaire</Th>
-                  <Th>Publié</Th>
-                  <Th></Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {reviews.map(r => (
-                  <Tr key={r.id}>
-                    <Td>{r.display_order}</Td>
-                    <Td fontWeight="600">{r.author_name}</Td>
-                    <Td>{renderStars(r.rating)}</Td>
-                    <Td maxW="400px">
-                      <Text noOfLines={2} fontSize="sm">
-                        {r.comment}
-                      </Text>
-                    </Td>
-                    <Td>
-                      <Switch
-                        size="sm"
-                        isChecked={r.is_published}
-                        onChange={() => togglePublished(r)}
-                      />
-                    </Td>
-                    <Td>
-                      <HStack spacing={1}>
-                        <IconButton
-                          aria-label="Éditer"
-                          icon={<FiEdit2 />}
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openEdit(r)}
-                        />
-                        <IconButton
-                          aria-label="Supprimer"
-                          icon={<FiTrash2 />}
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="red"
-                          onClick={() => handleDelete(r.id)}
-                        />
-                      </HStack>
-                    </Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-
-          {/* Mobile : cards */}
-          <Stack spacing={3} display={{ base: 'flex', md: 'none' }}>
-            {reviews.map(r => (
-              <Card key={r.id}>
-                <CardBody>
-                  <Stack spacing={2}>
-                    <HStack justify="space-between">
-                      <Text fontWeight="600">{r.author_name}</Text>
-                      <Badge colorScheme={r.is_published ? 'green' : 'gray'}>
-                        {r.is_published ? 'Publié' : 'Masqué'}
-                      </Badge>
-                    </HStack>
-                    {renderStars(r.rating)}
-                    <Text fontSize="sm" color="gray.700" noOfLines={3}>
-                      {r.comment}
-                    </Text>
-                    <HStack spacing={2}>
-                      <Button size="xs" leftIcon={<FiEdit2 />} onClick={() => openEdit(r)}>
-                        Éditer
-                      </Button>
-                      <Button
-                        size="xs"
-                        colorScheme="red"
-                        variant="ghost"
-                        leftIcon={<FiTrash2 />}
-                        onClick={() => handleDelete(r.id)}
-                      >
-                        Supprimer
-                      </Button>
-                    </HStack>
-                  </Stack>
-                </CardBody>
-              </Card>
-            ))}
-          </Stack>
-        </>
+        <DataTable
+          columns={[
+            {
+              key: 'display_order',
+              label: 'Ordre',
+              sortable: true,
+              render: (r: Review) => r.display_order,
+            },
+            {
+              key: 'author_name',
+              label: 'Auteur',
+              sortable: true,
+              render: (r: Review) => r.author_name,
+            },
+            {
+              key: 'rating',
+              label: 'Note',
+              sortable: true,
+              render: (r: Review) => <Stars n={r.rating} />,
+            },
+            {
+              key: 'comment',
+              label: 'Commentaire',
+              render: (r: Review) => (
+                <Text noOfLines={2} fontSize="sm" maxW="400px">
+                  {r.comment}
+                </Text>
+              ),
+            },
+            {
+              key: 'is_published',
+              label: 'Statut',
+              sortable: true,
+              render: (r: Review) => (
+                <Badge
+                  colorScheme={r.is_published ? 'brand' : 'gray'}
+                  bg={r.is_published ? 'sand.200' : 'gray.100'}
+                  color={r.is_published ? 'brand.700' : 'gray.600'}
+                  cursor="pointer"
+                  onClick={e => {
+                    e.stopPropagation();
+                    togglePublished(r);
+                  }}
+                >
+                  {r.is_published ? 'Publié' : 'Masqué'}
+                </Badge>
+              ),
+            },
+            {
+              key: 'actions',
+              label: '',
+              render: (r: Review) => (
+                <IconButton
+                  aria-label="Supprimer"
+                  icon={<FiTrash2 />}
+                  size="sm"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleDelete(r.id);
+                  }}
+                />
+              ),
+            },
+          ]}
+          data={reviews}
+          onRowClick={openEdit}
+        />
       )}
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered scrollBehavior="inside">
