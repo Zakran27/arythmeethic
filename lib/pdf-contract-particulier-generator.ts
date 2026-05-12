@@ -300,7 +300,7 @@ export async function generateContractParticulierPDF(
   write('Signature salarié :', 9);
   writeRight('Signature employeur :', 9, sigLabelY);
 
-  // Yousign fields: Florence (salarié) on left, client (employeur) on right
+  // DocuSeal fields: Florence (salarié) on left, client (employeur) on right
   const signaturePage = pdfDoc.getPageCount();
   const signatureX = MARGIN + 250; // right column — employeur
   const signatureY = sigLabelY - 80;

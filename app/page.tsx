@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { Nav } from '@/components/Nav';
 import { ContactModal } from '@/components/ContactModal';
+import { GoogleReviewsCarousel } from '@/components/GoogleReviewsCarousel';
 import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from 'react';
 
 const PARTICULIER_STEPS = [
@@ -842,6 +843,9 @@ export default function HomePage() {
         </Container>
       </Box>
 
+
+      {/* ── AVIS GOOGLE ── */}
+      <GoogleReviewsCarousel />
 
       {/* ── CTA ── */}
       <Box bg="brand.500" py={{ base: 14, md: 20 }}>

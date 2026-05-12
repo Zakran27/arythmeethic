@@ -152,9 +152,8 @@ CREATE TABLE public.procedures (
   client_id uuid NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   procedure_type_id uuid NOT NULL REFERENCES public.procedure_types(id),
   status proc_status NOT NULL DEFAULT 'DRAFT',
-  -- YouSign integration (future)
-  yousign_procedure_id text,
-  yousign_file_id text,
+  -- DocuSeal integration
+  docuseal_submission_id text,
   deadline_at date,
   signed_at timestamptz,
   -- Timestamps

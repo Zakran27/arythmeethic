@@ -14,7 +14,8 @@ Yousign exige un plan à ~106 €/mois pour accéder à l'API. DocuSeal Pro coû
 ### Ce qui n'a pas changé
 
 - Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) — inchangés
-- La base de données — la colonne `yousign_procedure_id` est réutilisée pour stocker l'ID de soumission DocuSeal (pas de migration nécessaire)
+- Les générateurs PDF (`lib/pdf-contract-generator.ts`, `lib/pdf-contract-particulier-generator.ts`) — inchangés
+- La base de données : la colonne `yousign_procedure_id` a été renommée en `docuseal_submission_id` (migration appliquée), `yousign_file_id` supprimée
 
 ### Résumé technique
 

@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await supabase
         .from('procedures')
         .update({
-          yousign_procedure_id: submissionId,
+          docuseal_submission_id: submissionId,
           status: 'SIGN_REQUESTED',
         })
         .eq('id', newProcedure.id);

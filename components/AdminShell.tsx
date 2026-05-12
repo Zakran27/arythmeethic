@@ -22,7 +22,10 @@ import { createClient } from '@/lib/supabase-client';
 
 const SIDEBAR_W = '220px';
 
-const navItems = [{ label: 'Contacts', href: '/admin/clients' }];
+const navItems = [
+  { label: 'Contacts', href: '/admin/clients' },
+  { label: 'Avis Google', href: '/admin/avis' },
+];
 
 function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
   return (
