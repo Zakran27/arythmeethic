@@ -797,7 +797,7 @@ export default function HomePage() {
               </Heading>
             </Box>
             <Flex direction={{ base: 'column', lg: 'row' }} gap={{ base: 10, lg: 16 }} align="center">
-              {/* Placeholder vidéo — remplacer l'URL ci-dessous par l'URL YouTube/Vimeo */}
+              {/* Placeholder vidéo - remplacer l'URL ci-dessous par l'URL YouTube/Vimeo */}
               <Box
                 flex="1"
                 w="100%"

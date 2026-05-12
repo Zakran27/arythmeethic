@@ -59,16 +59,16 @@ export function HeuresRealiséesModal({
       : null;
 
   const montantHeures =
-    heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '—';
+    heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '-';
   const montantKm =
-    kmCalcules && baremeKm ? (parseFloat(kmCalcules) * parseFloat(baremeKm)).toFixed(2) : '—';
+    kmCalcules && baremeKm ? (parseFloat(kmCalcules) * parseFloat(baremeKm)).toFixed(2) : '-';
   const total =
     heures && tarifHoraire && kmCalcules && baremeKm
       ? (
           parseFloat(heures) * parseFloat(tarifHoraire) +
           parseFloat(kmCalcules) * parseFloat(baremeKm)
         ).toFixed(2)
-      : '—';
+      : '-';
 
   const handleSubmit = async () => {
     if (!mois || !heures || !tarifHoraire) {
@@ -192,7 +192,7 @@ export function HeuresRealiséesModal({
                     Km calculés{clientDistanceKm ? ` (${clientDistanceKm} km/dépl.)` : ''}
                   </FormLabel>
                   <Input
-                    value={kmCalcules !== null ? `${kmCalcules} km` : '— (distance non renseignée)'}
+                    value={kmCalcules !== null ? `${kmCalcules} km` : '- (distance non renseignée)'}
                     isReadOnly
                     bg="gray.50"
                     color={kmCalcules !== null ? 'inherit' : 'gray.400'}
@@ -232,15 +232,15 @@ export function HeuresRealiséesModal({
               <Grid templateColumns="1fr 1fr" gap={2}>
                 <Text color="gray.600">Montant heures :</Text>
                 <Text fontWeight="medium">
-                  {montantHeures !== '—' ? `${montantHeures} €` : '—'}
+                  {montantHeures !== '-' ? `${montantHeures} €` : '-'}
                 </Text>
                 <Text color="gray.600">Montant km :</Text>
-                <Text fontWeight="medium">{montantKm !== '—' ? `${montantKm} €` : '—'}</Text>
+                <Text fontWeight="medium">{montantKm !== '-' ? `${montantKm} €` : '-'}</Text>
                 <Text color="gray.600" fontWeight="bold">
                   Total :
                 </Text>
                 <Text fontWeight="bold" color="brand.500">
-                  {total !== '—' ? `${total} €` : '—'}
+                  {total !== '-' ? `${total} €` : '-'}
                 </Text>
               </Grid>
             </Stack>

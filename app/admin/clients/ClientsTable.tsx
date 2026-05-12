@@ -41,20 +41,20 @@ function getDisplayName(client: Client): string {
 // Helper function to get the display email based on client type
 function getDisplayEmail(client: Client): string {
   if (client.type_client === 'École') {
-    return client.email || '—';
+    return client.email || '-';
   }
 
   // For Particulier
   if (client.sub_type === 'Jeune') {
     // Show jeune's email first, then parent1's email as fallback
-    return client.email_jeune || client.email_parent1 || client.email || '—';
+    return client.email_jeune || client.email_parent1 || client.email || '-';
   } else if (client.sub_type === 'Parent') {
     // Show parent 1's email
-    return client.email_parent1 || client.email || '—';
+    return client.email_parent1 || client.email || '-';
   }
 
   // Fallback to main email
-  return client.email || '—';
+  return client.email || '-';
 }
 
 // Helper function to get the display type

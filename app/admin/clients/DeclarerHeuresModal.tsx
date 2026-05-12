@@ -62,10 +62,10 @@ function getClientDisplayName(client: Client): string {
 
 function getEmailOptions(client: Client): { label: string; value: string }[] {
   const opts: { label: string; value: string }[] = [];
-  if (client.email_parent1) opts.push({ label: `Parent 1 — ${client.email_parent1}`, value: client.email_parent1 });
-  if (client.email_parent2) opts.push({ label: `Parent 2 — ${client.email_parent2}`, value: client.email_parent2 });
-  if (client.email_jeune) opts.push({ label: `Jeune — ${client.email_jeune}`, value: client.email_jeune });
-  if (client.email) opts.push({ label: `Principal — ${client.email}`, value: client.email });
+  if (client.email_parent1) opts.push({ label: `Parent 1 - ${client.email_parent1}`, value: client.email_parent1 });
+  if (client.email_parent2) opts.push({ label: `Parent 2 - ${client.email_parent2}`, value: client.email_parent2 });
+  if (client.email_jeune) opts.push({ label: `Jeune - ${client.email_jeune}`, value: client.email_jeune });
+  if (client.email) opts.push({ label: `Principal - ${client.email}`, value: client.email });
   return opts;
 }
 

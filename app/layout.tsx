@@ -7,7 +7,7 @@ const SITE_URL = 'https://arythmeethic.fr';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'A Rythme Ethic — Cours particuliers & interventions en établissement à Nantes',
+    default: 'A Rythme Ethic - Cours particuliers & interventions en établissement à Nantes',
     template: '%s · A Rythme Ethic',
   },
   description:
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     apple: '/logo.jpg',
   },
   openGraph: {
-    title: 'A Rythme Ethic — Accompagnement humain et bienveillant',
+    title: 'A Rythme Ethic - Accompagnement humain et bienveillant',
     description:
       'Cours particuliers, soutien scolaire et ateliers pour les jeunes de 11 à 25 ans. Nantes Est & Thouaré-sur-Loire.',
     url: SITE_URL,
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'A Rythme Ethic',
     description:
-      'Cours particuliers et interventions en établissement à Nantes — Florence Louazel.',
+      'Cours particuliers et interventions en établissement à Nantes - Florence Louazel.',
     images: ['/logo.jpg'],
   },
   robots: {

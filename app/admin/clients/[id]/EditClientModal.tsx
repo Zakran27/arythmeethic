@@ -148,7 +148,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
     // Statut juridique
     ecole_statut_juridique: client.ecole_statut_juridique || '',
-    // Particulier — tarif, distance, démarche
+    // Particulier - tarif, distance, démarche
     tarif_horaire: client.tarif_horaire?.toString() || '',
     distance_km: client.distance_km?.toString() || '',
     demarche_volontaire: client.demarche_volontaire || false,
@@ -240,7 +240,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
       // Statut juridique
       ecole_statut_juridique: client.ecole_statut_juridique || '',
-      // Particulier — tarif et distance
+      // Particulier - tarif et distance
       tarif_horaire: client.tarif_horaire?.toString() || '',
       distance_km: client.distance_km?.toString() || '',
       demarche_volontaire: client.demarche_volontaire || false,
@@ -371,7 +371,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
           // Statut juridique
           ecole_statut_juridique: formData.ecole_statut_juridique || null,
-          // Particulier — tarif
+          // Particulier - tarif
           tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
           distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
           demarche_volontaire: formData.demarche_volontaire || false,

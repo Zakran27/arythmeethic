@@ -28,7 +28,7 @@ async function generateRecapPDF(entry: RecapEntry, moisLabel: string): Promise<B
   // Header
   page.drawText('A Rythme Ethic', { x: margin, y, size: 16, font: fontBold, color: rgb(0.4, 0.2, 0.1) });
   y -= 24;
-  page.drawText(`Récapitulatif des heures — ${moisLabel}`, { x: margin, y, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(`Récapitulatif des heures - ${moisLabel}`, { x: margin, y, size: 12, font, color: rgb(0.3, 0.3, 0.3) });
   y -= 30;
 
   // Divider
@@ -76,7 +76,7 @@ async function generateRecapPDF(entry: RecapEntry, moisLabel: string): Promise<B
   // Footer
   page.drawText('Cordialement,', { x: margin, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
   y -= 16;
-  page.drawText('Florence Louazel — A Rythme Ethic', { x: margin, y, size: 10, font: fontBold, color: rgb(0.4, 0.2, 0.1) });
+  page.drawText('Florence Louazel - A Rythme Ethic', { x: margin, y, size: 10, font: fontBold, color: rgb(0.4, 0.2, 0.1) });
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">Bonjour,</p>
               <p style="margin: 0 0 24px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Veuillez trouver ci-joint le récapitulatif des heures pour <strong>${entry.clientName}</strong> — <strong>${moisLabel}</strong>.
+                Veuillez trouver ci-joint le récapitulatif des heures pour <strong>${entry.clientName}</strong> - <strong>${moisLabel}</strong>.
               </p>
               <!-- Table -->
               <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 15px;">
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       const emailPayload = {
         sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
         to: [{ email: entry.parentEmail }],
-        subject: `Récapitulatif heures — ${entry.clientName} — ${moisLabel}`,
+        subject: `Récapitulatif heures - ${entry.clientName} - ${moisLabel}`,
         htmlContent,
         attachment: [
           {
