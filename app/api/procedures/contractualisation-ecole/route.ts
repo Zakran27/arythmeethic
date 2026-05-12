@@ -346,7 +346,7 @@ export async function POST(request: NextRequest) {
           },
           {
             role: 'Florence',
-            email: 'zakran27@gmail.com', // TODO: remettre florence.louazel@arythmeethic.fr après tests
+            email: 'florence.louazel@arythmeethic.fr',
             name: 'Florence LOUAZEL',
             fields: { page: signaturePage, ...florenceCoords },
           },
