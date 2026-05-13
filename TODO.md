@@ -26,6 +26,9 @@
   - **Page publique** `/formations` (ou slug équivalent) avec le titre `A Rythme Ethic se forme pour mieux vous accompagner`, affichant la liste de manière soignée
   - Bouton `A Rythme Ethic se forme pour mieux vous accompagner` à la fin du paragraphe "Découvrez qui je suis" sur la home, qui pointe vers cette nouvelle page
 
+## Authentification admin
+- [ ] **Ajouter "Mot de passe oublié"** sur la page de login admin - flow Supabase Auth `resetPasswordForEmail` + page `/auth/reset-password` pour saisir le nouveau mot de passe
+
 ## Emails - UX
 - [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
 - [ ] **Email avis Google** : ajouter une phrase invitant au bouche-à-oreille - *« Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous ! »* (template dans `app/api/formulaire/renouvellement` qui demande l'avis Google)
