@@ -15,6 +15,20 @@ const KIND_LABELS: Record<DocKind, string> = {
   FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat de travail',
 };
 
+const KIND_FILENAMES: Record<DocKind, string> = {
+  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Recu-solde-de-tout-compte',
+  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation-employeur',
+  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat-de-travail',
+};
+
+function slugify(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
 // GET — info procedure (state of uploaded docs) for the form page
 export async function GET(request: NextRequest) {
   try {
@@ -100,9 +114,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Fetch jeune name to build a clean filename
+    const { data: client } = await supabase
+      .from('clients')
+      .select('first_name_jeune, last_name_jeune')
+      .eq('id', procedure.client_id)
+      .single();
+    const jeuneSlug = client
+      ? slugify(`${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim())
+      : '';
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.name.split('.').pop() || 'pdf';
-    const storagePath = `fin-de-contrat/${procedure.client_id}/${procedure.id}/${kind}_${Date.now()}.${ext}`;
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+    const cleanBase = jeuneSlug
+      ? `${KIND_FILENAMES[kind]}-${jeuneSlug}`
+      : KIND_FILENAMES[kind];
+    const cleanFilename = `${cleanBase}.${ext}`;
+    const storagePath = `fin-de-contrat/${procedure.client_id}/${procedure.id}/${cleanBase}_${Date.now()}.${ext}`;
 
     // Remove previous version of the same kind for this procedure
     const { data: existing } = await supabase
@@ -130,7 +158,7 @@ export async function POST(request: NextRequest) {
       kind,
       title: KIND_LABELS[kind],
       storage_path: storagePath,
-      original_filename: file.name,
+      original_filename: cleanFilename,
       uploaded_by: 'CLIENT',
     });
 
