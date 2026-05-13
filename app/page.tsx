@@ -142,24 +142,9 @@ export default function HomePage() {
     'student'
   );
   const [activeTab, setActiveTab] = useState<'particulier' | 'accompagnement' | 'ecole'>('particulier');
-  const [autoRotate, setAutoRotate] = useState(true);
-  const tabsOrder = ['particulier', 'accompagnement', 'ecole'] as const;
-
-  // Auto-rotation des services (carousel défilant)
-  useEffect(() => {
-    if (!autoRotate) return;
-    const timer = setTimeout(() => {
-      setActiveTab(prev => {
-        const i = tabsOrder.indexOf(prev);
-        return tabsOrder[(i + 1) % tabsOrder.length];
-      });
-    }, 9000);
-    return () => clearTimeout(timer);
-  }, [activeTab, autoRotate]);
 
   const handleNavServiceClick = (tab: 'particulier' | 'accompagnement' | 'ecole') => {
     setActiveTab(tab);
-    setAutoRotate(false);
     setTimeout(() => {
       document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
     }, 0);
@@ -316,40 +301,38 @@ export default function HomePage() {
                 Une approche personnalisée pour chaque besoin
               </Text>
 
-              {/* Carousel indicator - dots */}
-              <Flex justify="center" align="center" gap={4}>
-                <HStack spacing={3}>
+              {/* Tab selector */}
+              <Flex justify="center">
+                <HStack
+                  bg="sand.100"
+                  borderRadius="full"
+                  p="4px"
+                  spacing={1}
+                  flexWrap={{ base: 'wrap', md: 'nowrap' }}
+                  justify="center"
+                >
                   {([
                     { key: 'particulier', label: 'Cours particuliers' },
                     { key: 'accompagnement', label: 'Accompagnement' },
                     { key: 'ecole', label: 'Établissements & associations' },
                   ] as const).map(({ key, label }) => (
-                    <Box
+                    <Button
                       key={key}
-                      as="button"
-                      onClick={() => {
-                        setActiveTab(key);
-                        setAutoRotate(false);
-                      }}
-                      aria-label={label}
-                      transition="all 0.2s"
-                      cursor="pointer"
-                      h="10px"
-                      w={activeTab === key ? '28px' : '10px'}
                       borderRadius="full"
-                      bg={activeTab === key ? 'brand.500' : 'sand.200'}
-                      _hover={{ bg: activeTab === key ? 'brand.600' : 'sand.300' }}
-                    />
+                      size="sm"
+                      bg={activeTab === key ? 'brand.500' : 'transparent'}
+                      color={activeTab === key ? 'white' : 'brand.500'}
+                      _hover={{ bg: activeTab === key ? 'brand.600' : 'sand.200' }}
+                      onClick={() => setActiveTab(key)}
+                      fontWeight="600"
+                      px={5}
+                      transition="all 0.2s"
+                    >
+                      {label}
+                    </Button>
                   ))}
                 </HStack>
               </Flex>
-              <Text fontSize="sm" color="brand.500" fontWeight="600" mt={3}>
-                {activeTab === 'particulier'
-                  ? 'Cours particuliers'
-                  : activeTab === 'accompagnement'
-                    ? 'Accompagnement'
-                    : 'Établissements & associations'}
-              </Text>
             </Box>
           </FadeUp>
 
