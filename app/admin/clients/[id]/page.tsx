@@ -307,10 +307,22 @@ export default function ClientDetailPage() {
           return;
         }
         const blob = await res.blob();
+        // Extract filename from Content-Disposition (server sets the proper name)
+        let filename = `contrat_${procedureId}.pdf`;
+        const cd = res.headers.get('content-disposition');
+        if (cd) {
+          const utf = /filename\*=UTF-8''([^;]+)/i.exec(cd);
+          if (utf) {
+            filename = decodeURIComponent(utf[1]);
+          } else {
+            const m = /filename="([^"]+)"/i.exec(cd);
+            if (m) filename = m[1];
+          }
+        }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `contrat_signe_${procedureId}.pdf`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1966,7 +1978,18 @@ export default function ClientDetailPage() {
                   >
                     <Stack spacing={0} flex={1} minW={0}>
                       <Text fontWeight="medium" fontSize="sm">
-                        {p.procedure_type?.label || 'Contractualisation'}
+                        {(() => {
+                          const d = new Date(p.created_at);
+                          const y = d.getFullYear();
+                          const m = d.getMonth() + 1;
+                          const schoolYear = m >= 9 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+                          const isEcole = client?.type_client === 'École';
+                          const label = isEcole
+                            ? client?.organisation || `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim()
+                            : `${client?.first_name_jeune || ''} ${client?.last_name_jeune || ''}`.trim() ||
+                              `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim();
+                          return `Contrat - ${label} - ${schoolYear}`;
+                        })()}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
                         {new Date(p.created_at).toLocaleString('fr-FR', {

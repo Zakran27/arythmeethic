@@ -95,8 +95,9 @@ async function sendSignatureEmail({
         </tr>
         <tr>
           <td style="padding:30px 40px;background-color:#f9f3ee;border-radius:0 0 16px 16px;text-align:center;">
-            <p style="margin:0;color:#6e3a25;font-size:14px;font-weight:600;">Florence Louazel</p>
+            <a href="https://arythmeethic.fr" style="text-decoration:none;color:inherit;display:block;"><p style="margin:0;color:#6e3a25;font-size:14px;font-weight:600;">Florence Louazel</p>
             <p style="margin:5px 0 0 0;color:#a97761;font-size:13px;">A Rythme Ethic</p>
+            </a>
           </td>
         </tr>
       </table>
@@ -333,9 +334,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      const contractName = `Contrat - ${client.organisation || client.last_name} - ${anneeScolaire}`;
       const { submissionId, signers: submitters } = await createDocusealSubmission({
         pdfBuffer,
-        filename: `contractualisation_${client.id}.pdf`,
+        filename: `${contractName}.pdf`,
         annexes: annexeBuffers,
         signers: [
           {

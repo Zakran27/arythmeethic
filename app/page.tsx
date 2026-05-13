@@ -12,6 +12,7 @@ import {
   HStack,
   useDisclosure,
 } from '@chakra-ui/react';
+import Link from 'next/link';
 import { Nav } from '@/components/Nav';
 import { ContactModal } from '@/components/ContactModal';
 import { GoogleReviewsCarousel } from '@/components/GoogleReviewsCarousel';
@@ -774,7 +775,7 @@ export default function HomePage() {
 
       {/* ── DÉCOUVREZ QUI JE SUIS ── */}
       <Box id="decouvrir" bg="#faf6f2" py={{ base: 16, md: 24 }}>
-        <Container maxW="container.xl">
+        <Container maxW="container.md">
           <FadeUp>
             <Box textAlign="center" mb={10}>
               <Text
@@ -785,7 +786,7 @@ export default function HomePage() {
                 letterSpacing="widest"
                 mb={3}
               >
-                En vidéo
+                À propos
               </Text>
               <Heading
                 as="h2"
@@ -796,49 +797,46 @@ export default function HomePage() {
                 Découvrez qui je suis
               </Heading>
             </Box>
-            <Flex direction={{ base: 'column', lg: 'row' }} gap={{ base: 10, lg: 16 }} align="center">
-              {/* Placeholder vidéo - remplacer l'URL ci-dessous par l'URL YouTube/Vimeo */}
-              <Box
-                flex="1"
-                w="100%"
-                borderRadius="2xl"
-                overflow="hidden"
-                boxShadow="xl"
-                bg="brand.100"
-                aspectRatio={16 / 9}
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text color="brand.400" fontSize="lg" fontWeight="500">
-                  Vidéo à venir
-                </Text>
+            <Stack spacing={5}>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
+                Ingénieure généraliste de formation, je suis passionnée par la transmission depuis le début de mes
+                études. J&apos;ai créé A Rythme Ethic avec l&apos;envie de proposer un accompagnement à la fois
+                complet, humain et profondément personnalisé pour les jeunes de 11 à 25 ans.
+              </Text>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
+                Depuis mes débuts en tant que formatrice, mon objectif est de transmettre bien plus que des
+                connaissances : aider les jeunes à mieux se connaître, développer leur autonomie intellectuelle et
+                retrouver le plaisir d&apos;apprendre. J&apos;accorde une place essentielle à une approche ludique
+                et enthousiasmante, pour que la curiosité et la joie restent au cœur de chaque parcours.
+              </Text>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
+                Le lien humain a toujours été une grande source d&apos;inspiration pour moi. Aujourd&apos;hui, je
+                souhaite offrir aux jeunes cet espace de confiance et de soutien pour les accompagner dans les
+                étapes clés de leur vie.
+              </Text>
+              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
+                Je suis formatrice en matières techniques dans l&apos;enseignement supérieur et j&apos;anime
+                également des ateliers de compétences psychosociales, en individuel ou en groupe, pour les
+                particuliers, les établissements et les associations étudiantes.
+              </Text>
+              <Box textAlign="center" pt={4}>
+                <Link href="/formations">
+                  <Button
+                    size="lg"
+                    colorScheme="accent"
+                    variant="outline"
+                    _hover={{ bg: 'accent.500', color: 'white', transform: 'translateY(-2px)', shadow: 'lg' }}
+                    transition="all 0.2s"
+                    whiteSpace="normal"
+                    height="auto"
+                    py={4}
+                    px={8}
+                  >
+                    A Rythme Ethic se forme pour mieux vous accompagner
+                  </Button>
+                </Link>
               </Box>
-              {/* Description */}
-              <Stack flex="1" spacing={5}>
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
-                  Ingénieure généraliste de formation, je suis passionnée par la transmission depuis le début de mes
-                  études. J&apos;ai créé A Rythme Ethic avec l&apos;envie de proposer un accompagnement à la fois
-                  complet, humain et profondément personnalisé pour les jeunes de 11 à 25 ans.
-                </Text>
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
-                  Depuis mes débuts en tant que formatrice, mon objectif est de transmettre bien plus que des
-                  connaissances : aider les jeunes à mieux se connaître, développer leur autonomie intellectuelle et
-                  retrouver le plaisir d&apos;apprendre. J&apos;accorde une place essentielle à une approche ludique
-                  et enthousiasmante, pour que la curiosité et la joie restent au cœur de chaque parcours.
-                </Text>
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
-                  Le lien humain a toujours été une grande source d&apos;inspiration pour moi. Aujourd&apos;hui, je
-                  souhaite offrir aux jeunes cet espace de confiance et de soutien pour les accompagner dans les
-                  étapes clés de leur vie.
-                </Text>
-                <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" lineHeight="1.9" textAlign="justify">
-                  Je suis formatrice en matières techniques dans l&apos;enseignement supérieur et j&apos;anime
-                  également des ateliers de compétences psychosociales, en individuel ou en groupe, pour les
-                  particuliers, les établissements et les associations étudiantes.
-                </Text>
-              </Stack>
-            </Flex>
+            </Stack>
           </FadeUp>
         </Container>
       </Box>

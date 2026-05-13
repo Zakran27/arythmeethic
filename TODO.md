@@ -13,8 +13,8 @@
 
 ## Référencement (SEO)
 - [x] Métadonnées enrichies (`app/layout.tsx`), sitemap (`app/sitemap.ts`), robots (`app/robots.ts`), JSON-LD LocalBusiness
-- [ ] Soumettre à Google Search Console (vérification du domaine + sitemap) - action manuelle Florence/Thomas
-- [ ] **Chercher comment faire des trucs dans Search Console** (rapports d'indexation, requêtes performantes, etc. - rédiger un guide pour Florence)
+- [x] Soumettre à Google Search Console (vérification du domaine + sitemap)
+- [x] Search Console connecté
 
 ## Site vitrine - Évolutions
 - [ ] **Carousel défilant pour les matières** (page d'accueil section services) - actuellement trop de boutons à cliquer, transformer en carousel auto-scroll comme pour les avis Google
@@ -34,7 +34,7 @@
 - [ ] **Email avis Google** : ajouter une phrase invitant au bouche-à-oreille - *« Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous ! »* (template dans `app/api/formulaire/renouvellement` qui demande l'avis Google)
 
 ## DocuSeal
-- [ ] **Chercher comment désactiver les emails automatiques de DocuSeal** (on veut que ce soit uniquement Brevo qui envoie les emails de signature, pas DocuSeal en doublon)
+- [x] Désactivation des emails automatiques DocuSeal vérifiée
 
 ## Autonomie de Florence
 - [ ] **Rendre Florence autonome sur les modifs du site vitrine** - pistes :
@@ -53,16 +53,23 @@
   - Particulier : `Contrat - {nom de l'élève} - {année scolaire}`
 
 ## Procédure "Fin de contrat" (Particulier)
-- [ ] **Créer la procédure de fin de contrat pour les particuliers** :
-  - Étape 1 : email d'annonce de fin de contrat avec récap
-  - Étape 2 : envoi automatique du relevé annuel des heures réalisées avec le jeune *(si pas déjà envoyé manuellement - vérifier l'envoi de récap des heures déjà en place dans `app/api/heures-realisees/recap-email`)*
-  - Étape 3 : email avec procédure expliquant comment mettre fin au contrat côté CESU (lien officiel) + demande de retourner les 3 documents signés :
-    - Attestation simplifiée des particuliers employeurs
-    - Certificat de travail
-    - Reçu pour solde de tout compte
-  - Étape 4 : **formulaire d'upload** côté client (lien tokenisé envoyé par email) pour qu'il dépose les 3 documents
-  - Étape 5 : **relance auto tous les 3 jours à 18h** tant que les documents n'ont pas été uploadés (cron, comme la relance renouvellement)
-  - Étape 6 : envoi d'un questionnaire de satisfaction + demande d'avis Google (réutiliser le template d'email de `app/api/formulaire/renouvellement` qui demande déjà un avis Google)
+- [ ] **Créer la procédure de fin de contrat** - 2 modes de lancement :
+  - **A. Manuel** : bouton "Fin de contrat" dans la fiche client → modale (comme les autres procédures) pour choisir le destinataire de l'email
+  - **B. Automatique** : déclenchée si la procédure "Souhait de renouvellement" reçoit une réponse "Non" (pas de souhait de renouveler)
+  - Étape 1 : email "Fin de contrat" envoyé au destinataire, contenu :
+    - "Bonjour [prénom], l'accompagnement de votre enfant touche à sa fin."
+    - Lien CESU pour démarches de fin de contrat : https://www.cesu.urssaf.fr/info/accueil/question-du-moment/comment-gerer-la-fin-de-contrat.html
+    - Demande de joindre les 3 documents via un formulaire d'upload (lien tokenisé) :
+      - Reçu pour solde de tout compte
+      - Attestation employeur (= Attestation simplifiée des particuliers employeurs)
+      - Certificat de travail
+    - Mention que Florence retournera les documents signés
+    - Phrase de remerciement + mention que Florence fait des sessions de révisions Brevet/BAC ponctuelles
+  - Étape 2 : formulaire d'upload côté client (route `/formulaire/fin-de-contrat/[token]`) — 3 emplacements pour les 3 documents
+  - Étape 3 : **relance auto tous les 3 jours à 18h** tant que les 3 documents ne sont pas uploadés (cron, comme renouvellement-relance)
+  - **PAS d'envoi de questionnaire de satisfaction** ici
+  - **PAS d'envoi du mail avis Google** ici (déjà fait dans la procédure renouvellement avant cette étape, on évite le doublon)
+  - L'envoi du récap des heures n'est PAS automatique dans cette procédure (le récap est déjà déclenchable manuellement depuis l'admin via `app/api/heures-realisees/recap-email`)
 
 ## Mise en ligne sur arythmeethic.fr
 > Contexte : site Next.js déployé sur Vercel (auto-deploy depuis main). Florence a un compte Microsoft 365
