@@ -30,6 +30,9 @@
   - **Option robuste :** intégrer un CMS headless (Sanity, Contentful, Payload, ou Supabase + interface admin custom)
   - **À décider** selon le niveau d'autonomie souhaité et le budget
 
+## Contrats - mise à jour
+- [ ] **Nouvelle version du contrat professionnel (école)** disponible - mettre à jour le générateur PDF `lib/pdf-contract-generator.ts` avec la nouvelle version fournie par Florence
+
 ## Contrats - nommage
 - [ ] **Renommer les contrats partout** (génération PDF, écran de signature DocuSeal, liste "Contrats signés" dans l'admin) :
   - École : `Contrat - {nom école} - {année scolaire}`
