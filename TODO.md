@@ -16,6 +16,9 @@
 - [ ] Soumettre à Google Search Console (vérification du domaine + sitemap) - action manuelle Florence/Thomas
 - [ ] **Chercher comment faire des trucs dans Search Console** (rapports d'indexation, requêtes performantes, etc. - rédiger un guide pour Florence)
 
+## Emails - UX
+- [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
+
 ## DocuSeal
 - [ ] **Chercher comment désactiver les emails automatiques de DocuSeal** (on veut que ce soit uniquement Brevo qui envoie les emails de signature, pas DocuSeal en doublon)
 
