@@ -10,6 +10,7 @@ import {
   Flex,
   Image,
   HStack,
+  Tooltip,
   useDisclosure,
 } from '@chakra-ui/react';
 import Link from 'next/link';
@@ -651,75 +652,70 @@ export default function HomePage() {
                 }}
               >
                 {[0, 1].map(setIdx => (
-                  <Box key={`set-${setIdx}`} display="flex" gap={4} flexShrink={0}>
+                  <Box key={`set-${setIdx}`} display="flex" gap={6} flexShrink={0} alignItems="center">
                     {[
                       { label: 'Mathématiques', icon: '📐' },
                       { label: 'Dessin industriel', icon: '📏' },
                       { label: 'Rhétorique', icon: '🗣️' },
                       { label: 'Éducation financière', icon: '💰' },
                       { label: 'Management de projets', icon: '📋' },
-                    ].map(m => (
-                      <Box
-                        key={`${setIdx}-${m.label}`}
-                        bg="white"
-                        borderRadius="xl"
-                        px={6}
-                        py={5}
-                        boxShadow="sm"
-                        border="1px solid"
-                        borderColor="sand.200"
-                        textAlign="center"
-                        minW="180px"
-                        flexShrink={0}
-                      >
-                        <Text fontSize="2xl">{m.icon}</Text>
-                        <Text fontWeight="600" color="brand.500" mt={2}>
-                          {m.label}
-                        </Text>
-                      </Box>
-                    ))}
-                    <Box
-                      bg="white"
-                      borderRadius="xl"
-                      px={6}
-                      py={5}
-                      boxShadow="sm"
-                      border="1px solid"
-                      borderColor="sand.200"
-                      minW="240px"
-                      maxW="280px"
-                      flexShrink={0}
-                    >
-                      <Text fontSize="2xl" textAlign="center">🎯</Text>
-                      <Text fontWeight="600" color="brand.500" mt={2} textAlign="center">
-                        Ateliers
-                      </Text>
-                      <Stack spacing={1} mt={3}>
-                        {['Connaissance de soi', 'Posture professionnelle', 'Communication professionnelle', 'Méthodologie de travail'].map(item => (
-                          <Text key={item} fontSize="xs" color="brand.400">· {item}</Text>
-                        ))}
-                      </Stack>
-                    </Box>
-                    <Box
-                      bg="brand.50"
-                      borderRadius="xl"
-                      px={6}
-                      py={5}
-                      boxShadow="sm"
-                      border="1px solid"
-                      borderColor="brand.100"
-                      textAlign="center"
-                      minW="180px"
-                      flexShrink={0}
-                    >
-                      <Text fontSize="2xl">✉️</Text>
-                      <Text fontWeight="600" color="brand.500" mt={2}>
-                        Et d&apos;autres…
-                      </Text>
-                      <Text fontSize="xs" color="brand.400" mt={1}>
-                        Me contacter
-                      </Text>
-                    </Box>
+                      {
+                        label: 'Ateliers',
+                        icon: '🎯',
+                        tooltip: [
+                          'Connaissance de soi',
+                          'Posture professionnelle',
+                          'Communication professionnelle',
+                          'Méthodologie de travail',
+                        ],
+                      },
+                      { label: 'Et d’autres…', icon: '✉️', muted: true },
+                    ].map(m => {
+                      const item = (
+                        <Flex
+                          align="center"
+                          gap={3}
+                          px={2}
+                          flexShrink={0}
+                          opacity={m.muted ? 0.75 : 1}
+                          cursor={m.tooltip ? 'help' : 'default'}
+                          borderBottom={m.tooltip ? '1px dashed' : 'none'}
+                          borderColor="brand.200"
+                        >
+                          <Text fontSize="2xl">{m.icon}</Text>
+                          <Text fontWeight="600" color="brand.500" whiteSpace="nowrap">
+                            {m.label}
+                          </Text>
+                        </Flex>
+                      );
+                      if (m.tooltip) {
+                        return (
+                          <Tooltip
+                            key={`${setIdx}-${m.label}`}
+                            hasArrow
+                            placement="top"
+                            bg="white"
+                            color="brand.600"
+                            border="1px solid"
+                            borderColor="sand.200"
+                            borderRadius="md"
+                            px={4}
+                            py={3}
+                            boxShadow="md"
+                            label={
+                              <Stack spacing={1}>
+                                {m.tooltip.map(t => (
+                                  <Text key={t} fontSize="sm">· {t}</Text>
+                                ))}
+                              </Stack>
+                            }
+                          >
+                            {item}
+                          </Tooltip>
+                        );
+                      }
+                      return <Box key={`${setIdx}-${m.label}`}>{item}</Box>;
+                    })}
                   </Box>
                 ))}
               </Box>
