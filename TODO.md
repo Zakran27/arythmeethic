@@ -14,13 +14,34 @@
 ## Référencement (SEO)
 - [x] Métadonnées enrichies (`app/layout.tsx`), sitemap (`app/sitemap.ts`), robots (`app/robots.ts`), JSON-LD LocalBusiness
 - [ ] Soumettre à Google Search Console (vérification du domaine + sitemap) - action manuelle Florence/Thomas
+- [ ] **Chercher comment faire des trucs dans Search Console** (rapports d'indexation, requêtes performantes, etc. - rédiger un guide pour Florence)
+
+## DocuSeal
+- [ ] **Chercher comment désactiver les emails automatiques de DocuSeal** (on veut que ce soit uniquement Brevo qui envoie les emails de signature, pas DocuSeal en doublon)
 
 ## Autonomie de Florence
-- [ ] **Permettre à Florence de modifier le site vitrine seule** - pistes à explorer :
-  - **Option simple :** créer une formation/doc Markdown lui expliquant comment éditer `app/page.tsx` via GitHub web UI (déploiement auto Vercel) - convient pour modifs textuelles
+- [ ] **Rendre Florence autonome sur les modifs du site vitrine** - pistes :
+  - **Option simple :** doc Markdown expliquant comment éditer `app/page.tsx` via GitHub web UI (déploiement auto Vercel)
   - **Option médiane :** extraire les textes du site dans des fichiers JSON ou MDX éditables, garder le code séparé
-  - **Option robuste :** intégrer un CMS headless (Sanity, Contentful, Payload, ou Supabase + interface admin custom) - Florence édite via une interface graphique, pas de code
+  - **Option robuste :** intégrer un CMS headless (Sanity, Contentful, Payload, ou Supabase + interface admin custom)
   - **À décider** selon le niveau d'autonomie souhaité et le budget
+
+## Contrats - nommage
+- [ ] **Renommer les contrats partout** (génération PDF, écran de signature DocuSeal, liste "Contrats signés" dans l'admin) :
+  - École : `Contrat - {nom école} - {année scolaire}`
+  - Particulier : `Contrat - {nom de l'élève} - {année scolaire}`
+
+## Procédure "Fin de contrat" (Particulier)
+- [ ] **Créer la procédure de fin de contrat pour les particuliers** :
+  - Étape 1 : email d'annonce de fin de contrat avec récap
+  - Étape 2 : envoi automatique du relevé annuel des heures réalisées avec le jeune *(si pas déjà envoyé manuellement - vérifier l'envoi de récap des heures déjà en place dans `app/api/heures-realisees/recap-email`)*
+  - Étape 3 : email avec procédure expliquant comment mettre fin au contrat côté CESU (lien officiel) + demande de retourner les 3 documents signés :
+    - Attestation simplifiée des particuliers employeurs
+    - Certificat de travail
+    - Reçu pour solde de tout compte
+  - Étape 4 : **formulaire d'upload** côté client (lien tokenisé envoyé par email) pour qu'il dépose les 3 documents
+  - Étape 5 : **relance auto tous les 3 jours à 18h** tant que les documents n'ont pas été uploadés (cron, comme la relance renouvellement)
+  - Étape 6 : envoi d'un questionnaire de satisfaction + demande d'avis Google (réutiliser le template d'email de `app/api/formulaire/renouvellement` qui demande déjà un avis Google)
 
 ## Mise en ligne sur arythmeethic.fr
 > Contexte : site Next.js déployé sur Vercel (auto-deploy depuis main). Florence a un compte Microsoft 365
