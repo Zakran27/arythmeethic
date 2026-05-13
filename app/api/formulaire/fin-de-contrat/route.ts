@@ -51,11 +51,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Lien expiré' }, { status: 410 });
       }
     }
+    const labelToKind: Record<string, DocKind> = Object.fromEntries(
+      (Object.entries(KIND_LABELS) as [DocKind, string][]).map(([k, label]) => [label, k])
+    );
     const { data: docs } = await supabase
       .from('documents')
-      .select('id, kind, original_filename, created_at')
+      .select('id, title, original_filename, created_at')
       .eq('procedure_id', procedure.id)
-      .in('kind', REQUIRED_KINDS as unknown as string[]);
+      .eq('kind', 'SUPPORTING_DOC')
+      .in('title', Object.values(KIND_LABELS));
 
     const uploaded: Record<DocKind, { filename: string; uploadedAt: string } | null> = {
       FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: null,
@@ -63,8 +67,8 @@ export async function GET(request: NextRequest) {
       FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: null,
     };
     for (const d of docs ?? []) {
-      const k = d.kind as DocKind;
-      if (k in uploaded) {
+      const k = labelToKind[d.title];
+      if (k) {
         uploaded[k] = { filename: d.original_filename || 'document.pdf', uploadedAt: d.created_at };
       }
     }
@@ -132,12 +136,13 @@ export async function POST(request: NextRequest) {
     const cleanFilename = `${cleanBase}.${ext}`;
     const storagePath = `fin-de-contrat/${procedure.client_id}/${procedure.id}/${cleanBase}_${Date.now()}.${ext}`;
 
-    // Remove previous version of the same kind for this procedure
+    // Remove previous version of the same doc-type for this procedure (matched by title)
     const { data: existing } = await supabase
       .from('documents')
       .select('id, storage_path')
       .eq('procedure_id', procedure.id)
-      .eq('kind', kind);
+      .eq('kind', 'SUPPORTING_DOC')
+      .eq('title', KIND_LABELS[kind]);
     for (const d of existing ?? []) {
       if (d.storage_path) {
         await supabase.storage.from('client-files').remove([d.storage_path]);
@@ -153,23 +158,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Erreur upload' }, { status: 500 });
     }
 
-    await supabase.from('documents').insert({
+    const { error: insertError } = await supabase.from('documents').insert({
       procedure_id: procedure.id,
-      kind,
+      kind: 'SUPPORTING_DOC',
       title: KIND_LABELS[kind],
       storage_path: storagePath,
       original_filename: cleanFilename,
       uploaded_by: 'CLIENT',
     });
+    if (insertError) {
+      console.error('Document insert error:', insertError);
+      await supabase.storage.from('client-files').remove([storagePath]);
+      return NextResponse.json(
+        { success: false, error: 'Erreur enregistrement document' },
+        { status: 500 }
+      );
+    }
 
     // Check if all 3 docs are now uploaded → mark procedure as SIGNED (=completed)
     const { data: allDocs } = await supabase
       .from('documents')
-      .select('kind')
+      .select('title')
       .eq('procedure_id', procedure.id)
-      .in('kind', REQUIRED_KINDS as unknown as string[]);
-    const uploadedKinds = new Set((allDocs ?? []).map(d => d.kind));
-    const allDone = REQUIRED_KINDS.every(k => uploadedKinds.has(k));
+      .eq('kind', 'SUPPORTING_DOC')
+      .in('title', Object.values(KIND_LABELS));
+    const uploadedTitles = new Set((allDocs ?? []).map(d => d.title));
+    const allDone = REQUIRED_KINDS.every(k => uploadedTitles.has(KIND_LABELS[k]));
     if (allDone && procedure.status !== 'SIGNED') {
       await supabase
         .from('procedures')
