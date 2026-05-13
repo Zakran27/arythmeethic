@@ -643,67 +643,104 @@ export default function HomePage() {
                 Matières enseignées
               </Heading>
             </Box>
-            <Flex flexWrap="wrap" gap={4} justify="center">
-              {[
-                { label: 'Mathématiques', icon: '📐' },
-                { label: 'Dessin industriel', icon: '📏' },
-                { label: 'Rhétorique', icon: '🗣️' },
-                { label: 'Éducation financière', icon: '💰' },
-                { label: 'Management de projets', icon: '📋' },
-              ].map(m => (
-                <Box
-                  key={m.label}
-                  bg="white"
-                  borderRadius="xl"
-                  px={6}
-                  py={5}
-                  boxShadow="sm"
-                  border="1px solid"
-                  borderColor="sand.200"
-                  textAlign="center"
-                  minW="160px"
-                >
-                  <Text fontSize="2xl">{m.icon}</Text>
-                  <Text fontWeight="600" color="brand.500" mt={2}>{m.label}</Text>
-                </Box>
-              ))}
-              {/* Ateliers */}
+            <Box
+              overflow="hidden"
+              position="relative"
+              maxW="100%"
+              sx={{
+                maskImage:
+                  'linear-gradient(to right, transparent 0, black 80px, black calc(100% - 80px), transparent 100%)',
+                WebkitMaskImage:
+                  'linear-gradient(to right, transparent 0, black 80px, black calc(100% - 80px), transparent 100%)',
+              }}
+            >
               <Box
-                bg="white"
-                borderRadius="xl"
-                px={6}
-                py={5}
-                boxShadow="sm"
-                border="1px solid"
-                borderColor="sand.200"
-                minW="220px"
-                maxW="280px"
+                display="flex"
+                width="max-content"
+                gap={4}
+                sx={{
+                  animation: 'matieresScroll 32s linear infinite',
+                  '@keyframes matieresScroll': {
+                    from: { transform: 'translateX(0)' },
+                    to: { transform: 'translateX(-50%)' },
+                  },
+                  '&:hover': { animationPlayState: 'paused' },
+                }}
               >
-                <Text fontSize="2xl" textAlign="center">🎯</Text>
-                <Text fontWeight="600" color="brand.500" mt={2} textAlign="center">Ateliers</Text>
-                <Stack spacing={1} mt={3}>
-                  {['Connaissance de soi', 'Posture professionnelle', 'Communication professionnelle', 'Méthodologie de travail'].map(item => (
-                    <Text key={item} fontSize="xs" color="brand.400">· {item}</Text>
-                  ))}
-                </Stack>
+                {[0, 1].map(setIdx => (
+                  <Box key={`set-${setIdx}`} display="flex" gap={4} flexShrink={0}>
+                    {[
+                      { label: 'Mathématiques', icon: '📐' },
+                      { label: 'Dessin industriel', icon: '📏' },
+                      { label: 'Rhétorique', icon: '🗣️' },
+                      { label: 'Éducation financière', icon: '💰' },
+                      { label: 'Management de projets', icon: '📋' },
+                    ].map(m => (
+                      <Box
+                        key={`${setIdx}-${m.label}`}
+                        bg="white"
+                        borderRadius="xl"
+                        px={6}
+                        py={5}
+                        boxShadow="sm"
+                        border="1px solid"
+                        borderColor="sand.200"
+                        textAlign="center"
+                        minW="180px"
+                        flexShrink={0}
+                      >
+                        <Text fontSize="2xl">{m.icon}</Text>
+                        <Text fontWeight="600" color="brand.500" mt={2}>
+                          {m.label}
+                        </Text>
+                      </Box>
+                    ))}
+                    <Box
+                      bg="white"
+                      borderRadius="xl"
+                      px={6}
+                      py={5}
+                      boxShadow="sm"
+                      border="1px solid"
+                      borderColor="sand.200"
+                      minW="240px"
+                      maxW="280px"
+                      flexShrink={0}
+                    >
+                      <Text fontSize="2xl" textAlign="center">🎯</Text>
+                      <Text fontWeight="600" color="brand.500" mt={2} textAlign="center">
+                        Ateliers
+                      </Text>
+                      <Stack spacing={1} mt={3}>
+                        {['Connaissance de soi', 'Posture professionnelle', 'Communication professionnelle', 'Méthodologie de travail'].map(item => (
+                          <Text key={item} fontSize="xs" color="brand.400">· {item}</Text>
+                        ))}
+                      </Stack>
+                    </Box>
+                    <Box
+                      bg="brand.50"
+                      borderRadius="xl"
+                      px={6}
+                      py={5}
+                      boxShadow="sm"
+                      border="1px solid"
+                      borderColor="brand.100"
+                      textAlign="center"
+                      minW="180px"
+                      flexShrink={0}
+                    >
+                      <Text fontSize="2xl">✉️</Text>
+                      <Text fontWeight="600" color="brand.500" mt={2}>
+                        Et d&apos;autres…
+                      </Text>
+                      <Text fontSize="xs" color="brand.400" mt={1}>
+                        Me contacter
+                      </Text>
+                    </Box>
+                  </Box>
+                ))}
               </Box>
-              {/* Et d'autres */}
-              <Box
-                bg="brand.50"
-                borderRadius="xl"
-                px={6}
-                py={5}
-                boxShadow="sm"
-                border="1px solid"
-                borderColor="brand.100"
-                textAlign="center"
-                minW="160px"
-              >
-                <Text fontSize="2xl">✉️</Text>
-                <Text fontWeight="600" color="brand.500" mt={2}>Et d&apos;autres…</Text>
-                <Text fontSize="xs" color="brand.400" mt={1}>Me contacter pour en savoir plus</Text>
-              </Box>
-            </Flex>
+            </Box>
           </FadeUp>
         </Container>
       </Box>
