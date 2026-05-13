@@ -32,6 +32,7 @@
 
 ## Contrats - mise à jour
 - [ ] **Nouvelle version du contrat professionnel (école)** disponible - mettre à jour le générateur PDF `lib/pdf-contract-generator.ts` avec la nouvelle version fournie par Florence
+- [ ] **PDF contrat particulier** : ajouter un saut de page entre la section 4 et la section 5 (`lib/pdf-contract-particulier-generator.ts`)
 
 ## Contrats - nommage
 - [ ] **Renommer les contrats partout** (génération PDF, écran de signature DocuSeal, liste "Contrats signés" dans l'admin) :
