@@ -120,14 +120,15 @@ export async function GET(request: NextRequest) {
         skipped++;
         continue;
       }
-      // Get uploaded docs for this procedure
+      // Get uploaded docs for this procedure (stored with kind='SUPPORTING_DOC', type in title)
       const { data: docs } = await supabase
         .from('documents')
-        .select('kind')
+        .select('title')
         .eq('procedure_id', p.id)
-        .in('kind', REQUIRED_KINDS);
-      const have = new Set((docs ?? []).map(d => d.kind));
-      const missing = REQUIRED_KINDS.filter(k => !have.has(k));
+        .eq('kind', 'SUPPORTING_DOC')
+        .in('title', Object.values(KIND_LABELS));
+      const haveTitles = new Set((docs ?? []).map(d => d.title));
+      const missing = REQUIRED_KINDS.filter(k => !haveTitles.has(KIND_LABELS[k]));
       if (missing.length === 0) {
         // shouldn't happen (procedure would be SIGNED) - skip
         skipped++;
