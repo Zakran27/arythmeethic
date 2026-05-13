@@ -14,13 +14,32 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const supabase = createServiceRoleClient();
     const { data: procedure, error } = await supabase
       .from('procedures')
-      .select('id, docuseal_submission_id, client_id')
+      .select('id, docuseal_submission_id, client_id, created_at, client:clients(organisation, type_client, first_name, last_name, first_name_jeune, last_name_jeune)')
       .eq('id', id)
       .single();
 
     if (error || !procedure) {
       return NextResponse.json({ success: false, error: 'Procédure introuvable' }, { status: 404 });
     }
+    const c = procedure.client as unknown as {
+      organisation: string | null;
+      type_client: string;
+      first_name: string | null;
+      last_name: string | null;
+      first_name_jeune: string | null;
+      last_name_jeune: string | null;
+    } | null;
+    const created = new Date(procedure.created_at);
+    const y = created.getFullYear();
+    const m = created.getMonth() + 1;
+    const schoolYear = m >= 9 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+    const isEcole = c?.type_client === 'École';
+    const label = isEcole
+      ? c?.organisation || `${c?.first_name ?? ''} ${c?.last_name ?? ''}`.trim()
+      : `${c?.first_name_jeune || ''} ${c?.last_name_jeune || ''}`.trim() ||
+        `${c?.first_name ?? ''} ${c?.last_name ?? ''}`.trim();
+    const safeLabel = (label || 'contrat').replace(/[\\/:*?"<>|]/g, '').trim();
+    const downloadName = `Contrat - ${safeLabel} - ${schoolYear}.pdf`;
     const submissionId = procedure.docuseal_submission_id;
     if (!submissionId) {
       return NextResponse.json(
@@ -74,7 +93,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return new NextResponse(buf, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="contrat_signe_${id}.pdf"`,
+        'Content-Disposition': `attachment; filename="${downloadName}"; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
       },
     });
   } catch (err) {

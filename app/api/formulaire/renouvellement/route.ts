@@ -106,7 +106,10 @@ function generateGoogleReviewEmailHtml(recipientName: string): string {
                 </tr>
               </table>
 
-              <p style="margin: 30px 0 0 0; color: #a97761; font-size: 14px; line-height: 1.6;">
+              <p style="margin: 30px 0 16px 0; color: #7b4a31; font-size: 15px; line-height: 1.6;">
+                Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous !
+              </p>
+              <p style="margin: 0 0 0 0; color: #a97761; font-size: 14px; line-height: 1.6;">
                 Un grand merci pour votre soutien !
               </p>
             </td>
@@ -115,12 +118,14 @@ function generateGoogleReviewEmailHtml(recipientName: string): string {
           <!-- Footer -->
           <tr>
             <td style="padding: 30px 40px; background-color: #f9f3ee; border-radius: 0 0 16px 16px; text-align: center;">
-              <p style="margin: 0; color: #6e3a25; font-size: 14px;">
+              <a href="https://arythmeethic.fr" style="text-decoration:none;color:inherit;display:block;">
+                <p style="margin: 0; color: #6e3a25; font-size: 14px;">
                 Florence Louazel
               </p>
-              <p style="margin: 5px 0 0 0; color: #a97761; font-size: 13px;">
+                <p style="margin: 5px 0 0 0; color: #a97761; font-size: 13px;">
                 A Rythme Ethic - Cours de mathématiques
               </p>
+              </a>
             </td>
           </tr>
         </table>

@@ -182,7 +182,8 @@ export async function generateContractParticulierPDF(
   write("Le salarié occupe un emploi d'enseignante à domicile en mathématiques.", 9);
   br(14);
 
-  // ===== SECTION 5 : DURÉE ET HORAIRES =====
+  // ===== SECTION 5 : DURÉE ET HORAIRES (saut de page) =====
+  newPage();
   write('5. Durée et horaires de travail', 12, true);
   br(6);
   write(
