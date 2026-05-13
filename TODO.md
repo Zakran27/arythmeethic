@@ -15,6 +15,7 @@
 - [x] Métadonnées enrichies (`app/layout.tsx`), sitemap (`app/sitemap.ts`), robots (`app/robots.ts`), JSON-LD LocalBusiness
 - [x] Soumettre à Google Search Console (vérification du domaine + sitemap)
 - [x] Search Console connecté
+- [x] Guide Search Console pour Florence
 
 ## Site vitrine - Évolutions ✅ DONE
 - [x] **Carousel défilant pour les matières** (carousel auto-rotatif 9s/slide avec dots cliquables)
