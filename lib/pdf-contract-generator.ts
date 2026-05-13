@@ -155,9 +155,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     9
   );
   write(`  Nombre prévisionnel d'apprenants : ${client.ecole_groupe_taille || ''}`, 9);
-  write(`  Intervenant(e) : Florence LOUAZEL`, 9);
   write(
-    `  Diplôme de l'intervenant(e) : Diplôme d'ingénieur généraliste – ECAM Louis de Broglie`,
+    `  Intervenant(e) : Florence LOUAZEL - Diplôme : Diplôme d'ingénieur généraliste – ECAM Louis de Broglie`,
     9
   );
   br(8);
@@ -169,26 +168,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   br(12);
 
   // ===== ARTICLE 3 =====
-  write(
-    'Article 3 : Contenu des actions / modalités / moyens techniques et pédagogiques mobilisés',
-    11,
-    true
-  );
-  br(6);
-  write('Objectifs pédagogiques généraux :', 9, false, 0, true);
-  br(20);
-  write('Actions et modalités pédagogiques :', 9, false, 0, true);
-  br(20);
-  write('Moyens techniques mobilisés :', 9, false, 0, true);
-  br(20);
-  write(
-    'Le sous-traitant est tenu à une obligation de moyens dans la réalisation de la formation.',
-    9
-  );
-  br(12);
-
-  // ===== ARTICLE 4 =====
-  write('Article 4 : Durée du contrat', 11, true);
+  write('Article 3 : Durée du contrat', 11, true);
   br(6);
   write(
     "Le présent contrat est strictement limité à la prestation de formation visée à l'article 2.",
@@ -200,8 +180,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   );
   br(12);
 
-  // ===== ARTICLE 5 =====
-  write('Article 5 : Obligations du sous-traitant', 11, true);
+  // ===== ARTICLE 4 =====
+  write('Article 4 : Obligations du sous-traitant', 11, true);
   br(6);
   write("Le sous-traitant s'engage à :", 9);
   write(
@@ -241,8 +221,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('administratives de la mission et ne saurait constituer un indice de subordination.', 9);
   br(12);
 
-  // ===== ARTICLE 6 =====
-  write("Article 6 : Obligations du donneur d'ordre", 11, true);
+  // ===== ARTICLE 5 =====
+  write("Article 5 : Obligations du donneur d'ordre", 11, true);
   br(6);
   write("Le donneur d'ordre s'engage à :", 9);
   write("  - Confier au sous-traitant la formation prévue à l'article 2 ;", 9);
@@ -278,17 +258,18 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write("prévue s'appliquera.", 9);
   br(12);
 
-  // ===== ARTICLE 7 =====
-  write('Article 7 : Modalités financières', 11, true);
+  // ===== ARTICLE 6 =====
+  write('Article 6 : Modalités financières', 11, true);
   br(6);
   write(
     `Le sous-traitant percevra une rémunération de ${tarifHoraireHT.toFixed(2)} euros HT par heure de face à face pédagogique.`,
     9
   );
   br(6);
-  if (client.ecole_frais_km_prix) {
+  {
+    const kmPrice = client.ecole_frais_km_prix ? Number(client.ecole_frais_km_prix) : 0.636;
     write(
-      `Des frais de déplacement seront appliqués pour ${Number(client.ecole_frais_km_prix).toFixed(3)} euros/kilomètre.`,
+      `Des frais de déplacement seront appliqués pour ${kmPrice.toFixed(3)} euros/kilomètre.`,
       9
     );
     br(6);
@@ -323,8 +304,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('L.441-10 du Code de commerce.', 9);
   br(12);
 
-  // ===== ARTICLE 8 =====
-  write('Article 8 : Résiliation anticipée', 11, true);
+  // ===== ARTICLE 7 =====
+  write('Article 7 : Résiliation anticipée', 11, true);
   br(6);
   write(
     "En cas de manquement grave à l'une des obligations contractuelles ou en cas de force majeure",
@@ -342,8 +323,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('sommes déjà perçues par le sous-traitant lui demeureront acquises.', 9);
   br(12);
 
-  // ===== ARTICLE 9 =====
-  write('Article 9 : Litige', 11, true);
+  // ===== ARTICLE 8 =====
+  write('Article 8 : Litige', 11, true);
   br(6);
   write(
     "En cas de litige relatif à l'interprétation ou l'exécution du présent contrat, les parties",
@@ -356,8 +337,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('compétents du ressort du siège social du sous-traitant.', 9);
   br(12);
 
-  // ===== ARTICLE 10 =====
-  write('Article 10 : Protection des données personnelles', 11, true);
+  // ===== ARTICLE 9 =====
+  write('Article 9 : Protection des données personnelles', 11, true);
   br(6);
   write(
     "Le sous-traitant s'engage à respecter les obligations issues du Règlement Général sur la",
@@ -370,8 +351,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('auxquelles il pourrait avoir accès en dehors du strict cadre de sa mission.', 9);
   br(12);
 
-  // ===== ARTICLE 11 =====
-  write('Article 11 : Dispositions diverses', 11, true);
+  // ===== ARTICLE 10 =====
+  write('Article 10 : Dispositions diverses', 11, true);
   br(6);
   write(
     '  Le présent contrat ne crée entre les parties aucun lien de subordination, le sous-traitant',
@@ -396,6 +377,75 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     9
   );
   write("  contrat, à l'exclusion de toute exploitation ultérieure.", 9);
+  br(12);
+
+  // ===== ARTICLE 11 (NOUVEAU) =====
+  write('Article 11 : Référence client et utilisation du nom et du logo', 11, true);
+  br(6);
+  write(
+    "Le Donneur d'ordre autorise le Prestataire à mentionner sa dénomination sociale et à reproduire",
+    9
+  );
+  write(
+    'son logo à titre de référence client, exclusivement afin d\'informer les tiers de l\'existence',
+    9
+  );
+  write("d'une relation contractuelle présente ou passée entre les Parties.", 9);
+  br(6);
+  write('Cette utilisation est strictement encadrée comme suit :', 9);
+  br(4);
+  write('Finalité de l\'usage', 9, true);
+  write(
+    "L'utilisation du nom et du logo est autorisée uniquement à titre informatif dans les supports",
+    9
+  );
+  write(
+    'de communication du Prestataire dédiés à ses références clients (site internet, propositions',
+    9
+  );
+  write('commerciales, plaquettes, présentations).', 9);
+  br(4);
+  write("Absence d'assimilation à une promotion ou recommandation", 9, true);
+  write(
+    'Cette utilisation ne vaut ni partenariat, ni recommandation, ni validation des services du',
+    9
+  );
+  write("Prestataire par le Donneur d'ordre.", 9);
+  br(4);
+  write("Conditions d'utilisation du logo", 9, true);
+  write("Le Prestataire s'engage à :", 9);
+  write("  - utiliser exclusivement le logo fourni par le Donneur d'ordre ;", 9);
+  write('  - ne procéder à aucune modification, altération ou ajout de texte ;', 9);
+  write('  - ne pas mettre le logo en avant par rapport aux autres références clients ;', 9);
+  write('  - limiter la reproduction à une utilisation raisonnable et proportionnée sur un même support.', 9);
+  br(4);
+  write('Usages interdits', 9, true);
+  write(
+    "Toute utilisation du nom ou du logo en dehors des cas ci-dessus, notamment sur des produits,",
+    9
+  );
+  write(
+    "campagnes publicitaires, témoignages, études de cas détaillées ou pages dédiées, nécessite",
+    9
+  );
+  write("l'autorisation écrite préalable du Donneur d'ordre.", 9);
+  br(4);
+  write('Durée et retrait', 9, true);
+  write("L'autorisation est accordée pour une durée indéterminée.", 9);
+  write(
+    "Le Donneur d'ordre peut retirer cette autorisation à tout moment par email envoyé à",
+    9
+  );
+  write(
+    "florence.louazel@ARythmeEthic.fr, avec accusé de réception, sous réserve qu'un email de",
+    9
+  );
+  write("confirmation du Prestataire soit adressé pour valider la réception.", 9);
+  write(
+    'Le Prestataire disposera alors d\'un délai de trente (30) jours à compter de la confirmation',
+    9
+  );
+  write('de réception pour cesser tout usage.', 9);
   br(12);
 
   // ===== ARTICLE 12 =====
