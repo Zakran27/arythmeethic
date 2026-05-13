@@ -24,7 +24,7 @@ async function sendBrevoEmail(p: { to: string; toName: string; subject: string; 
     method: 'POST',
     headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
+      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
       to: [{ email: p.to, name: p.toName }],
       subject: p.subject,
       htmlContent: p.htmlContent,

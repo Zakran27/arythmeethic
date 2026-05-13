@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       `.trim();
 
       const emailPayload = {
-        sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
+        sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
         to: [{ email: entry.parentEmail }],
         subject: `Récapitulatif heures - ${entry.clientName} - ${moisLabel}`,
         htmlContent,
