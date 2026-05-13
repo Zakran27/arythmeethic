@@ -19,12 +19,12 @@
 ## Site vitrine - Évolutions
 - [ ] **Carousel défilant pour les matières** (page d'accueil section services) - actuellement trop de boutons à cliquer, transformer en carousel auto-scroll comme pour les avis Google
 - [ ] **Section "Découvrez qui je suis"** : retirer le bloc vidéo (placeholder) mais garder le texte. Changer le surtitre "En vidéo" en quelque chose de plus adapté (ex. "À propos")
-- [ ] **Page Formations & Conférences** :
+- [ ] **Page "A Rythme Ethic se forme pour mieux vous accompagner"** (titre exact de la page **et** du bouton qui y mène) :
   - Créer une table Supabase `formations` éditable depuis l'admin (titre, contenu/description, année) - même modèle que `google_reviews`
   - Page admin `/admin/formations` avec CRUD (tableau + modale, comme `/admin/avis`)
   - **Export PDF** de la liste depuis l'admin (bouton "Télécharger en PDF")
-  - **Page publique** `/formations` (ou `/parcours`) affichant la liste de manière soignée
-  - Bouton "Voir mon parcours" / "Mes formations" à la fin du paragraphe "Découvrez qui je suis" sur la home, qui pointe vers cette nouvelle page
+  - **Page publique** `/formations` (ou slug équivalent) avec le titre `A Rythme Ethic se forme pour mieux vous accompagner`, affichant la liste de manière soignée
+  - Bouton `A Rythme Ethic se forme pour mieux vous accompagner` à la fin du paragraphe "Découvrez qui je suis" sur la home, qui pointe vers cette nouvelle page
 
 ## Emails - UX
 - [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
