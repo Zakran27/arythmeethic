@@ -16,6 +16,16 @@
 - [ ] Soumettre à Google Search Console (vérification du domaine + sitemap) - action manuelle Florence/Thomas
 - [ ] **Chercher comment faire des trucs dans Search Console** (rapports d'indexation, requêtes performantes, etc. - rédiger un guide pour Florence)
 
+## Site vitrine - Évolutions
+- [ ] **Carousel défilant pour les matières** (page d'accueil section services) - actuellement trop de boutons à cliquer, transformer en carousel auto-scroll comme pour les avis Google
+- [ ] **Section "Découvrez qui je suis"** : retirer le bloc vidéo (placeholder) mais garder le texte. Changer le surtitre "En vidéo" en quelque chose de plus adapté (ex. "À propos")
+- [ ] **Page Formations & Conférences** :
+  - Créer une table Supabase `formations` éditable depuis l'admin (titre, contenu/description, année) - même modèle que `google_reviews`
+  - Page admin `/admin/formations` avec CRUD (tableau + modale, comme `/admin/avis`)
+  - **Export PDF** de la liste depuis l'admin (bouton "Télécharger en PDF")
+  - **Page publique** `/formations` (ou `/parcours`) affichant la liste de manière soignée
+  - Bouton "Voir mon parcours" / "Mes formations" à la fin du paragraphe "Découvrez qui je suis" sur la home, qui pointe vers cette nouvelle page
+
 ## Emails - UX
 - [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
 - [ ] **Email avis Google** : ajouter une phrase invitant au bouche-à-oreille - *« Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous ! »* (template dans `app/api/formulaire/renouvellement` qui demande l'avis Google)
