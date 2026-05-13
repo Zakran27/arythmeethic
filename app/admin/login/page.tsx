@@ -134,6 +134,12 @@ export default function LoginPage() {
                   </Stack>
                 </form>
 
+                <Box textAlign="center">
+                  <ChakraLink as={Link} href="/admin/forgot-password" color="brand.600" fontSize="sm">
+                    Mot de passe oublié ?
+                  </ChakraLink>
+                </Box>
+
                 <Box textAlign="center" pt={4} borderTop="1px" borderColor="gray.200">
                   <ChakraLink as={Link} href="/" color="brand.600" fontSize="sm">
                     ← Retour à l'accueil
