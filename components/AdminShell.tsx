@@ -25,6 +25,7 @@ const SIDEBAR_W = '220px';
 const navItems = [
   { label: 'Contacts', href: '/admin/clients' },
   { label: 'Avis Google', href: '/admin/avis' },
+  { label: 'Formations', href: '/admin/formations' },
 ];
 
 function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
