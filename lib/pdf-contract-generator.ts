@@ -440,9 +440,9 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     "florence.louazel@ARythmeEthic.fr, avec accusé de réception, sous réserve qu'un email de",
     9
   );
-  write("confirmation du Prestataire soit adressé pour valider la réception.", 9);
+  write('confirmation du Prestataire soit adressé pour valider la réception.', 9);
   write(
-    'Le Prestataire disposera alors d\'un délai de trente (30) jours à compter de la confirmation',
+    "Le Prestataire disposera alors d'un délai de trente (30) jours à compter de la confirmation",
     9
   );
   write('de réception pour cesser tout usage.', 9);

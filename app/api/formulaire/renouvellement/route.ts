@@ -324,9 +324,7 @@ export async function POST(request: NextRequest) {
     // la procédure de fin de contrat
     if (souhaite === false) {
       try {
-        const { launchFinDeContratProcedure } = await import(
-          '@/app/api/procedures/fin-de-contrat/route'
-        );
+        const { launchFinDeContratProcedure } = await import('@/lib/fin-de-contrat');
         await launchFinDeContratProcedure({
           clientId: client.id,
           recipientEmail,
