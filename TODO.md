@@ -32,12 +32,47 @@
 ## DocuSeal
 - [x] Désactivation des emails automatiques DocuSeal vérifiée
 
-## Autonomie de Florence
-- [ ] **Rendre Florence autonome sur les modifs du site vitrine** - pistes :
-  - **Option simple :** doc Markdown expliquant comment éditer `app/page.tsx` via GitHub web UI (déploiement auto Vercel)
-  - **Option médiane :** extraire les textes du site dans des fichiers JSON ou MDX éditables, garder le code séparé
-  - **Option robuste :** intégrer un CMS headless (Sanity, Contentful, Payload, ou Supabase + interface admin custom)
-  - **À décider** selon le niveau d'autonomie souhaité et le budget
+## Autonomie de Florence — Édition du site vitrine via /admin 🟡 À FAIRE
+
+**Décision prise** : étendre l'interface `/admin` existante avec une section "Site vitrine" (Florence n'est pas tech du tout, donc pas de Git/GitHub/MDX/CMS tiers). Elle se connecte avec son compte admin existant et édite les textes/images via des formulaires Chakra UI classiques (comme la page `/admin/avis` ou `/admin/formations` qu'on a déjà).
+
+### Architecture cible
+- Stockage : table Supabase (probablement une seule table `site_content` clé/valeur, ou tables dédiées par section)
+- Stockage images : bucket Supabase `client-files` (déjà existant) ou nouveau bucket public `site-content`
+- Lecture côté public : `app/page.tsx` (et autres pages vitrine) lit depuis Supabase au build/SSR plutôt qu'avoir du contenu en dur
+- Lecture côté admin : nouvelles pages `/admin/site/...` avec formulaires d'édition
+- Auth : RLS Supabase + auth admin existante (cf `lib/hooks/useAuth.ts`)
+
+### Sections candidates à rendre éditables (à confirmer avec Florence)
+Inventaire actuel de `app/page.tsx` (942 lignes) :
+1. **Hero** (ligne ~194) — titre principal + sous-titre + CTA
+2. **Présentation Florence** (ligne ~292) — texte "À propos" + photo
+3. **Services** (lignes ~390-558) — 3 cartes : Cours particuliers / Accompagnement / Établissements + leurs sous-textes
+4. **Matières enseignées** — carousel défilant (constante `MATIERES` à identifier)
+5. **Process** — `PARTICULIER_STEPS` et `ECOLE_STEPS` (lignes 22-42)
+6. **Témoignages** — `<GoogleReviewsCarousel />` (déjà géré via `/admin/avis` ✅)
+7. **Footer / Contact** — coordonnées + horaires
+
+Autres pages potentiellement à éditer :
+- `app/formations/page.tsx` (déjà géré via `/admin/formations` ✅)
+- `app/mentions-legales/`, `app/politique-confidentialite/` — probablement à laisser en dur (rare modifs)
+
+### Stratégie d'implémentation recommandée
+1. **Phase 1 — Scope** : valider avec Florence quelles sections elle veut vraiment modifier (ne pas tout rendre dynamique). Probable MVP : Hero + Présentation + Services + Process steps.
+2. **Phase 2 — Modèle de données** : table unique `site_content` avec colonnes `(section text PK, content jsonb, updated_at)`. Chaque section a un schéma JSON typé côté TS (`types/site-content.ts`).
+3. **Phase 3 — Admin UI** : `/admin/site/page.tsx` (liste des sections) → `/admin/site/[section]/page.tsx` (édition). Réutiliser le pattern Chakra Form de `/admin/avis` et `/admin/formations`.
+4. **Phase 4 — Lecture publique** : modifier `app/page.tsx` pour passer en RSC (Server Component) et fetcher le contenu depuis Supabase. Garder `revalidate: 60` pour ne pas exploser le SSR. Fallback sur les valeurs actuelles si la row est manquante (pas de régression).
+5. **Phase 5 — Migration** : seed initial avec les valeurs actuelles hardcodées pour que Florence ait quelque chose à éditer.
+
+### Prérequis techniques
+- Stack existante : Next.js App Router, Chakra UI, Supabase, auth admin Supabase
+- Patterns à réutiliser : voir [app/admin/avis/page.tsx](app/admin/avis/page.tsx) et [app/admin/formations/page.tsx](app/admin/formations/page.tsx) pour le pattern CRUD + auth admin
+- Migration SQL : ajouter dans [database/schema.sql](database/schema.sql), créer un fichier de migration dans `database/migrations/` si on garde cette convention
+- Upload image : route `/api/storage/upload` existe déjà (cf usage dans recueil-informations)
+
+### Mot-clé prochaine session
+> "On attaque l'autonomie Florence" ou "On fait le CMS admin"
+> → reprendre depuis la **Phase 1 (validation du scope avec Florence)** ou directement implémenter le MVP si Florence valide le scope par défaut (Hero + Présentation + Services + Process).
 
 ## Contrats - mise à jour ✅ DONE
 - [x] **Nouvelle version du contrat professionnel (école)** intégrée (Article 11 "Référence client" ajouté, articles renumérotés)
