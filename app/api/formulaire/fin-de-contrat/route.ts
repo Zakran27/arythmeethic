@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
       kind: 'SUPPORTING_DOC',
       title: KIND_LABELS[kind],
       storage_path: storagePath,
-      original_filename: cleanFilename,
+      original_filename: file.name,
       uploaded_by: 'CLIENT',
     });
     if (insertError) {
