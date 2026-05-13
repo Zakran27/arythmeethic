@@ -177,7 +177,7 @@ export async function launchFinDeContratProcedure(params: LaunchFinDeContratPara
 
   await supabase.from('procedure_status_history').insert({
     procedure_id: procedure.id,
-    status: 'FORMULAIRE_ENVOYE',
+    status: 'MAIL_ENVOYE',
   });
 
   return { success: true, procedureId: procedure.id };

@@ -19,10 +19,10 @@ import {
   AlertDescription,
   Input,
   Progress,
+  Image,
 } from '@chakra-ui/react';
 import { FiCheckCircle, FiUpload, FiFile } from 'react-icons/fi';
 import { use, useEffect, useState } from 'react';
-import { Nav } from '@/components/Nav';
 
 interface UploadedInfo {
   filename: string;
@@ -99,194 +99,224 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
   const totalReq = info?.required.length || 3;
   const allDone = info && totalDone === totalReq;
 
-  return (
-    <>
-      <Nav />
-      <Box bg="#faf6f2" minH="100vh" py={{ base: 8, md: 16 }}>
-        <Container maxW="container.md">
-          <Stack spacing={8}>
-            <Box textAlign="center">
-              <Text
-                fontSize="xs"
-                fontWeight="700"
-                color="accent.500"
-                textTransform="uppercase"
-                letterSpacing="widest"
-                mb={3}
-              >
-                Fin de contrat
-              </Text>
-              <Heading
-                as="h1"
-                fontSize={{ base: '2xl', md: '3xl' }}
-                color="brand.500"
-                fontFamily="heading"
-              >
-                Transmission des documents
-              </Heading>
-            </Box>
+  if (loading) {
+    return (
+      <Box textAlign="center" py={20}>
+        <Spinner size="xl" color="accent.500" />
+        <Text mt={4} color="brand.600">
+          Chargement du formulaire...
+        </Text>
+      </Box>
+    );
+  }
 
-            {loading ? (
-              <Box textAlign="center" py={10}>
-                <Spinner size="xl" color="accent.500" />
-              </Box>
-            ) : error ? (
-              <Alert status="error" borderRadius="md">
-                <AlertIcon />
-                <Box>
-                  <AlertTitle>Lien invalide</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Box>
-              </Alert>
-            ) : info ? (
-              <>
-                <Card bg="white">
-                  <CardBody>
-                    <Stack spacing={3}>
-                      <Text color="brand.600" lineHeight="1.7">
-                        Merci de bien vouloir déposer ci-dessous les <strong>3 documents</strong> de fin
-                        de contrat signés. Vous pouvez les envoyer un par un.
-                      </Text>
-                      <Text fontSize="sm" color="gray.600">
-                        Format accepté : PDF, JPG, PNG, DOCX (max 20 Mo par fichier).
-                      </Text>
-                      <Box pt={2}>
-                        <HStack justify="space-between" mb={1}>
-                          <Text fontSize="sm" fontWeight="600" color="brand.600">
-                            {totalDone} / {totalReq} documents déposés
-                          </Text>
-                          {allDone && (
-                            <HStack spacing={1}>
-                              <Icon as={FiCheckCircle} color="green.500" />
-                              <Text fontSize="sm" color="green.600" fontWeight="600">
-                                Tout est reçu !
-                              </Text>
-                            </HStack>
+  if (error) {
+    return (
+      <Container maxW="container.md" py={20}>
+        <Alert status="error" borderRadius="lg">
+          <AlertIcon />
+          <Box>
+            <AlertTitle>Lien invalide</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Box>
+        </Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Box bg="#fafafa" minH="100vh" py={8}>
+      <Container maxW="container.md">
+        <Stack spacing={6}>
+          {/* Header */}
+          <Box textAlign="center" mb={4}>
+            <Image
+              src="/logo.jpg"
+              alt="A Rythme Ethic"
+              maxH="80px"
+              mx="auto"
+              borderRadius="xl"
+              boxShadow="sm"
+              mb={4}
+            />
+            <Heading as="h1" size="xl" color="brand.500" fontFamily="heading">
+              Transmission des documents
+            </Heading>
+            <Text color="brand.600" mt={2}>
+              Merci de déposer ci-dessous les 3 documents de fin de contrat
+            </Text>
+          </Box>
+
+          {info && (
+            <>
+              <Card bg="white" shadow="sm">
+                <CardBody>
+                  <Stack spacing={3}>
+                    <Text color="brand.600" lineHeight="1.7">
+                      Vous pouvez envoyer les documents un par un. Format accepté : PDF, JPG, PNG,
+                      DOCX (max 20 Mo par fichier).
+                    </Text>
+                    <Box pt={2}>
+                      <HStack justify="space-between" mb={1}>
+                        <Text fontSize="sm" fontWeight="600" color="brand.600">
+                          {totalDone} / {totalReq} documents déposés
+                        </Text>
+                        {allDone && (
+                          <HStack spacing={1}>
+                            <Icon as={FiCheckCircle} color="green.500" />
+                            <Text fontSize="sm" color="green.600" fontWeight="600">
+                              Tout est reçu !
+                            </Text>
+                          </HStack>
+                        )}
+                      </HStack>
+                      <Progress
+                        value={(totalDone / totalReq) * 100}
+                        size="sm"
+                        colorScheme="cyan"
+                        borderRadius="full"
+                      />
+                    </Box>
+                  </Stack>
+                </CardBody>
+              </Card>
+
+              {info.required.map(doc => {
+                const up = info.uploaded[doc.kind];
+                const isUploading = uploadingKind === doc.kind;
+                const inputId = `file-${doc.kind}`;
+                return (
+                  <Card key={doc.kind} bg="white" shadow="sm">
+                    <CardBody>
+                      <Stack spacing={3}>
+                        <HStack justify="space-between" flexWrap="wrap">
+                          <Heading size="sm" color="brand.500" fontFamily="heading">
+                            {doc.label}
+                          </Heading>
+                          {up && (
+                            <Text fontSize="xs" color="gray.500">
+                              Reçu le{' '}
+                              {new Date(up.uploadedAt).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                            </Text>
                           )}
                         </HStack>
-                        <Progress
-                          value={(totalDone / totalReq) * 100}
-                          size="sm"
-                          colorScheme="brand"
-                          borderRadius="full"
-                        />
-                      </Box>
-                    </Stack>
-                  </CardBody>
-                </Card>
 
-                <Stack spacing={4}>
-                  {info.required.map(doc => {
-                    const up = info.uploaded[doc.kind];
-                    const isUploading = uploadingKind === doc.kind;
-                    return (
-                      <Card key={doc.kind} bg="white" borderLeft="4px" borderColor={up ? 'green.500' : 'sand.300'}>
-                        <CardBody>
-                          <Stack spacing={3}>
-                            <HStack justify="space-between" flexWrap="wrap">
-                              <HStack spacing={2}>
-                                <Icon as={up ? FiCheckCircle : FiFile} color={up ? 'green.500' : 'brand.500'} />
-                                <Text fontWeight="600" color="brand.600">
-                                  {doc.label}
+                        {!up ? (
+                          <Box
+                            as="label"
+                            htmlFor={inputId}
+                            display="flex"
+                            flexDirection="column"
+                            alignItems="center"
+                            justifyContent="center"
+                            p={6}
+                            border="2px dashed"
+                            borderColor="gray.300"
+                            borderRadius="lg"
+                            cursor={isUploading ? 'wait' : 'pointer'}
+                            opacity={isUploading ? 0.6 : 1}
+                            _hover={{ borderColor: 'accent.500', bg: 'gray.50' }}
+                            transition="all 0.2s"
+                          >
+                            {isUploading ? (
+                              <>
+                                <Spinner color="accent.500" mb={2} />
+                                <Text color="gray.500" fontSize="sm">
+                                  Envoi en cours...
                                 </Text>
-                              </HStack>
-                              {up && (
-                                <Text fontSize="xs" color="gray.500">
-                                  Reçu le{' '}
-                                  {new Date(up.uploadedAt).toLocaleDateString('fr-FR', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })}
-                                </Text>
-                              )}
-                            </HStack>
-                            {up ? (
-                              <HStack
-                                bg="green.50"
-                                p={3}
-                                borderRadius="md"
-                                justify="space-between"
-                                flexWrap="wrap"
-                              >
-                                <Text fontSize="sm" color="green.700" noOfLines={1}>
-                                  {up.filename}
-                                </Text>
-                                <Button
-                                  size="xs"
-                                  variant="ghost"
-                                  as="label"
-                                  htmlFor={`file-${doc.kind}`}
-                                  cursor="pointer"
-                                  isLoading={isUploading}
-                                >
-                                  Remplacer
-                                  <Input
-                                    id={`file-${doc.kind}`}
-                                    type="file"
-                                    display="none"
-                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                    onChange={e => {
-                                      if (e.target.files && e.target.files[0]) {
-                                        handleUpload(doc.kind, e.target.files[0]);
-                                        e.target.value = '';
-                                      }
-                                    }}
-                                  />
-                                </Button>
-                              </HStack>
+                              </>
                             ) : (
-                              <Box>
-                                <Button
-                                  as="label"
-                                  htmlFor={`file-${doc.kind}`}
-                                  leftIcon={<FiUpload />}
-                                  colorScheme="accent"
-                                  variant="outline"
-                                  cursor="pointer"
-                                  isLoading={isUploading}
-                                  loadingText="Envoi..."
-                                  w={{ base: 'full', md: 'auto' }}
-                                >
-                                  Déposer le document
-                                  <Input
-                                    id={`file-${doc.kind}`}
-                                    type="file"
-                                    display="none"
-                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                    onChange={e => {
-                                      if (e.target.files && e.target.files[0]) {
-                                        handleUpload(doc.kind, e.target.files[0]);
-                                        e.target.value = '';
-                                      }
-                                    }}
-                                  />
-                                </Button>
-                              </Box>
+                              <>
+                                <Icon as={FiUpload} boxSize={8} color="gray.400" mb={2} />
+                                <Text color="gray.500" fontSize="sm">
+                                  Cliquez pour sélectionner un fichier
+                                </Text>
+                              </>
                             )}
-                          </Stack>
-                        </CardBody>
-                      </Card>
-                    );
-                  })}
-                </Stack>
+                            <Input
+                              id={inputId}
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              display="none"
+                              disabled={isUploading}
+                              onChange={e => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleUpload(doc.kind, e.target.files[0]);
+                                  e.target.value = '';
+                                }
+                              }}
+                            />
+                          </Box>
+                        ) : (
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            p={3}
+                            bg="green.50"
+                            border="1px solid"
+                            borderColor="green.200"
+                            borderRadius="lg"
+                            flexWrap="wrap"
+                            gap={2}
+                          >
+                            <Box display="flex" alignItems="center" gap={2}>
+                              <Icon as={FiFile} color="green.500" />
+                              <Text fontSize="sm" color="green.700" noOfLines={1}>
+                                {up.filename}
+                              </Text>
+                            </Box>
+                            <Button
+                              as="label"
+                              htmlFor={inputId}
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="cyan"
+                              cursor="pointer"
+                              isLoading={isUploading}
+                            >
+                              Remplacer
+                              <Input
+                                id={inputId}
+                                type="file"
+                                display="none"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                onChange={e => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleUpload(doc.kind, e.target.files[0]);
+                                    e.target.value = '';
+                                  }
+                                }}
+                              />
+                            </Button>
+                          </Box>
+                        )}
+                      </Stack>
+                    </CardBody>
+                  </Card>
+                );
+              })}
 
-                {allDone && (
-                  <Alert status="success" borderRadius="md">
-                    <AlertIcon />
-                    <Box>
-                      <AlertTitle>Merci !</AlertTitle>
-                      <AlertDescription>
-                        Florence a bien reçu vos 3 documents. Elle reviendra vers vous après les avoir signés.
-                      </AlertDescription>
-                    </Box>
-                  </Alert>
-                )}
-              </>
-            ) : null}
-          </Stack>
-        </Container>
-      </Box>
-    </>
+              {allDone && (
+                <Alert status="success" borderRadius="lg">
+                  <AlertIcon />
+                  <Box>
+                    <AlertTitle>Merci !</AlertTitle>
+                    <AlertDescription>
+                      Florence a bien reçu vos 3 documents. Elle reviendra vers vous après les
+                      avoir signés.
+                    </AlertDescription>
+                  </Box>
+                </Alert>
+              )}
+            </>
+          )}
+        </Stack>
+      </Container>
+    </Box>
   );
 }
