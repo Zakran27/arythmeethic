@@ -18,6 +18,7 @@
 
 ## Emails - UX
 - [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
+- [ ] **Email avis Google** : ajouter une phrase invitant au bouche-à-oreille - *« Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous ! »* (template dans `app/api/formulaire/renouvellement` qui demande l'avis Google)
 
 ## DocuSeal
 - [ ] **Chercher comment désactiver les emails automatiques de DocuSeal** (on veut que ce soit uniquement Brevo qui envoie les emails de signature, pas DocuSeal en doublon)
