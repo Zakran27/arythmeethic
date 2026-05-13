@@ -110,7 +110,7 @@ async function sendSignatureEmail({
     method: 'POST',
     headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'noreply@arythmeethic.fr' },
+      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
       to: [{ email: to, name: toName }],
       subject: `A Rythme Ethic - Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`,
       htmlContent,
