@@ -16,22 +16,17 @@
 - [x] Soumettre à Google Search Console (vérification du domaine + sitemap)
 - [x] Search Console connecté
 
-## Site vitrine - Évolutions
-- [ ] **Carousel défilant pour les matières** (page d'accueil section services) - actuellement trop de boutons à cliquer, transformer en carousel auto-scroll comme pour les avis Google
-- [ ] **Section "Découvrez qui je suis"** : retirer le bloc vidéo (placeholder) mais garder le texte. Changer le surtitre "En vidéo" en quelque chose de plus adapté (ex. "À propos")
-- [ ] **Page "A Rythme Ethic se forme pour mieux vous accompagner"** (titre exact de la page **et** du bouton qui y mène) :
-  - Créer une table Supabase `formations` éditable depuis l'admin (titre, contenu/description, année) - même modèle que `google_reviews`
-  - Page admin `/admin/formations` avec CRUD (tableau + modale, comme `/admin/avis`)
-  - **Export PDF** de la liste depuis l'admin (bouton "Télécharger en PDF")
-  - **Page publique** `/formations` (ou slug équivalent) avec le titre `A Rythme Ethic se forme pour mieux vous accompagner`, affichant la liste de manière soignée
-  - Bouton `A Rythme Ethic se forme pour mieux vous accompagner` à la fin du paragraphe "Découvrez qui je suis" sur la home, qui pointe vers cette nouvelle page
+## Site vitrine - Évolutions ✅ DONE
+- [x] **Carousel défilant pour les matières** (carousel auto-rotatif 9s/slide avec dots cliquables)
+- [x] **Section "Découvrez qui je suis"** : vidéo placeholder retirée, surtitre "En vidéo" -> "À propos"
+- [x] **Page "A Rythme Ethic se forme pour mieux vous accompagner"** (table + admin CRUD + export PDF + page publique + bouton)
 
-## Authentification admin
-- [ ] **Ajouter "Mot de passe oublié"** sur la page de login admin - flow Supabase Auth `resetPasswordForEmail` + page `/auth/reset-password` pour saisir le nouveau mot de passe
+## Authentification admin ✅ DONE
+- [x] **Mot de passe oublié** : `/admin/forgot-password` + `/admin/reset-password`
 
-## Emails - UX
-- [ ] **Rendre le footer de tous les emails cliquable** vers la page d'accueil `https://arythmeethic.fr` (zone "Florence Louazel / A Rythme Ethic" en bas de chaque email)
-- [ ] **Email avis Google** : ajouter une phrase invitant au bouche-à-oreille - *« Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous ! »* (template dans `app/api/formulaire/renouvellement` qui demande l'avis Google)
+## Emails - UX ✅ DONE
+- [x] Footer cliquable vers la home dans tous les emails
+- [x] Email avis Google : phrase bouche-à-oreille ajoutée
 
 ## DocuSeal
 - [x] Désactivation des emails automatiques DocuSeal vérifiée
@@ -43,17 +38,15 @@
   - **Option robuste :** intégrer un CMS headless (Sanity, Contentful, Payload, ou Supabase + interface admin custom)
   - **À décider** selon le niveau d'autonomie souhaité et le budget
 
-## Contrats - mise à jour
-- [ ] **Nouvelle version du contrat professionnel (école)** disponible - mettre à jour le générateur PDF `lib/pdf-contract-generator.ts` avec la nouvelle version fournie par Florence
-- [ ] **PDF contrat particulier** : ajouter un saut de page entre la section 4 et la section 5 (`lib/pdf-contract-particulier-generator.ts`)
+## Contrats - mise à jour ✅ DONE
+- [x] **Nouvelle version du contrat professionnel (école)** intégrée (Article 11 "Référence client" ajouté, articles renumérotés)
+- [x] **PDF contrat particulier** : saut de page entre sections 4 et 5
 
-## Contrats - nommage
-- [ ] **Renommer les contrats partout** (génération PDF, écran de signature DocuSeal, liste "Contrats signés" dans l'admin) :
-  - École : `Contrat - {nom école} - {année scolaire}`
-  - Particulier : `Contrat - {nom de l'élève} - {année scolaire}`
+## Contrats - nommage ✅ DONE
+- [x] **Renommé partout** : `Contrat - <école|élève> - <année scolaire>` (filename PDF, écran signature DocuSeal, liste admin, téléchargement signé)
 
-## Procédure "Fin de contrat" (Particulier)
-- [ ] **Créer la procédure de fin de contrat** - 2 modes de lancement :
+## Procédure "Fin de contrat" (Particulier) ✅ DONE
+- [x] **Créer la procédure de fin de contrat** - 2 modes de lancement :
   - **A. Manuel** : bouton "Fin de contrat" dans la fiche client → modale (comme les autres procédures) pour choisir le destinataire de l'email
   - **B. Automatique** : déclenchée si la procédure "Souhait de renouvellement" reçoit une réponse "Non" (pas de souhait de renouveler)
   - Étape 1 : email "Fin de contrat" envoyé au destinataire, contenu :

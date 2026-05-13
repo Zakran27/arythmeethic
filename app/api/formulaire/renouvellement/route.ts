@@ -320,6 +320,23 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if email fails
     }
 
+    // Auto-trigger : si le client refuse le renouvellement, lancer automatiquement
+    // la procédure de fin de contrat
+    if (souhaite === false) {
+      try {
+        const { launchFinDeContratProcedure } = await import(
+          '@/app/api/procedures/fin-de-contrat/route'
+        );
+        await launchFinDeContratProcedure({
+          clientId: client.id,
+          recipientEmail,
+          recipientName,
+        });
+      } catch (e) {
+        console.error('Auto-trigger fin-de-contrat failed:', e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Réponse enregistrée avec succès',

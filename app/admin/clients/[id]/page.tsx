@@ -84,6 +84,12 @@ export default function ClientDetailPage() {
     onClose: onRenouvellementClose,
   } = useDisclosure();
   const {
+    isOpen: isFinDeContratOpen,
+    onOpen: onFinDeContratOpen,
+    onClose: onFinDeContratClose,
+  } = useDisclosure();
+  const [selectedFinDeContratSigner, setSelectedFinDeContratSigner] = useState('');
+  const {
     isOpen: isCvCasierOpen,
     onOpen: onCvCasierOpen,
     onClose: onCvCasierClose,
@@ -467,6 +473,47 @@ export default function ClientDetailPage() {
       toast({
         title: 'Erreur',
         description: 'Une erreur est survenue lors du lancement de la procédure.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLaunchingProcedure(false);
+    }
+  };
+
+  const handleLaunchFinDeContratProcedure = async () => {
+    setIsLaunchingProcedure(true);
+    try {
+      const [email, firstName, lastName] = selectedFinDeContratSigner.split('|');
+      const response = await fetch('/api/procedures/fin-de-contrat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          recipientEmail: email,
+          recipientFirstName: firstName,
+          recipientLastName: lastName,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erreur lors du lancement');
+      }
+      toast({
+        title: 'Procédure lancée',
+        description: `Un email de fin de contrat a été envoyé à ${email}.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      onFinDeContratClose();
+      setSelectedFinDeContratSigner('');
+      refetch();
+    } catch (err) {
+      toast({
+        title: 'Erreur',
+        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -1867,7 +1914,7 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRenouvellementOpen}>
                     Souhait de renouvellement
                   </Button>
-                  <Button colorScheme="accent" size="sm">
+                  <Button colorScheme="accent" size="sm" onClick={onFinDeContratOpen}>
                     Fin du contrat
                   </Button>
                 </>
@@ -2374,6 +2421,84 @@ export default function ClientDetailPage() {
       </Modal>
 
       {/* Modal de confirmation - Souhait de renouvellement */}
+      <Modal isOpen={isFinDeContratOpen} onClose={onFinDeContratClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader color="brand.500" fontFamily="heading">
+            Fin de contrat
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing={4}>
+              <Text>
+                Vous êtes sur le point de lancer la procédure <strong>Fin de contrat</strong>.
+              </Text>
+              <Text fontSize="sm" color="brand.600">
+                Un email sera envoyé au destinataire avec :
+              </Text>
+              <Box as="ul" pl={5} color="brand.600" fontSize="sm">
+                <li>Le lien CESU pour la démarche de fin de contrat</li>
+                <li>Un formulaire d&apos;upload pour les 3 documents (reçu solde de tout compte, attestation employeur, certificat de travail)</li>
+              </Box>
+              <Text fontSize="sm" color="gray.600">
+                Une relance automatique sera envoyée tous les 3 jours à 18h tant que les documents ne sont pas tous transmis.
+              </Text>
+              <FormControl isRequired>
+                <FormLabel color="brand.600">Destinataire</FormLabel>
+                <Select
+                  placeholder="Sélectionner un destinataire"
+                  value={selectedFinDeContratSigner}
+                  onChange={e => setSelectedFinDeContratSigner(e.target.value)}
+                >
+                  {client?.email_parent1 && (
+                    <option
+                      value={`${client.email_parent1}|${client.first_name_parent1 || ''}|${client.last_name_parent1 || ''}`}
+                    >
+                      {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                    </option>
+                  )}
+                  {client?.email_parent2 && (
+                    <option
+                      value={`${client.email_parent2}|${client.first_name_parent2 || ''}|${client.last_name_parent2 || ''}`}
+                    >
+                      {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
+                    </option>
+                  )}
+                  {client?.email_jeune && (
+                    <option
+                      value={`${client.email_jeune}|${client.first_name_jeune || ''}|${client.last_name_jeune || ''}`}
+                    >
+                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}&gt; (Jeune)
+                    </option>
+                  )}
+                </Select>
+              </FormControl>
+            </Stack>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="ghost"
+              mr={3}
+              onClick={() => {
+                onFinDeContratClose();
+                setSelectedFinDeContratSigner('');
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              colorScheme="accent"
+              onClick={handleLaunchFinDeContratProcedure}
+              isLoading={isLaunchingProcedure}
+              loadingText="Envoi en cours..."
+              isDisabled={!selectedFinDeContratSigner}
+            >
+              Lancer la procédure
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <Modal isOpen={isRenouvellementOpen} onClose={onRenouvellementClose} isCentered>
         <ModalOverlay />
         <ModalContent>
