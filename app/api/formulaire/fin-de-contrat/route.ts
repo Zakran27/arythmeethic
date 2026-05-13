@@ -175,6 +175,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Refresh procedure updated_at so the relance cooldown restarts at each upload
+    await supabase
+      .from('procedures')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', procedure.id);
+
     // Check if all 3 docs are now uploaded → mark procedure as SIGNED (=completed)
     const { data: allDocs } = await supabase
       .from('documents')
