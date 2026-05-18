@@ -38,6 +38,7 @@ interface Formation {
   titre: string;
   contenu: string;
   annee: string;
+  duree: string | null;
   display_order: number;
   is_published: boolean;
   created_at: string;
@@ -47,6 +48,7 @@ interface FormState {
   titre: string;
   contenu: string;
   annee: string;
+  duree: string;
   display_order: number;
   is_published: boolean;
 }
@@ -55,6 +57,7 @@ const emptyForm: FormState = {
   titre: '',
   contenu: '',
   annee: String(new Date().getFullYear()),
+  duree: '',
   display_order: 0,
   is_published: true,
 };
@@ -95,6 +98,7 @@ export default function FormationsAdminPage() {
       titre: f.titre,
       contenu: f.contenu,
       annee: f.annee,
+      duree: f.duree ?? '',
       display_order: f.display_order,
       is_published: f.is_published,
     });
@@ -117,7 +121,11 @@ export default function FormationsAdminPage() {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
-      toast({ title: editing ? 'Formation modifiée' : 'Formation ajoutée', status: 'success', duration: 2000 });
+      toast({
+        title: editing ? 'Formation modifiée' : 'Formation ajoutée',
+        status: 'success',
+        duration: 2000,
+      });
       onClose();
       fetchFormations();
     } catch (e) {
@@ -161,7 +169,12 @@ export default function FormationsAdminPage() {
           Formations & Conférences
         </Heading>
         <HStack spacing={2}>
-          <Button leftIcon={<FiDownload />} variant="outline" colorScheme="brand" onClick={handleDownloadPdf}>
+          <Button
+            leftIcon={<FiDownload />}
+            variant="outline"
+            colorScheme="brand"
+            onClick={handleDownloadPdf}
+          >
             Télécharger en PDF
           </Button>
           <Button colorScheme="accent" onClick={openCreate}>
@@ -208,10 +221,16 @@ export default function FormationsAdminPage() {
               render: (f: Formation) => f.annee,
             },
             {
+              key: 'duree',
+              label: 'Durée',
+              sortable: true,
+              render: (f: Formation) => f.duree || '-',
+            },
+            {
               key: 'contenu',
               label: 'Contenu',
               render: (f: Formation) => (
-                <Text noOfLines={2} fontSize="sm" maxW="400px">
+                <Text noOfLines={2} fontSize="sm" whiteSpace="normal">
                   {f.contenu}
                 </Text>
               ),
@@ -294,6 +313,15 @@ export default function FormationsAdminPage() {
                     value={form.annee}
                     onChange={e => setForm({ ...form, annee: e.target.value })}
                     placeholder="2025"
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel fontSize="sm">Durée</FormLabel>
+                  <Input
+                    size="sm"
+                    value={form.duree}
+                    onChange={e => setForm({ ...form, duree: e.target.value })}
+                    placeholder="Ex : 3 jours, 21h, 2 semaines…"
                   />
                 </FormControl>
                 <FormControl>
