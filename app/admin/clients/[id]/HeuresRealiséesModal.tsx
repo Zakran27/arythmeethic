@@ -18,7 +18,16 @@ import {
   Text,
   useToast,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+export interface HeuresInitial {
+  mois: string; // 'YYYY-MM' or 'YYYY-MM-DD'
+  heures: number | string;
+  tarif_horaire: number | string;
+  km?: number | string;
+  bareme_km?: number | string;
+  temps_a_reporter?: number | string;
+}
 
 interface HeuresRealiséesModalProps {
   isOpen: boolean;
@@ -28,6 +37,7 @@ interface HeuresRealiséesModalProps {
   clientTarifHoraire?: number;
   clientDistanceKm?: number;
   defaultBaremeKm?: string;
+  initial?: HeuresInitial | null; // when provided, modal is in "edit" mode
 }
 
 export function HeuresRealiséesModal({
@@ -38,12 +48,14 @@ export function HeuresRealiséesModal({
   clientTarifHoraire,
   clientDistanceKm,
   defaultBaremeKm = '0.636',
+  initial,
 }: HeuresRealiséesModalProps) {
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const now = new Date();
   const defaultMois = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const isEditing = !!initial;
 
   const [mois, setMois] = useState(defaultMois);
   const [heures, setHeures] = useState('');
@@ -51,6 +63,35 @@ export function HeuresRealiséesModal({
   const [nbDeplacements, setNbDeplacements] = useState('0');
   const [baremeKm, setBaremeKm] = useState(defaultBaremeKm);
   const [tempsAReporter, setTempsAReporter] = useState('');
+
+  // When opening in edit mode, pre-fill from existing entry.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (initial) {
+      const moisStr = String(initial.mois).slice(0, 7); // 'YYYY-MM'
+      setMois(moisStr);
+      setHeures(String(initial.heures ?? ''));
+      setTarifHoraire(String(initial.tarif_horaire ?? clientTarifHoraire ?? ''));
+      const kmValue = Number(initial.km ?? 0);
+      if (clientDistanceKm && clientDistanceKm > 0) {
+        // Reverse-derive number of trips from total km
+        const trips = kmValue / clientDistanceKm;
+        setNbDeplacements(Number.isFinite(trips) ? String(Math.round(trips * 100) / 100) : '0');
+      } else {
+        setNbDeplacements('0');
+      }
+      setBaremeKm(String(initial.bareme_km ?? defaultBaremeKm));
+      setTempsAReporter(initial.temps_a_reporter != null ? String(initial.temps_a_reporter) : '');
+    } else {
+      setMois(defaultMois);
+      setHeures('');
+      setTarifHoraire(clientTarifHoraire?.toString() ?? '');
+      setNbDeplacements('0');
+      setBaremeKm(defaultBaremeKm);
+      setTempsAReporter('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initial]);
 
   // km calculés automatiquement depuis nb_deplacements × distance_km du client
   const kmCalcules =
@@ -103,8 +144,10 @@ export function HeuresRealiséesModal({
       if (!data.success) throw new Error(data.error);
 
       toast({
-        title: 'Heures enregistrées',
-        description: 'Les heures réalisées ont été sauvegardées.',
+        title: isEditing ? 'Heures modifiées' : 'Heures enregistrées',
+        description: isEditing
+          ? 'La déclaration a été mise à jour.'
+          : 'Les heures réalisées ont été sauvegardées.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -136,14 +179,20 @@ export function HeuresRealiséesModal({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader color="brand.500" fontFamily="heading">
-          Déclarer les heures réalisées
+          {isEditing ? 'Modifier la déclaration' : 'Déclarer les heures réalisées'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Stack spacing={4}>
             <FormControl isRequired>
               <FormLabel>Mois</FormLabel>
-              <Input type="month" value={mois} onChange={e => setMois(e.target.value)} />
+              <Input
+                type="month"
+                value={mois}
+                onChange={e => setMois(e.target.value)}
+                isReadOnly={isEditing}
+                bg={isEditing ? 'gray.50' : undefined}
+              />
             </FormControl>
 
             <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -251,7 +300,7 @@ export function HeuresRealiséesModal({
             Annuler
           </Button>
           <Button colorScheme="accent" onClick={handleSubmit} isLoading={isSubmitting}>
-            Enregistrer
+            {isEditing ? 'Mettre à jour' : 'Enregistrer'}
           </Button>
         </ModalFooter>
       </ModalContent>

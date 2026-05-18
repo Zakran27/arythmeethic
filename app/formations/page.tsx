@@ -1,5 +1,17 @@
 import type { Metadata } from 'next';
-import { Box, Container, Heading, Stack, Text, Card, CardBody, HStack, Badge, Flex, Button } from '@chakra-ui/react';
+import {
+  Box,
+  Container,
+  Heading,
+  Stack,
+  Text,
+  Card,
+  CardBody,
+  HStack,
+  Badge,
+  Flex,
+  Button,
+} from '@chakra-ui/react';
 import { Nav } from '@/components/Nav';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import Link from 'next/link';
@@ -17,7 +29,7 @@ async function getFormations() {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from('formations')
-      .select('id, titre, contenu, annee, display_order')
+      .select('id, titre, contenu, annee, duree, display_order')
       .eq('is_published', true)
       .order('display_order', { ascending: false })
       .order('annee', { ascending: false });
@@ -59,10 +71,16 @@ export default async function FormationsPage() {
               >
                 A Rythme Ethic se forme pour mieux vous accompagner
               </Heading>
-              <Text fontSize={{ base: 'md', md: 'lg' }} color="brand.600" maxW="700px" mx="auto" lineHeight="1.7">
-                Parce qu&apos;accompagner des jeunes demande de constamment se remettre en question et
-                d&apos;élargir ses compétences, je me forme régulièrement pour vous offrir un suivi
-                toujours plus pertinent et bienveillant.
+              <Text
+                fontSize={{ base: 'md', md: 'lg' }}
+                color="brand.600"
+                maxW="700px"
+                mx="auto"
+                lineHeight="1.7"
+              >
+                Parce qu&apos;accompagner des jeunes demande de constamment se remettre en question
+                et d&apos;élargir ses compétences, je me forme régulièrement pour vous offrir un
+                suivi toujours plus pertinent et bienveillant.
               </Text>
             </Box>
 
@@ -86,33 +104,56 @@ export default async function FormationsPage() {
                     transition="all 0.2s"
                   >
                     <CardBody p={{ base: 6, md: 8 }}>
-                      <HStack justify="space-between" align="start" mb={3} flexWrap="wrap">
+                      <Flex
+                        justify="space-between"
+                        align="start"
+                        mb={3}
+                        gap={3}
+                        direction={{ base: 'column', sm: 'row' }}
+                      >
                         <Heading
                           size="md"
                           color="brand.500"
                           fontFamily="heading"
-                          flex={1}
+                          flex="1 1 auto"
                           minW="0"
+                          w="full"
                         >
                           {f.titre}
                         </Heading>
-                        <Badge
-                          colorScheme="brand"
-                          bg="sand.200"
-                          color="brand.700"
-                          fontSize="sm"
-                          px={3}
-                          py={1}
-                          borderRadius="full"
-                        >
-                          {f.annee}
-                        </Badge>
-                      </HStack>
+                        <HStack spacing={2} flexShrink={0} flexWrap="wrap">
+                          {f.duree && (
+                            <Badge
+                              colorScheme="accent"
+                              bg="accent.100"
+                              color="accent.700"
+                              fontSize="sm"
+                              px={3}
+                              py={1}
+                              borderRadius="full"
+                            >
+                              {f.duree}
+                            </Badge>
+                          )}
+                          <Badge
+                            colorScheme="brand"
+                            bg="sand.200"
+                            color="brand.700"
+                            fontSize="sm"
+                            px={3}
+                            py={1}
+                            borderRadius="full"
+                          >
+                            {f.annee}
+                          </Badge>
+                        </HStack>
+                      </Flex>
                       <Text
                         color="brand.600"
                         lineHeight="1.8"
                         fontSize={{ base: 'sm', md: 'md' }}
                         whiteSpace="pre-wrap"
+                        w="full"
                       >
                         {f.contenu}
                       </Text>

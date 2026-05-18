@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         titre: body.titre,
         contenu: body.contenu,
         annee: body.annee,
+        duree: body.duree?.trim() ? body.duree.trim() : null,
         display_order: body.display_order ?? 0,
         is_published: body.is_published ?? true,
       })
@@ -49,6 +50,10 @@ export async function PATCH(request: NextRequest) {
     const { id, ...patch } = body;
     if (!id) {
       return NextResponse.json({ success: false, error: 'id requis' }, { status: 400 });
+    }
+    if ('duree' in patch) {
+      patch.duree =
+        typeof patch.duree === 'string' && patch.duree.trim() ? patch.duree.trim() : null;
     }
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase

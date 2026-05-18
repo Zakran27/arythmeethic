@@ -51,6 +51,7 @@ import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX, FiTrash2 } from '
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
+import { formatPhone } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 
@@ -108,18 +109,18 @@ export default function ClientDetailPage() {
 
   // Heures réalisées
   const { isOpen: isHeuresOpen, onOpen: onHeuresOpen, onClose: onHeuresClose } = useDisclosure();
-  const [heuresRealisees, setHeuresRealisees] = useState<
-    Array<{
-      id: string;
-      mois: string;
-      heures: number;
-      tarif_horaire: number;
-      km: number;
-      bareme_km: number;
-      temps_a_reporter?: number;
-      created_at: string;
-    }>
-  >([]);
+  type HeureEntry = {
+    id: string;
+    mois: string;
+    heures: number;
+    tarif_horaire: number;
+    km: number;
+    bareme_km: number;
+    temps_a_reporter?: number;
+    created_at: string;
+  };
+  const [heuresRealisees, setHeuresRealisees] = useState<HeureEntry[]>([]);
+  const [editingHeure, setEditingHeure] = useState<HeureEntry | null>(null);
   const [heuresLoading, setHeuresLoading] = useState(false);
   const now = new Date();
   const defaultFilterFrom = `${now.getFullYear() - 1}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -246,7 +247,12 @@ export default function ClientDetailPage() {
       if (ecolePreviewUrl) URL.revokeObjectURL(ecolePreviewUrl);
       setEcolePreviewUrl(URL.createObjectURL(blob));
     } catch (e) {
-      toast({ title: 'Aperçu impossible', description: String(e), status: 'error', duration: 3500 });
+      toast({
+        title: 'Aperçu impossible',
+        description: String(e),
+        status: 'error',
+        duration: 3500,
+      });
     } finally {
       setPreviewLoading(false);
     }
@@ -287,7 +293,12 @@ export default function ClientDetailPage() {
       if (particulierPreviewUrl) URL.revokeObjectURL(particulierPreviewUrl);
       setParticulierPreviewUrl(URL.createObjectURL(blob));
     } catch (e) {
-      toast({ title: 'Aperçu impossible', description: String(e), status: 'error', duration: 3500 });
+      toast({
+        title: 'Aperçu impossible',
+        description: String(e),
+        status: 'error',
+        duration: 3500,
+      });
     } finally {
       setPreviewLoading(false);
     }
@@ -305,7 +316,7 @@ export default function ClientDetailPage() {
             title: 'Téléchargement impossible',
             description:
               res.status === 409
-                ? 'Le contrat n\'est pas encore signé par toutes les parties.'
+                ? "Le contrat n'est pas encore signé par toutes les parties."
                 : data.error || 'Erreur',
             status: res.status === 409 ? 'info' : 'error',
             duration: 4000,
@@ -946,7 +957,12 @@ export default function ClientDetailPage() {
 
   return (
     <Stack spacing={6}>
-      <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'stretch', md: 'center' }} spacing={3}>
+      <Stack
+        direction={{ base: 'column', md: 'row' }}
+        justify="space-between"
+        align={{ base: 'stretch', md: 'center' }}
+        spacing={3}
+      >
         <Heading color="brand.500" fontFamily="heading">
           {getDisplayName()}
         </Heading>
@@ -1041,7 +1057,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_jeune || '-'}</Text>
+                  <Text fontWeight="medium">{formatPhone(client.phone_jeune) || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1074,7 +1090,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_parent1 || '-'}</Text>
+                  <Text fontWeight="medium">{formatPhone(client.phone_parent1) || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1107,7 +1123,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone_parent2 || '-'}</Text>
+                  <Text fontWeight="medium">{formatPhone(client.phone_parent2) || '-'}</Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1142,7 +1158,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.phone1 || '-'}</Text>
+                  <Text fontWeight="medium">{formatPhone(client.phone1) || '-'}</Text>
                 </GridItem>
                 <GridItem colSpan={{ base: 1, md: 2 }}>
                   <Text fontSize="sm" color="gray.500">
@@ -1187,7 +1203,9 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_modules_phone || '-'}</Text>
+                  <Text fontWeight="medium">
+                    {formatPhone(client.ecole_resp_modules_phone) || '-'}
+                  </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1220,7 +1238,9 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_autorisation_phone || '-'}</Text>
+                  <Text fontWeight="medium">
+                    {formatPhone(client.ecole_resp_autorisation_phone) || '-'}
+                  </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1253,7 +1273,9 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_facturation_phone || '-'}</Text>
+                  <Text fontWeight="medium">
+                    {formatPhone(client.ecole_resp_facturation_phone) || '-'}
+                  </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1286,7 +1308,9 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Téléphone
                   </Text>
-                  <Text fontWeight="medium">{client.ecole_resp_planning_phone || '-'}</Text>
+                  <Text fontWeight="medium">
+                    {formatPhone(client.ecole_resp_planning_phone) || '-'}
+                  </Text>
                 </Box>
                 <Box>
                   <Text fontSize="sm" color="gray.500">
@@ -1569,7 +1593,9 @@ export default function ClientDetailPage() {
                       <Text fontSize="sm" color="gray.500">
                         Téléphone
                       </Text>
-                      <Text fontWeight="medium">{client.ecole_resp_notes_phone || '-'}</Text>
+                      <Text fontWeight="medium">
+                        {formatPhone(client.ecole_resp_notes_phone) || '-'}
+                      </Text>
                     </GridItem>
                     <GridItem colSpan={{ base: 1, md: 2 }}>
                       <Text fontSize="sm" color="gray.500">
@@ -1669,9 +1695,7 @@ export default function ClientDetailPage() {
                   <Text fontSize="sm" color="gray.500">
                     Démarche volontaire du jeune
                   </Text>
-                  <Text fontWeight="medium">
-                    {client.demarche_volontaire ? 'Oui' : 'Non'}
-                  </Text>
+                  <Text fontWeight="medium">{client.demarche_volontaire ? 'Oui' : 'Non'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1763,17 +1787,34 @@ export default function ClientDetailPage() {
         <Card bg="white">
           <CardBody>
             <Stack spacing={4}>
-              <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'flex-start', md: 'center' }} spacing={2}>
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                justify="space-between"
+                align={{ base: 'flex-start', md: 'center' }}
+                spacing={2}
+              >
                 <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
                   Heures réalisées
                 </Heading>
-                <Button colorScheme="accent" size="sm" onClick={onHeuresOpen} flexShrink={0}>
+                <Button
+                  colorScheme="accent"
+                  size="sm"
+                  onClick={() => {
+                    setEditingHeure(null);
+                    onHeuresOpen();
+                  }}
+                  flexShrink={0}
+                >
                   + Déclarer des heures
                 </Button>
               </Stack>
 
               {/* Filtres date range */}
-              <Stack direction={{ base: 'column', md: 'row' }} spacing={3} align={{ base: 'stretch', md: 'flex-end' }}>
+              <Stack
+                direction={{ base: 'column', md: 'row' }}
+                spacing={3}
+                align={{ base: 'stretch', md: 'flex-end' }}
+              >
                 <FormControl>
                   <FormLabel fontSize="xs" mb={1}>
                     De
@@ -1816,6 +1857,7 @@ export default function ClientDetailPage() {
                         <Th isNumeric>Montant km</Th>
                         <Th isNumeric>Total</Th>
                         <Th isNumeric>À reporter</Th>
+                        <Th></Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -1842,6 +1884,19 @@ export default function ClientDetailPage() {
                             </Td>
                             <Td isNumeric color={h.temps_a_reporter ? 'orange.500' : 'gray.400'}>
                               {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '-'}
+                            </Td>
+                            <Td isNumeric>
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                colorScheme="brand"
+                                onClick={() => {
+                                  setEditingHeure(h);
+                                  onHeuresOpen();
+                                }}
+                              >
+                                Modifier
+                              </Button>
                             </Td>
                           </Tr>
                         );
@@ -2032,7 +2087,8 @@ export default function ClientDetailPage() {
                           const schoolYear = m >= 9 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
                           const isEcole = client?.type_client === 'École';
                           const label = isEcole
-                            ? client?.organisation || `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim()
+                            ? client?.organisation ||
+                              `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim()
                             : `${client?.first_name_jeune || ''} ${client?.last_name_jeune || ''}`.trim() ||
                               `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim();
                           return `Contrat - ${label} - ${schoolYear}`;
@@ -2061,8 +2117,8 @@ export default function ClientDetailPage() {
                 ))}
               </Stack>
               <Text fontSize="xs" color="gray.500">
-                Le PDF est récupéré directement depuis DocuSeal. Si toutes les parties n&apos;ont pas
-                encore signé, le téléchargement sera indisponible.
+                Le PDF est récupéré directement depuis DocuSeal. Si toutes les parties n&apos;ont
+                pas encore signé, le téléchargement sera indisponible.
               </Text>
             </Stack>
           </CardBody>
@@ -2438,10 +2494,14 @@ export default function ClientDetailPage() {
               </Text>
               <Box as="ul" pl={5} color="brand.600" fontSize="sm">
                 <li>Le lien CESU pour la démarche de fin de contrat</li>
-                <li>Un formulaire d&apos;upload pour les 3 documents (reçu solde de tout compte, attestation employeur, certificat de travail)</li>
+                <li>
+                  Un formulaire d&apos;upload pour les 3 documents (reçu solde de tout compte,
+                  attestation employeur, certificat de travail)
+                </li>
               </Box>
               <Text fontSize="sm" color="gray.600">
-                Une relance automatique sera envoyée tous les 3 jours à 18h tant que les documents ne sont pas tous transmis.
+                Une relance automatique sera envoyée tous les 3 jours à 18h tant que les documents
+                ne sont pas tous transmis.
               </Text>
               <FormControl isRequired>
                 <FormLabel color="brand.600">Destinataire</FormLabel>
@@ -2454,21 +2514,24 @@ export default function ClientDetailPage() {
                     <option
                       value={`${client.email_parent1}|${client.first_name_parent1 || ''}|${client.last_name_parent1 || ''}`}
                     >
-                      {client.first_name_parent1} {client.last_name_parent1} &lt;{client.email_parent1}&gt; (Parent 1)
+                      {client.first_name_parent1} {client.last_name_parent1} &lt;
+                      {client.email_parent1}&gt; (Parent 1)
                     </option>
                   )}
                   {client?.email_parent2 && (
                     <option
                       value={`${client.email_parent2}|${client.first_name_parent2 || ''}|${client.last_name_parent2 || ''}`}
                     >
-                      {client.first_name_parent2} {client.last_name_parent2} &lt;{client.email_parent2}&gt; (Parent 2)
+                      {client.first_name_parent2} {client.last_name_parent2} &lt;
+                      {client.email_parent2}&gt; (Parent 2)
                     </option>
                   )}
                   {client?.email_jeune && (
                     <option
                       value={`${client.email_jeune}|${client.first_name_jeune || ''}|${client.last_name_jeune || ''}`}
                     >
-                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}&gt; (Jeune)
+                      {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}
+                      &gt; (Jeune)
                     </option>
                   )}
                 </Select>
@@ -2794,7 +2857,9 @@ export default function ClientDetailPage() {
                     <HStack key={idx} bg="gray.50" p={2} borderRadius="md" justify="space-between">
                       <HStack spacing={2}>
                         <Icon as={FiFile} color="gray.500" boxSize={3} />
-                        <Text fontSize="xs" color="gray.600" noOfLines={1}>{f.name}</Text>
+                        <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                          {f.name}
+                        </Text>
                       </HStack>
                       <IconButton
                         aria-label="Supprimer"
@@ -2802,7 +2867,9 @@ export default function ClientDetailPage() {
                         size="xs"
                         variant="ghost"
                         colorScheme="red"
-                        onClick={() => setContractAnnexeFiles(prev => prev.filter((_, i) => i !== idx))}
+                        onClick={() =>
+                          setContractAnnexeFiles(prev => prev.filter((_, i) => i !== idx))
+                        }
                       />
                     </HStack>
                   ))}
@@ -3220,12 +3287,16 @@ export default function ClientDetailPage() {
       {/* Modal Heures Réalisées */}
       <HeuresRealiséesModal
         isOpen={isHeuresOpen}
-        onClose={onHeuresClose}
+        onClose={() => {
+          onHeuresClose();
+          setEditingHeure(null);
+        }}
         clientId={clientId}
         onSuccess={fetchHeures}
         clientTarifHoraire={client?.tarif_horaire}
         clientDistanceKm={client?.distance_km}
         defaultBaremeKm={defaultBaremeKm}
+        initial={editingHeure}
       />
     </Stack>
   );

@@ -38,10 +38,21 @@ export async function GET() {
     const ensure = (h: number) => {
       if (y - h < BOTTOM) newPage();
     };
-    const draw = (text: string, size: number, opts: { bold?: boolean; italic?: boolean; color?: [number, number, number]; indent?: number } = {}) => {
+    const draw = (
+      text: string,
+      size: number,
+      opts: {
+        bold?: boolean;
+        italic?: boolean;
+        color?: [number, number, number];
+        indent?: number;
+      } = {}
+    ) => {
       ensure(size + 4);
       const f = opts.bold ? fontBold : opts.italic ? fontItalic : font;
-      const c = opts.color ? rgb(opts.color[0], opts.color[1], opts.color[2]) : rgb(0.13, 0.07, 0.04);
+      const c = opts.color
+        ? rgb(opts.color[0], opts.color[1], opts.color[2])
+        : rgb(0.13, 0.07, 0.04);
       // Basic word-wrap
       const maxWidth = PAGE_W - MARGIN * 2 - (opts.indent || 0);
       const words = text.split(' ');
@@ -62,7 +73,9 @@ export async function GET() {
         y -= size + 4;
       }
     };
-    const br = (n = 8) => { y -= n; };
+    const br = (n = 8) => {
+      y -= n;
+    };
 
     // ===== HEADER =====
     draw('A Rythme Ethic', 22, { bold: true, color: [0.43, 0.23, 0.15] });
@@ -77,10 +90,13 @@ export async function GET() {
         ensure(60);
         draw(f.titre, 13, { bold: true, color: [0.43, 0.23, 0.15] });
         br(2);
-        draw(f.annee, 10, { italic: true, color: [0.65, 0.35, 0.25] });
+        const meta = f.duree ? `${f.annee} • ${f.duree}` : String(f.annee);
+        draw(meta, 10, { italic: true, color: [0.65, 0.35, 0.25] });
         br(4);
         // Split contenu by newlines and draw each paragraph
-        const paragraphs = String(f.contenu).split(/\n+/).filter(p => p.trim());
+        const paragraphs = String(f.contenu)
+          .split(/\n+/)
+          .filter(p => p.trim());
         for (const p of paragraphs) {
           draw(p.trim(), 10);
           br(2);
@@ -93,10 +109,13 @@ export async function GET() {
     const totalPages = pdfDoc.getPageCount();
     for (let i = 0; i < totalPages; i++) {
       const p = pdfDoc.getPage(i);
-      p.drawText(
-        `Florence LOUAZEL - A Rythme Ethic - Page ${i + 1}/${totalPages}`,
-        { x: MARGIN, y: 30, size: 8, font, color: rgb(0.55, 0.47, 0.41) }
-      );
+      p.drawText(`Florence LOUAZEL - A Rythme Ethic - Page ${i + 1}/${totalPages}`, {
+        x: MARGIN,
+        y: 30,
+        size: 8,
+        font,
+        color: rgb(0.55, 0.47, 0.41),
+      });
     }
 
     const bytes = await pdfDoc.save();
