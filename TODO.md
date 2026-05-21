@@ -1,5 +1,69 @@
 # TODO
 
+## 🟠 Retours Florence (21 mai 2026) — À FAIRE prochaine session
+
+> Messages reçus de Florence après la dernière livraison. À traiter en bloc à la prochaine session.
+
+### 1. Temps à reporter — cumul et bascule auto à 1h
+**Demande Florence :**
+- Le temps à reporter doit se **cumuler avec le report du mois précédent**.
+- Lorsque le cumul **dépasse 1h**, il doit **automatiquement être ajouté à la déclaration** du parent.
+- Le compteur garde en mémoire le **reste** s'il y en a (ex. cumul 1h30 → 1h facturée, 0h30 reporté au mois suivant).
+
+**État actuel du code (à modifier) :**
+- Table `heures_realisees` : colonne `temps_a_reporter` (numeric) déjà présente, saisie manuellement dans [HeuresRealiséesModal.tsx](app/admin/clients/[id]/HeuresRealiséesModal.tsx).
+- Affichage dans la fiche client : colonne "À reporter" du tableau heures réalisées ([app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx) ~ligne 1859).
+- Le récap envoyé par email ([app/api/heures-realisees/recap-email/route.ts](app/api/heures-realisees/recap-email/route.ts)) **n'utilise pas du tout** `temps_a_reporter` aujourd'hui.
+
+**Stratégie pressentie :**
+- À l'affichage du mois N et à la génération du recap mois N : calculer `cumul = temps_a_reporter(mois N) + report_restant(mois N-1)`.
+- Si `cumul >= 1` : ajouter `floor(cumul)` heures (en heures entières ? ou demi-heures ?) à la facturation, et sauvegarder `cumul - floor(cumul)` comme nouveau report.
+- Ajouter une colonne `report_restant` (ou réutiliser `temps_a_reporter` après "consommation") dans `heures_realisees`, ou calculer dynamiquement à partir de l'historique.
+- ⚠️ **À clarifier avec Florence** :
+  - Le seuil "1h" déclenche-t-il un report à l'unité (1h, 2h, etc.) ou par paliers de 0.5h ?
+  - Faut-il ajouter ces heures à la facturation **automatiquement** au moment de la saisie, ou seulement au moment de l'envoi du récap mensuel ?
+  - Le récap envoyé doit-il afficher explicitement "+ X h reportées du mois précédent" pour transparence ?
+
+### 2. Bouton "Envoyer la déclaration mensuelle" dans la fiche client particulier
+**Demande Florence :** ajouter un bouton dans la fiche client (Particulier) pour envoyer la déclaration mensuelle directement, sans passer par le bouton global de la liste clients.
+
+**État actuel du code :**
+- Modale globale [DeclarerHeuresModal.tsx](app/admin/clients/DeclarerHeuresModal.tsx) qui scanne toutes les heures sur une plage de dates et permet d'envoyer en bulk via `/api/heures-realisees/recap-email`.
+- Pas de bouton "Envoyer le récap" individuel sur la fiche client.
+
+**Stratégie pressentie :**
+- Ajouter, à côté du bouton "+ Déclarer des heures" dans la section "Heures réalisées" de [app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx) (~ligne 1799), un bouton "Envoyer la déclaration mensuelle".
+- Au clic : ouvrir une modale (ou inline) listant les mois éligibles (non encore envoyés) avec un select destinataire (parent1/parent2/jeune) et un bouton "Envoyer" qui appelle `/api/heures-realisees/recap-email` avec une seule entrée.
+
+### 3. Indicateur "Déclaration mensuelle envoyée" dans la fiche client
+**Demande Florence :** "J'aimerais voir dans la fiche client que la déclaration mensuelle a été envoyée afin de ne pas perdre la tête."
+
+**État actuel du code :** rien n'est tracké côté DB. Le récap est envoyé via Brevo sans persister de marqueur.
+
+**Stratégie pressentie :**
+- Ajouter dans `heures_realisees` une colonne `recap_email_sent_at timestamptz` (nullable) + éventuellement `recap_email_to text`.
+- À chaque envoi réussi via `/api/heures-realisees/recap-email`, faire un `UPDATE heures_realisees SET recap_email_sent_at = now(), recap_email_to = parentEmail WHERE client_id = ? AND mois = ?`.
+- Dans la fiche client (tableau heures réalisées) : ajouter une colonne (ou un badge) "Envoyé le JJ/MM/AAAA à <email>". Si non envoyé : badge orange "Non envoyé".
+- Migration SQL à créer dans `database/` (la table n'est pas dans `schema.sql` aujourd'hui — créée directement dans Supabase).
+
+### 4. Validation email côté formulaire de contact
+**Demande Florence :** elle a tapé un email faux et n'a eu **aucune notification** pour l'inviter à vérifier. Comportement actuel anormal.
+
+**État actuel du code :**
+- [components/ContactModal.tsx](components/ContactModal.tsx) : champ `<Input type="email" />` (HTML5 only, validation très permissive).
+- [app/api/contact/route.ts](app/api/contact/route.ts) : aucune validation regex/RFC sur l'email avant insertion en DB et envoi du mail.
+- Conséquence : si l'utilisateur tape `florence@arythmeethic` (sans `.fr`) ou `florence@.com`, le formulaire passe silencieusement et la réponse de Florence partira dans le vide.
+
+**Stratégie pressentie :**
+- Côté client : ajouter validation regex (ou lib `zod`/`yup`) qui bloque la soumission tant que l'email n'a pas la forme `<local>@<domain>.<tld>` (TLD 2+ chars). Afficher un `FormErrorMessage` rouge sous le champ.
+- Côté API : refuser le POST si l'email ne match pas le regex (renvoyer 400 avec message clair pour pas insérer un Prospect avec un email mort en base).
+- Bonus à discuter : double opt-in mail de confirmation envoyé au prospect pour valider qu'il reçoit bien les emails (probablement overkill, on s'en tient à la validation format pour cette itération).
+
+### Mot-clé prochaine session
+> "On attaque les retours Florence" → reprendre dans l'ordre 1 → 2 → 3 → 4 (le 1 a le plus d'inconnues fonctionnelles à clarifier avec Florence avant d'implémenter).
+
+---
+
 ## Backoffice / Contractualisation
 - [x] Téléchargement du contrat signé (PDF) - bouton dans l'admin (fetch live DocuSeal)
 - [x] Preview embed du PDF dans la modale de lancement de contractualisation
