@@ -1,5 +1,22 @@
 # TODO
 
+## 🟠 Retours Florence (22 mai 2026) — À FAIRE prochaine session
+
+### 1. Mail de notification à Florence quand un formulaire est rempli sur le site
+**Demande Florence :** "Pourrais-tu ajouter un mail de notification pour moi lorsque les personnes remplissent un formulaire sur le site ?"
+
+**État actuel du code :**
+- Formulaire de contact public : [components/ContactModal.tsx](components/ContactModal.tsx) → POST [app/api/contact/route.ts](app/api/contact/route.ts) → insère un Prospect en DB + envoie un mail d'accusé de réception au prospect, mais **pas de notification à Florence**.
+- Autres formulaires côté client (à recenser) : `app/formulaire/recueil-informations/[token]`, `app/formulaire/fin-de-contrat/[token]`, éventuellement formulaires de signature DocuSeal (gérés par DocuSeal directement).
+
+**Stratégie pressentie :**
+- Dans [app/api/contact/route.ts](app/api/contact/route.ts) : après l'insert prospect réussi, envoyer un second mail via Brevo à `florence.louazel@arythmeethic.fr` (ou la variable `BREVO_SENDER_EMAIL` / une variable `FLORENCE_NOTIF_EMAIL`) avec le contenu du formulaire (nom, email, téléphone, message, type de demande).
+- Réutiliser le helper d'envoi Brevo existant (cf autres routes API qui envoient déjà des mails — `app/api/heures-realisees/recap-email/route.ts` par ex).
+- Vérifier si on étend la notif aux autres formulaires (recueil-informations, fin-de-contrat) ou si Florence ne parle que du formulaire de contact public.
+- ⚠️ **À clarifier avec Florence** : uniquement le formulaire de contact, ou tous les formulaires du site (recueil-informations, fin-de-contrat, etc.) ?
+
+---
+
 ## 🟠 Retours Florence (21 mai 2026) — À FAIRE prochaine session
 
 > Messages reçus de Florence après la dernière livraison. À traiter en bloc à la prochaine session.
