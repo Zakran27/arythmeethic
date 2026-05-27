@@ -54,6 +54,7 @@ import { statusLabels } from '@/types';
 import { formatPhone } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
+import { SendRecapModal } from './SendRecapModal';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -109,6 +110,11 @@ export default function ClientDetailPage() {
 
   // Heures réalisées
   const { isOpen: isHeuresOpen, onOpen: onHeuresOpen, onClose: onHeuresClose } = useDisclosure();
+  const {
+    isOpen: isSendRecapOpen,
+    onOpen: onSendRecapOpen,
+    onClose: onSendRecapClose,
+  } = useDisclosure();
   type HeureEntry = {
     id: string;
     mois: string;
@@ -117,6 +123,9 @@ export default function ClientDetailPage() {
     km: number;
     bareme_km: number;
     temps_a_reporter?: number;
+    report_in?: number;
+    recap_email_sent_at?: string | null;
+    recap_email_to?: string | null;
     created_at: string;
   };
   const [heuresRealisees, setHeuresRealisees] = useState<HeureEntry[]>([]);
@@ -1796,17 +1805,27 @@ export default function ClientDetailPage() {
                 <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
                   Heures réalisées
                 </Heading>
-                <Button
-                  colorScheme="accent"
-                  size="sm"
-                  onClick={() => {
-                    setEditingHeure(null);
-                    onHeuresOpen();
-                  }}
-                  flexShrink={0}
-                >
-                  + Déclarer des heures
-                </Button>
+                <HStack spacing={2} flexShrink={0}>
+                  <Button
+                    variant="outline"
+                    colorScheme="brand"
+                    size="sm"
+                    onClick={onSendRecapOpen}
+                    isDisabled={heuresRealisees.length === 0}
+                  >
+                    Envoyer la déclaration mensuelle
+                  </Button>
+                  <Button
+                    colorScheme="accent"
+                    size="sm"
+                    onClick={() => {
+                      setEditingHeure(null);
+                      onHeuresOpen();
+                    }}
+                  >
+                    + Déclarer des heures
+                  </Button>
+                </HStack>
               </Stack>
 
               {/* Filtres date range */}
@@ -1857,12 +1876,15 @@ export default function ClientDetailPage() {
                         <Th isNumeric>Montant km</Th>
                         <Th isNumeric>Total</Th>
                         <Th isNumeric>À reporter</Th>
+                        <Th>Envoi récap</Th>
                         <Th></Th>
                       </Tr>
                     </Thead>
                     <Tbody>
                       {heuresRealisees.map(h => {
-                        const montantHeures = h.heures * h.tarif_horaire;
+                        const reportIn = Number(h.report_in ?? 0);
+                        const heuresBillees = h.heures + reportIn;
+                        const montantHeures = heuresBillees * h.tarif_horaire;
                         const montantKm = h.km * h.bareme_km;
                         const total = montantHeures + montantKm;
                         const moisDate = new Date(h.mois + 'T00:00:00');
@@ -1870,10 +1892,20 @@ export default function ClientDetailPage() {
                           month: 'long',
                           year: 'numeric',
                         });
+                        const sentAt = h.recap_email_sent_at
+                          ? new Date(h.recap_email_sent_at)
+                          : null;
                         return (
                           <Tr key={h.id}>
                             <Td textTransform="capitalize">{label}</Td>
-                            <Td isNumeric>{h.heures}h</Td>
+                            <Td isNumeric>
+                              {h.heures}h
+                              {reportIn > 0 && (
+                                <Text as="span" color="orange.500" fontSize="xs" ml={1}>
+                                  (+{reportIn}h)
+                                </Text>
+                              )}
+                            </Td>
                             <Td isNumeric>{h.tarif_horaire.toFixed(2)} €</Td>
                             <Td isNumeric>{montantHeures.toFixed(2)} €</Td>
                             <Td isNumeric>{h.km} km</Td>
@@ -1884,6 +1916,24 @@ export default function ClientDetailPage() {
                             </Td>
                             <Td isNumeric color={h.temps_a_reporter ? 'orange.500' : 'gray.400'}>
                               {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '-'}
+                            </Td>
+                            <Td>
+                              {sentAt ? (
+                                <Stack spacing={0}>
+                                  <Badge colorScheme="green" fontSize="xs" w="fit-content">
+                                    Envoyé le {sentAt.toLocaleDateString('fr-FR')}
+                                  </Badge>
+                                  {h.recap_email_to && (
+                                    <Text fontSize="2xs" color="gray.500">
+                                      à {h.recap_email_to}
+                                    </Text>
+                                  )}
+                                </Stack>
+                              ) : (
+                                <Badge colorScheme="orange" fontSize="xs">
+                                  Non envoyé
+                                </Badge>
+                              )}
                             </Td>
                             <Td isNumeric>
                               <Button
@@ -3298,6 +3348,17 @@ export default function ClientDetailPage() {
         defaultBaremeKm={defaultBaremeKm}
         initial={editingHeure}
       />
+
+      {/* Modal Envoi de la déclaration mensuelle (récap) */}
+      {client && (
+        <SendRecapModal
+          isOpen={isSendRecapOpen}
+          onClose={onSendRecapClose}
+          client={client}
+          heures={heuresRealisees}
+          onSuccess={fetchHeures}
+        />
+      )}
     </Stack>
   );
 }

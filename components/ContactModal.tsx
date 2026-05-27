@@ -10,6 +10,7 @@ import {
   Button,
   Checkbox,
   FormControl,
+  FormErrorMessage,
   FormLabel,
   Input,
   Textarea,
@@ -20,6 +21,8 @@ import {
   GridItem,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -50,7 +53,12 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
     clientType: defaultClientType || '',
   });
   const [loading, setLoading] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
   const toast = useToast();
+
+  const trimmedEmail = formData.email.trim();
+  const emailValid = EMAIL_REGEX.test(trimmedEmail);
+  const showEmailError = emailTouched && trimmedEmail.length > 0 && !emailValid;
 
   // Reset form when defaultClientType changes
   useEffect(() => {
@@ -77,16 +85,32 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!emailValid) {
+      setEmailTouched(true);
+      toast({
+        title: 'Adresse email invalide',
+        description: 'Vérifiez la forme : nom@domaine.fr',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, email: trimmedEmail }),
       });
 
-      if (!response.ok) throw new Error("Erreur lors de l'envoi");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || "Erreur lors de l'envoi");
+      }
 
       toast({
         title: 'Message envoyé !',
@@ -104,7 +128,8 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue. Veuillez réessayer.',
+        description:
+          error instanceof Error ? error.message : 'Une erreur est survenue. Veuillez réessayer.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -147,14 +172,20 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               </GridItem>
             </Grid>
 
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={showEmailError}>
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="votre@email.com"
               />
+              {showEmailError && (
+                <FormErrorMessage>
+                  Adresse email invalide. Vérifiez la forme : nom@domaine.fr
+                </FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl>
@@ -233,14 +264,20 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               </GridItem>
             </Grid>
 
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={showEmailError}>
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="votre@email.com"
               />
+              {showEmailError && (
+                <FormErrorMessage>
+                  Adresse email invalide. Vérifiez la forme : nom@domaine.fr
+                </FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl>
@@ -300,14 +337,20 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               </GridItem>
             </Grid>
 
-            <FormControl isRequired>
+            <FormControl isRequired isInvalid={showEmailError}>
               <FormLabel>Email</FormLabel>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="contact@etablissement.fr"
               />
+              {showEmailError && (
+                <FormErrorMessage>
+                  Adresse email invalide. Vérifiez la forme : nom@domaine.fr
+                </FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl>
@@ -384,7 +427,6 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
         <ModalBody pb={6} overflowY="auto">
           <form onSubmit={handleSubmit}>
             <Stack spacing={4}>
-
               {/* Step 1 - Type d'accompagnement */}
               <FormControl isRequired>
                 <FormLabel>Type d'accompagnement</FormLabel>
@@ -395,12 +437,16 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                 >
                   <option value="cours_particulier">Cours particulier</option>
                   <option value="accompagnement_uniquement">Accompagnement uniquement</option>
-                  <option value="prestation_professionnels">Prestation pour les professionnels</option>
+                  <option value="prestation_professionnels">
+                    Prestation pour les professionnels
+                  </option>
                 </Select>
               </FormControl>
 
               {/* Step 2 - "Vous êtes" uniquement pour cours/accompagnement */}
-              {['cours_particulier', 'accompagnement_uniquement'].includes(formData.serviceType) && (
+              {['cours_particulier', 'accompagnement_uniquement'].includes(
+                formData.serviceType
+              ) && (
                 <FormControl isRequired>
                   <FormLabel>Vous êtes</FormLabel>
                   <Select
@@ -428,7 +474,6 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
                   </Button>
                 </Stack>
               )}
-
             </Stack>
           </form>
         </ModalBody>
