@@ -1805,13 +1805,19 @@ export default function ClientDetailPage() {
                 <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
                   Heures réalisées
                 </Heading>
-                <HStack spacing={2} flexShrink={0}>
+                <Stack
+                  direction={{ base: 'column', sm: 'row' }}
+                  spacing={2}
+                  w={{ base: '100%', md: 'auto' }}
+                  flexShrink={0}
+                >
                   <Button
                     variant="outline"
                     colorScheme="brand"
                     size="sm"
                     onClick={onSendRecapOpen}
                     isDisabled={heuresRealisees.length === 0}
+                    w={{ base: '100%', sm: 'auto' }}
                   >
                     Envoyer la déclaration mensuelle
                   </Button>
@@ -1822,10 +1828,11 @@ export default function ClientDetailPage() {
                       setEditingHeure(null);
                       onHeuresOpen();
                     }}
+                    w={{ base: '100%', sm: 'auto' }}
                   >
                     + Déclarer des heures
                   </Button>
-                </HStack>
+                </Stack>
               </Stack>
 
               {/* Filtres date range */}
