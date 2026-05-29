@@ -1,83 +1,287 @@
 # TODO
 
-## 🟠 Retours Florence (22 mai 2026) — À FAIRE prochaine session
+## 🔴 Retours Florence (28 mai 2026) — Call Thomas/Florence — À FAIRE prochaine session
 
-### 1. Mail de notification à Florence quand un formulaire est rempli sur le site
-**Demande Florence :** "Pourrais-tu ajouter un mail de notification pour moi lorsque les personnes remplissent un formulaire sur le site ?"
+> Liste des retours captés pendant le call du 28/05. À traiter en bloc à la prochaine session. Ordre suggéré : petits items rapides (1, 4, 5, 6) → moyens (2, 3, 7, 8, 10, 11) → gros chantier (12). Item 9 = question pure, réponse ci-dessous, rien à faire.
+>
+> **⚠️ Pour la DB : utiliser le MCP Supabase, PAS lire `database/schema.sql`** — le fichier local n'est pas toujours à jour vs. la DB réelle (plusieurs tables comme `heures_realisees` ont été créées directement dans Supabase). Utiliser :
+> - `mcp__supabase__list_tables` pour voir les tables et colonnes réelles
+> - `mcp__supabase__execute_sql` (ou `_read_only`) pour inspecter les contraintes / valeurs existantes
+> - `mcp__supabase__apply_migration` pour appliquer les changements de schéma (préférable à donner un SQL à Thomas à copier-coller)
+> - `mcp__supabase__get_advisors` après chaque migration pour détecter les pbs de sécurité / perf
+
+### 1. Bouton "Retour" à côté de "Modifier" sur la fiche client
+**Demande Florence :** ajouter un bouton "Retour" à côté du bouton "Modifier" dans le header de la fiche client. Le retour doit ramener à la **liste correspondante au type/statut du client** (liste Prospects si on regarde un Prospect, liste Clients si on regarde un Client, liste Archivés si on regarde un Archivé — voir item 2).
 
 **État actuel du code :**
-- Formulaire de contact public : [components/ContactModal.tsx](components/ContactModal.tsx) → POST [app/api/contact/route.ts](app/api/contact/route.ts) → insère un Prospect en DB + envoie un mail d'accusé de réception au prospect, mais **pas de notification à Florence**.
-- Autres formulaires côté client (à recenser) : `app/formulaire/recueil-informations/[token]`, `app/formulaire/fin-de-contrat/[token]`, éventuellement formulaires de signature DocuSeal (gérés par DocuSeal directement).
+- [app/admin/clients/\[id\]/page.tsx:978-985](app/admin/clients/[id]/page.tsx) — actuellement le header n'a que `<Button>Modifier</Button>` et `<Button>Supprimer</Button>`. Aucun bouton retour, l'utilisateur doit utiliser le navigateur.
+- La page liste [app/admin/clients/page.tsx:137-142](app/admin/clients/page.tsx) sépare déjà `prospectsList` et `clientsList` via le `client_status` et utilise probablement des onglets ou une route avec query param. À vérifier comment la page liste détecte l'onglet actif (state local ou query param ?). Si state local, le "Retour" devra reconstruire l'URL `/admin/clients?tab=prospects|clients|archives` (ou équivalent) — donc passer la page liste en query-param synchronisé.
 
 **Stratégie pressentie :**
-- Dans [app/api/contact/route.ts](app/api/contact/route.ts) : après l'insert prospect réussi, envoyer un second mail via Brevo à `florence.louazel@arythmeethic.fr` (ou la variable `BREVO_SENDER_EMAIL` / une variable `FLORENCE_NOTIF_EMAIL`) avec le contenu du formulaire (nom, email, téléphone, message, type de demande).
-- Réutiliser le helper d'envoi Brevo existant (cf autres routes API qui envoient déjà des mails — `app/api/heures-realisees/recap-email/route.ts` par ex).
-- Vérifier si on étend la notif aux autres formulaires (recueil-informations, fin-de-contrat) ou si Florence ne parle que du formulaire de contact public.
-- ⚠️ **À clarifier avec Florence** : uniquement le formulaire de contact, ou tous les formulaires du site (recueil-informations, fin-de-contrat, etc.) ?
+- Ajouter `<Button variant="outline" onClick={() => router.push('/admin/clients?tab=...')}>Retour</Button>` dans le `HStack` ligne 978 de [app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx).
+- L'onglet cible est dérivé du `client.client_status` (`'Prospect' → tab=prospects`, `'Client' → tab=clients`, `'Archivé' → tab=archives` — voir item 2 pour le 3e statut).
+- Côté liste [app/admin/clients/page.tsx](app/admin/clients/page.tsx) : lire un query param `?tab=...` au mount pour ouvrir le bon onglet.
 
 ---
 
-## 🟠 Retours Florence (21 mai 2026) — À FAIRE prochaine session
-
-> Messages reçus de Florence après la dernière livraison. À traiter en bloc à la prochaine session.
-
-### 1. Temps à reporter — cumul et bascule auto à 1h
-**Demande Florence :**
-- Le temps à reporter doit se **cumuler avec le report du mois précédent**.
-- Lorsque le cumul **dépasse 1h**, il doit **automatiquement être ajouté à la déclaration** du parent.
-- Le compteur garde en mémoire le **reste** s'il y en a (ex. cumul 1h30 → 1h facturée, 0h30 reporté au mois suivant).
-
-**État actuel du code (à modifier) :**
-- Table `heures_realisees` : colonne `temps_a_reporter` (numeric) déjà présente, saisie manuellement dans [HeuresRealiséesModal.tsx](app/admin/clients/[id]/HeuresRealiséesModal.tsx).
-- Affichage dans la fiche client : colonne "À reporter" du tableau heures réalisées ([app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx) ~ligne 1859).
-- Le récap envoyé par email ([app/api/heures-realisees/recap-email/route.ts](app/api/heures-realisees/recap-email/route.ts)) **n'utilise pas du tout** `temps_a_reporter` aujourd'hui.
-
-**Stratégie pressentie :**
-- À l'affichage du mois N et à la génération du recap mois N : calculer `cumul = temps_a_reporter(mois N) + report_restant(mois N-1)`.
-- Si `cumul >= 1` : ajouter `floor(cumul)` heures (en heures entières ? ou demi-heures ?) à la facturation, et sauvegarder `cumul - floor(cumul)` comme nouveau report.
-- Ajouter une colonne `report_restant` (ou réutiliser `temps_a_reporter` après "consommation") dans `heures_realisees`, ou calculer dynamiquement à partir de l'historique.
-- ⚠️ **À clarifier avec Florence** :
-  - Le seuil "1h" déclenche-t-il un report à l'unité (1h, 2h, etc.) ou par paliers de 0.5h ?
-  - Faut-il ajouter ces heures à la facturation **automatiquement** au moment de la saisie, ou seulement au moment de l'envoi du récap mensuel ?
-  - Le récap envoyé doit-il afficher explicitement "+ X h reportées du mois précédent" pour transparence ?
-
-### 2. Bouton "Envoyer la déclaration mensuelle" dans la fiche client particulier
-**Demande Florence :** ajouter un bouton dans la fiche client (Particulier) pour envoyer la déclaration mensuelle directement, sans passer par le bouton global de la liste clients.
+### 2. Bouton "Archiver" + onglet "Archivés" dans l'admin
+**Demande Florence :** ajouter un bouton "Archiver" sur la fiche client. Quand un client est archivé, on stocke la **date d'archivage** et il devient un 3e type (en plus de Client et Prospect). Donc :
+- Nouvel onglet "Archivés" dans l'admin (`/admin/clients`), à côté de "Clients" et "Prospects".
+- Dans la liste des archivés, afficher la **date d'archivage** comme colonne.
 
 **État actuel du code :**
-- Modale globale [DeclarerHeuresModal.tsx](app/admin/clients/DeclarerHeuresModal.tsx) qui scanne toutes les heures sur une plage de dates et permet d'envoyer en bulk via `/api/heures-realisees/recap-email`.
-- Pas de bouton "Envoyer le récap" individuel sur la fiche client.
+- DB : avant de toucher au schéma, utiliser `mcp__supabase__list_tables` pour vérifier les colonnes/contraintes réelles de la table `clients` (la contrainte `client_status` peut différer de schema.sql local).
+- Type [types/index.ts:14](types/index.ts) : `export type ClientStatus = 'Prospect' | 'Client'` → étendre à `'Prospect' | 'Client' | 'Archivé'`.
+- Liste [app/admin/clients/page.tsx:137-142](app/admin/clients/page.tsx) : filtres `prospectsList` et `clientsList`. À ajouter `archivedList = clients.filter(c => c.client_status === 'Archivé')`.
+- Fiche [app/admin/clients/\[id\]/page.tsx:978](app/admin/clients/[id]/page.tsx) : header avec boutons Modifier/Supprimer. Ajouter "Archiver".
+- Édition [app/admin/clients/\[id\]/EditClientModal.tsx:426-427](app/admin/clients/[id]/EditClientModal.tsx) : Select pour `client_status`. Ajouter l'option "Archivé".
+
+**Migration via `mcp__supabase__apply_migration` :**
+```sql
+-- Étendre la contrainte client_status
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS clients_client_status_check;
+ALTER TABLE clients ADD CONSTRAINT clients_client_status_check
+  CHECK (client_status IN ('Prospect', 'Client', 'Archivé'));
+
+-- Ajouter la date d'archivage
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+```
+→ Appliquer avec `mcp__supabase__apply_migration` (name: `add_archived_status`). Vérifier ensuite avec `mcp__supabase__get_advisors`.
 
 **Stratégie pressentie :**
-- Ajouter, à côté du bouton "+ Déclarer des heures" dans la section "Heures réalisées" de [app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx) (~ligne 1799), un bouton "Envoyer la déclaration mensuelle".
-- Au clic : ouvrir une modale (ou inline) listant les mois éligibles (non encore envoyés) avec un select destinataire (parent1/parent2/jeune) et un bouton "Envoyer" qui appelle `/api/heures-realisees/recap-email` avec une seule entrée.
+- Bouton "Archiver" sur la fiche client : ouvre une confirmation puis `UPDATE clients SET client_status='Archivé', archived_at=now() WHERE id=?`.
+- Si déjà archivé, le bouton devient "Désarchiver" (`UPDATE ... SET client_status='Prospect', archived_at=null`) — ou Florence choisit dans un Select le nouveau statut.
+- Onglet "Archivés" dans la liste avec colonne supplémentaire "Archivé le JJ/MM/AAAA".
+- ⚠️ Vérifier impact sur le bouton "Déclarer des heures" global → exclure les archivés.
+- ⚠️ Couplé avec l'item 1 (bouton Retour doit aussi connaître l'onglet "archives").
 
-### 3. Indicateur "Déclaration mensuelle envoyée" dans la fiche client
-**Demande Florence :** "J'aimerais voir dans la fiche client que la déclaration mensuelle a été envoyée afin de ne pas perdre la tête."
+---
 
-**État actuel du code :** rien n'est tracké côté DB. Le récap est envoyé via Brevo sans persister de marqueur.
-
-**Stratégie pressentie :**
-- Ajouter dans `heures_realisees` une colonne `recap_email_sent_at timestamptz` (nullable) + éventuellement `recap_email_to text`.
-- À chaque envoi réussi via `/api/heures-realisees/recap-email`, faire un `UPDATE heures_realisees SET recap_email_sent_at = now(), recap_email_to = parentEmail WHERE client_id = ? AND mois = ?`.
-- Dans la fiche client (tableau heures réalisées) : ajouter une colonne (ou un badge) "Envoyé le JJ/MM/AAAA à <email>". Si non envoyé : badge orange "Non envoyé".
-- Migration SQL à créer dans `database/` (la table n'est pas dans `schema.sql` aujourd'hui — créée directement dans Supabase).
-
-### 4. Validation email côté formulaire de contact
-**Demande Florence :** elle a tapé un email faux et n'a eu **aucune notification** pour l'inviter à vérifier. Comportement actuel anormal.
+### 3. Adresse des cours différente — checkbox conditionnelle
+**Demande Florence :** dans le formulaire client (création + édition) et sur la fiche client, ajouter une case à cocher "Adresse des cours différente de l'adresse du client". Si cochée, afficher un second bloc de champs d'adresse "Adresse des cours". Sinon, ne rien afficher.
 
 **État actuel du code :**
-- [components/ContactModal.tsx](components/ContactModal.tsx) : champ `<Input type="email" />` (HTML5 only, validation très permissive).
-- [app/api/contact/route.ts](app/api/contact/route.ts) : aucune validation regex/RFC sur l'email avant insertion en DB et envoi du mail.
-- Conséquence : si l'utilisateur tape `florence@arythmeethic` (sans `.fr`) ou `florence@.com`, le formulaire passe silencieusement et la réponse de Florence partira dans le vide.
+- DB : utiliser `mcp__supabase__list_tables` (schema=public, table=clients) pour récupérer les noms exacts des colonnes adresse existantes (`adresse` / `address` / `street` / `ville` / `code_postal` / etc.). Adapter la migration ci-dessous aux noms réels.
+- Formulaires : [app/admin/clients/NewClientModal.tsx](app/admin/clients/NewClientModal.tsx) (création) et [app/admin/clients/\[id\]/EditClientModal.tsx](app/admin/clients/[id]/EditClientModal.tsx) (édition). Grep `adresse` ou `address` pour trouver les champs existants à dupliquer.
+- Fiche : [app/admin/clients/\[id\]/page.tsx](app/admin/clients/[id]/page.tsx) — afficher l'adresse de cours quand elle existe.
+
+**Migration via `mcp__supabase__apply_migration` (name: `add_adresse_cours`) :**
+```sql
+ALTER TABLE clients
+  ADD COLUMN IF NOT EXISTS adresse_cours text,
+  ADD COLUMN IF NOT EXISTS code_postal_cours text,
+  ADD COLUMN IF NOT EXISTS ville_cours text;
+```
+(ajuster les noms `adresse_cours / code_postal_cours / ville_cours` pour matcher la convention des colonnes existantes — vérifier d'abord avec `mcp__supabase__list_tables`)
 
 **Stratégie pressentie :**
-- Côté client : ajouter validation regex (ou lib `zod`/`yup`) qui bloque la soumission tant que l'email n'a pas la forme `<local>@<domain>.<tld>` (TLD 2+ chars). Afficher un `FormErrorMessage` rouge sous le champ.
-- Côté API : refuser le POST si l'email ne match pas le regex (renvoyer 400 avec message clair pour pas insérer un Prospect avec un email mort en base).
-- Bonus à discuter : double opt-in mail de confirmation envoyé au prospect pour valider qu'il reçoit bien les emails (probablement overkill, on s'en tient à la validation format pour cette itération).
+- Checkbox `adresse_cours_differente` (booléen local, pas en DB) qui contrôle l'affichage conditionnel.
+- Si checkbox cochée et qu'on a `adresse_cours` non vide → afficher le bloc d'adresse cours. Sinon le bloc est masqué et les valeurs vidées au submit.
+- Sur la fiche, afficher "Adresse des cours : ..." uniquement si différente de l'adresse principale.
 
-### Mot-clé prochaine session
-> "On attaque les retours Florence" → reprendre dans l'ordre 1 → 2 → 3 → 4 (le 1 a le plus d'inconnues fonctionnelles à clarifier avec Florence avant d'implémenter).
+---
+
+### 4. Détrompeur sur les numéros de téléphone (tous les champs)
+**Demande Florence :** ajouter une validation des numéros de téléphone sur **tous les champs téléphone** dans les formulaires pour empêcher la saisie de numéros invalides.
+
+**État actuel du code :**
+- Champs téléphone côté admin : `phone1`, `phone_parent1`, `phone_parent2`, `phone_jeune` dans [NewClientModal.tsx](app/admin/clients/NewClientModal.tsx) et [EditClientModal.tsx](app/admin/clients/[id]/EditClientModal.tsx).
+- Champ téléphone côté contact : [components/ContactModal.tsx](components/ContactModal.tsx).
+- Une formatte téléphone partielle a déjà été ajoutée (cf commit afdaf94 "format tél"), mais sans validation bloquante apparente. À vérifier.
+
+**Stratégie pressentie :**
+- Côté client : regex stricte FR `/^(?:(?:\+|00)33[\s.-]{0,3}(?:\(0\)[\s.-]{0,3})?|0)[1-9](?:(?:[\s.-]?\d{2}){4})$/` (accepte +33, 00 33, 0X, espaces et tirets). Afficher `FormErrorMessage` sous le champ tant que non valide.
+- Bloquer la soumission tant que le téléphone (s'il est rempli) n'est pas valide.
+- Bonus : auto-format en `06 12 34 56 78` pendant la frappe (déjà partiellement présent ?).
+
+---
+
+### 5. Détrompeur sur les emails (tous les champs)
+**Demande Florence :** "Détrompeur sur les mails, checker si l'email est bon (si jamais on peut le faire)" → validation regex sur **tous les champs email** des formulaires (pas seulement Contact).
+
+**État actuel du code :**
+- Contact public : **DÉJÀ FAIT** — [app/api/contact/route.ts:6](app/api/contact/route.ts) `EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/` + check 400 + validation client dans [ContactModal.tsx](components/ContactModal.tsx). Cf section "21 mai 2026 #4" plus bas.
+- Admin (NewClient, EditClient) : aucune validation regex. `<Input type="email" />` HTML5 seulement.
+- Autres formulaires : recueil-informations, fin-de-contrat, renouvellement — à vérifier.
+
+**Stratégie pressentie :**
+- Centraliser le regex dans `lib/validators.ts` ou `lib/format.ts` (déjà existant).
+- Appliquer dans tous les formulaires admin avec `FormErrorMessage` sous chaque champ email.
+- Bonus (optionnel) : vérification de domaine via DNS/MX record côté API (overkill probablement, regex suffit).
+
+---
+
+### 6. Tableau "Heures réalisées" — colonnes tronquées à droite
+**Demande Florence :** dans la liste des heures réalisées (fiche client), les colonnes sont tronquées à droite. Réduire la taille des colonnes.
+
+**État actuel du code :**
+- [app/admin/clients/\[id\]/page.tsx ~ligne 1859](app/admin/clients/[id]/page.tsx) : tableau des heures réalisées avec colonnes Mois, Heures, Tarif, Total, Km, Barème, Frais km, À reporter, Total facturé, Actions.
+- Récemment fix c28316a pour le responsive des boutons d'action. Mais les colonnes de données peuvent encore déborder selon le viewport.
+
+**Stratégie pressentie :**
+- Réduire les paddings (`px={2}` au lieu de `px={4}`).
+- Format compact : "12h" au lieu de "12 heures", "01/2026" au lieu de "Janvier 2026".
+- Ajouter `overflowX="auto"` sur la `TableContainer` parente si pas déjà présent.
+- Considérer masquer certaines colonnes en mobile (`display={{ base: 'none', md: 'table-cell' }}`).
+- Tester visuellement à 1280px et 1440px (largeurs courantes laptop).
+
+---
+
+### 7. Récap email — afficher les heures reportées des "mois précédents"
+**Demande Florence :** ajouter la mention "des mois précédents" pour les heures à reporter dans le recap mensuel envoyé.
+
+**État actuel du code :**
+- [app/api/heures-realisees/recap-email/route.ts](app/api/heures-realisees/recap-email/route.ts) : email récap envoyé manuellement. Inclut déjà `temps_a_reporter` (cumul implémenté via commit 8265a80).
+- À vérifier : le mail dit-il bien "X heures reportées des mois précédents" ou seulement "À reporter : Xh" ?
+
+**Stratégie pressentie :**
+- Modifier le template HTML du recap pour expliciter : "incluant Xh reportées des mois précédents (cumul depuis mois M)".
+- Lien avec l'item 8 (cas d'annulation) : la ligne récap doit aussi montrer les heures d'annulation facturées.
+- ⚠️ Possiblement déjà fait par 8265a80 — vérifier le contenu actuel de l'email avant d'estimer le scope.
+
+---
+
+### 8. Cas d'annulation dans la déclaration d'heures
+**Demande Florence :** dans la modale "Déclarer des heures", ajouter une **checkbox "Cas d'annulation"** qui révèle un champ "Nombre d'heures à facturer en cas d'annulation". Ces heures doivent apparaître dans le récap envoyé.
+
+**État actuel du code :**
+- Modale [app/admin/clients/DeclarerHeuresModal.tsx](app/admin/clients/DeclarerHeuresModal.tsx) : champs Mois, Heures, Tarif, Km, Barème, "Temps à reporter". Pas de notion d'annulation.
+- DB : vérifier le schéma actuel de `heures_realisees` avec `mcp__supabase__list_tables` (la table n'est PAS dans `database/schema.sql` local — elle a été créée directement dans Supabase via les migrations `database/migration-*.sql`).
+- Récap email [app/api/heures-realisees/recap-email/route.ts](app/api/heures-realisees/recap-email/route.ts) : à enrichir pour inclure les heures d'annulation.
+
+**Migration via `mcp__supabase__apply_migration` (name: `add_heures_annulation`) :**
+```sql
+ALTER TABLE heures_realisees
+  ADD COLUMN IF NOT EXISTS heures_annulation numeric DEFAULT 0;
+```
+(stocker juste les heures, la "case cochée" se déduit de `heures_annulation > 0`)
+
+**Stratégie pressentie :**
+- Dans la modale, ajouter `<Checkbox>Cas d'annulation ce mois-ci</Checkbox>`. Si cochée → afficher `<NumberInput>Heures à facturer (annulation)</NumberInput>`. Sinon → masquer + reset à 0.
+- À l'insert/update de `heures_realisees`, stocker `heures_annulation`.
+- Mettre à jour le calcul du total facturé : `total = (heures × tarif) + (heures_annulation × tarif) + frais_km + ...`.
+- Dans le récap email, ajouter une ligne "Heures d'annulation facturées : Xh × Y€ = Z€" quand `heures_annulation > 0`.
+- Mettre à jour le tableau de la fiche client pour afficher la colonne "Annulation".
+
+---
+
+### 9. ✅ Réponse à Florence — Notification email sur les formulaires
+**Question Florence :** "L'envoi d'email à Florence, c'était bien quand quelqu'un remplit le formulaire 'Prendre contact' uniquement ?"
+
+**Réponse vérifiée dans le code :**
+> **OUI, uniquement le formulaire "Prendre contact"** ([components/ContactModal.tsx](components/ContactModal.tsx) → [app/api/contact/route.ts:221-311](app/api/contact/route.ts)).
+>
+> Aucun autre formulaire ne déclenche de notification à Florence :
+> - `app/formulaire/recueil-informations/[token]` (rempli par les clients après envoi de la procédure) — pas de notif
+> - `app/formulaire/recueil-informations-ecole/page.tsx` — pas de notif
+> - `app/formulaire/fin-de-contrat/[token]` — pas de notif
+> - `app/formulaire/renouvellement/[token]` — pas de notif
+>
+> Variables d'env utilisées : `FLORENCE_NOTIF_EMAIL` (override) → fallback sur `BREVO_SENDER_EMAIL` → fallback hardcodé sur `florence.louazel@arythmeethic.fr`.
+
+**Action requise** : NONE — purement informatif. Si Florence veut étendre aux autres formulaires, créer un nouvel item.
+
+---
+
+### 10. Uniformiser les salutations dans les emails — juste le prénom pour les particuliers
+**Demande Florence :** dans tous les emails envoyés aux particuliers, uniformiser la salutation. Aujourd'hui on a différentes formulations (`Bonjour ${firstName}`, `Bonjour ${firstName} ${lastName}`, `Bonjour ${recipientName}` où `recipientName` peut être "Prénom Nom"). Florence veut **uniquement le prénom** partout pour les particuliers.
+
+**État actuel du code (inventaire) :**
+- [app/api/procedures/preparation-rdv1/route.ts:142](app/api/procedures/preparation-rdv1/route.ts) — `Bonjour ${recipientName}` (recipientName = "Prénom Nom")
+- [app/api/procedures/contractualisation-particulier/route.ts:81](app/api/procedures/contractualisation-particulier/route.ts) — `Bonjour ${toName}` (= "Prénom Nom")
+- [app/api/procedures/recueil-informations/route.ts:251](app/api/procedures/recueil-informations/route.ts) — `Bonjour ${recipientName}` (déjà = `first_name` ✅)
+- [app/api/procedures/envoi-cv-casier/send-email/route.ts:183](app/api/procedures/envoi-cv-casier/send-email/route.ts) — `Bonjour ${recipientName}`
+- [app/api/procedures/souhait-renouvellement/route.ts:89](app/api/procedures/souhait-renouvellement/route.ts) — `Bonjour ${recipientName}`
+- [app/api/procedures/contractualisation-ecole/route.ts:81](app/api/procedures/contractualisation-ecole/route.ts) — `Bonjour ${toName}` (école → laisser "Prénom Nom" ? ou aussi prénom seul ?)
+- [app/api/formulaire/renouvellement/route.ts:88](app/api/formulaire/renouvellement/route.ts) — `Bonjour ${recipientName}`
+- [app/api/heures-realisees/recap-email/route.ts:208](app/api/heures-realisees/recap-email/route.ts) — `Bonjour,` (générique, à personnaliser ?)
+- [app/api/cron/renouvellement-envoi/route.ts:96](app/api/cron/renouvellement-envoi/route.ts) — `Bonjour ${recipientName}`
+- [app/api/cron/renouvellement-relance/route.ts:101](app/api/cron/renouvellement-relance/route.ts) — `Bonjour ${recipientName}`
+- [app/api/cron/fin-de-contrat-relance/route.ts:52](app/api/cron/fin-de-contrat-relance/route.ts) — `Bonjour ${recipientName}`
+- [lib/fin-de-contrat.ts:66](lib/fin-de-contrat.ts) — `Bonjour ${recipientName}`
+
+**Stratégie pressentie :**
+- Modifier chaque endroit pour passer `firstName` seul (extraire `recipientName.split(' ')[0]` ou utiliser directement `client.first_name_parent1` etc).
+- Pour les écoles : à confirmer avec Florence (prénom suffit ou Prénom Nom ?). Item parle de "particuliers" donc on garde "Prénom Nom" pour les écoles a priori.
+- Pour le récap heures (`Bonjour,` générique) : ajouter le prénom du destinataire (parent1/parent2/jeune selon choix dans modale).
+- ⚠️ Couplé avec item 12 (templates email dynamiques) — si on rend tout dynamique, cette uniformisation devient un attribut du template, pas du code.
+
+---
+
+### 11. Site vitrine — bouton "Formations suivies" dans la barre de navigation
+**Demande Florence :** dans la barre de navigation du site (en haut, là où on a "Cours particuliers / Accompagnement / Établissements & associations"), ajouter à **gauche** de "Cours particuliers" un bouton **"Formations suivies"** qui mène à la page `/formations`.
+
+**État actuel du code :**
+- [components/Nav.tsx:36-69](components/Nav.tsx) — `<HStack>` avec 3 boutons : Cours particuliers, Accompagnement, Établissements & associations. Ces 3 boutons utilisent `onServiceClick(...)` pour scroller vers la section services de la page d'accueil.
+- La page `/formations` existe : [app/formations/page.tsx](app/formations/page.tsx).
+
+**Stratégie pressentie :**
+- Avant le premier `<Button>` (ligne 39), ajouter un `<Link href="/formations">` Chakra qui ouvre `/formations` (pas un scroll). Style identique aux autres boutons.
+- Texte : "Formations suivies".
+- ⚠️ Sur la page `/formations`, garder le bouton retour vers `/` qui existe déjà (cf [app/formations/page.tsx](app/formations/page.tsx)).
+- Le bouton ne doit PAS appeler `onServiceClick` (qui ne fonctionne que sur la home).
+
+---
+
+### 12. 🔨 GROS CHANTIER — Éditeur de templates emails dans l'admin
+**Demande Florence :** ajouter un onglet dans l'admin (en-dessous de "Formations") qui permet à Florence de modifier **tous nos templates d'emails**. Tous les emails sortants doivent devenir dynamiques. Attention à ne rien casser.
+
+**Scope confirmé avec Thomas (call 28/05) :** TOUS les emails sortants, soit ~13 templates :
+1. **Contact** (notif Florence) — [app/api/contact/route.ts](app/api/contact/route.ts)
+2. **Preparation RDV1** — [app/api/procedures/preparation-rdv1/route.ts](app/api/procedures/preparation-rdv1/route.ts)
+3. **Recueil-informations** (envoi initial) — [app/api/procedures/recueil-informations/route.ts](app/api/procedures/recueil-informations/route.ts)
+4. **Contractualisation particulier** — [app/api/procedures/contractualisation-particulier/route.ts](app/api/procedures/contractualisation-particulier/route.ts)
+5. **Contractualisation école** — [app/api/procedures/contractualisation-ecole/route.ts](app/api/procedures/contractualisation-ecole/route.ts)
+6. **Envoi CV/Casier** — [app/api/procedures/envoi-cv-casier/send-email/route.ts](app/api/procedures/envoi-cv-casier/send-email/route.ts)
+7. **Souhait renouvellement** (lancement) — [app/api/procedures/souhait-renouvellement/route.ts](app/api/procedures/souhait-renouvellement/route.ts)
+8. **Renouvellement** (formulaire rempli, accusé) — [app/api/formulaire/renouvellement/route.ts](app/api/formulaire/renouvellement/route.ts)
+9. **Cron renouvellement envoi** (déclenchement auto) — [app/api/cron/renouvellement-envoi/route.ts](app/api/cron/renouvellement-envoi/route.ts)
+10. **Cron renouvellement relance** — [app/api/cron/renouvellement-relance/route.ts](app/api/cron/renouvellement-relance/route.ts)
+11. **Cron fin de contrat relance** — [app/api/cron/fin-de-contrat-relance/route.ts](app/api/cron/fin-de-contrat-relance/route.ts)
+12. **Fin de contrat** (lancement) — [lib/fin-de-contrat.ts](lib/fin-de-contrat.ts)
+13. **Récap heures réalisées** — [app/api/heures-realisees/recap-email/route.ts](app/api/heures-realisees/recap-email/route.ts)
+
+**Architecture cible :**
+- Table Supabase `email_templates(key text PK, name text, subject text, html text, variables jsonb, updated_at timestamptz)` — `variables` documente les placeholders supportés (ex: `{{firstName}}`, `{{lien}}`, `{{moisAnnee}}`).
+- Page admin `/admin/email-templates/page.tsx` : liste des 13 templates avec nom lisible.
+- Page édition `/admin/email-templates/[key]/page.tsx` : édition `subject` + `html` (textarea ou éditeur HTML simple comme [react-quill](https://www.npmjs.com/package/react-quill) ou TipTap), avec preview live et liste des variables supportées.
+- Helper `lib/email-templates.ts` : `getTemplate(key)` qui fetch en DB, `renderTemplate(key, variables)` qui fait la substitution `{{var}} → value`.
+- Refactor des 13 routes API ci-dessus pour appeler `renderTemplate(key, {...})` au lieu d'avoir le HTML en dur.
+
+**Migration via `mcp__supabase__apply_migration` (name: `create_email_templates`) :**
+```sql
+CREATE TABLE IF NOT EXISTS email_templates (
+  key text PRIMARY KEY,
+  name text NOT NULL,
+  subject text NOT NULL,
+  html text NOT NULL,
+  variables jsonb DEFAULT '[]'::jsonb,
+  updated_at timestamptz DEFAULT now()
+);
+-- Seed initial avec les 13 templates HTML actuels (à copier depuis les routes)
+-- Le seed sera fait via mcp__supabase__execute_sql, 1 INSERT par template
+```
+→ Après création, lancer `mcp__supabase__get_advisors` pour les pbs RLS/perf.
+
+**Stratégie pressentie (phases) :**
+1. **Phase 1 — Inventaire des variables** : pour chaque route, recenser les variables utilisées (`recipientName`, `formUrl`, `moisLabel`, `clientName`, `total`, etc.) → produire le `variables` jsonb par template.
+2. **Phase 2 — Modèle DB + seed** : créer la table + seed initial à l'identique du HTML actuel (zéro régression).
+3. **Phase 3 — Helper `renderTemplate`** : substitution `{{var}}` avec échappement HTML par défaut + variante `{{{var}}}` pour HTML brut (style Mustache/Handlebars). Tests unitaires.
+4. **Phase 4 — Refactor des 13 routes** une par une, en remplaçant le HTML inline par `await renderTemplate('key', {...})`. À chaque template refactoré, tester l'envoi en réel (Brevo) pour vérifier le rendu.
+5. **Phase 5 — Admin UI** : liste + édition + preview live. Bouton "Restaurer la version par défaut" qui re-seed depuis un fichier `lib/email-templates-defaults.ts`.
+6. **Phase 6 — Auth/RLS** : seul Florence peut éditer. RLS Supabase sur la table.
+
+**Garde-fous (attention à ne rien casser) :**
+- ⚠️ **TESTER CHAQUE TEMPLATE** après refactor : envoyer un email en réel via une route de test ou en lançant la procédure correspondante.
+- ⚠️ **Variables manquantes** : si Florence supprime une variable du template, `renderTemplate` doit la remplacer par `''` silencieusement (ne pas crasher).
+- ⚠️ **Variables nouvelles** : Florence ne peut pas ajouter une variable inconnue (elle ne sera pas remplacée). Documenter clairement la liste des variables supportées par template.
+- ⚠️ **HTML cassé** : valider que le HTML reste un email valide. Mettre une preview live pour qu'elle voie en temps réel.
+- ⚠️ **Rollback facile** : garder les HTML défaut en code (`lib/email-templates-defaults.ts`) pour pouvoir restaurer si elle casse un template.
+
+**Couplages :**
+- Item 10 (uniformiser salutations) → devient un simple changement de template via cet onglet.
+- Item 7 (mention "des mois précédents" dans récap) → idem.
+- Préférence : faire l'item 12 EN PREMIER pour les items 7 et 10, sinon on fait le boulot deux fois.
 
 ---
 
