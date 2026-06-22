@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { randomBytes } from 'crypto';
 
 // Send email via Brevo API
@@ -230,13 +232,23 @@ export async function POST(request: NextRequest) {
 
     // Send email
     const emailHtml = generateRenewalEmailHtml(recipientName, jeuneName, formUrl);
+    const ovRenew = await getEmailTemplateOverride('souhait-renouvellement', {
+      recipientName,
+      jeuneName,
+    });
+    const renewCta =
+      emailButton(formUrl, 'Donner ma réponse') +
+      `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Ce lien est valable pendant 30 jours. Si vous avez des questions, n'hésitez pas à me contacter.</p>`;
+    const renewHtml = ovRenew ? renderEmailShell(ovRenew.html, renewCta) : emailHtml;
+    const renewSubject =
+      ovRenew?.subject ?? "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?";
 
     try {
       const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
-        subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
-        htmlContent: emailHtml,
+        subject: renewSubject,
+        htmlContent: renewHtml,
       });
 
       if (!emailResult.success) {
