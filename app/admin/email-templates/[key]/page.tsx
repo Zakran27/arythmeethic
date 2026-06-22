@@ -52,6 +52,13 @@ export default function EmailTemplateEditorPage() {
           setSubject(data.subject || '');
           setHtml(data.html || '');
           setHasCustom(true);
+        } else {
+          // Aucune version personnalisée : afficher directement le template par défaut en vigueur
+          const def = DEFAULT_TEMPLATE_CONTENT[key];
+          if (def) {
+            setSubject(def.subject);
+            setHtml(def.html);
+          }
         }
         setLoading(false);
       });
@@ -73,21 +80,6 @@ export default function EmailTemplateEditorPage() {
       </Stack>
     );
   }
-
-  const loadDefault = () => {
-    const def = DEFAULT_TEMPLATE_CONTENT[key];
-    if (def) {
-      setSubject(def.subject);
-      setHtml(def.html);
-      toast({
-        title: 'Modèle par défaut chargé',
-        description: 'Pensez à enregistrer pour l’appliquer.',
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
 
   const handleSave = async () => {
     if (!html.trim() || !subject.trim()) {
@@ -133,8 +125,9 @@ export default function EmailTemplateEditorPage() {
       toast({ title: 'Erreur', description: error.message, status: 'error', duration: 5000 });
       return;
     }
-    setSubject('');
-    setHtml('');
+    const def = DEFAULT_TEMPLATE_CONTENT[key];
+    setSubject(def?.subject ?? '');
+    setHtml(def?.html ?? '');
     setHasCustom(false);
     toast({
       title: 'Réinitialisé',
@@ -200,20 +193,15 @@ export default function EmailTemplateEditorPage() {
 
           <Divider />
 
-          <HStack justify="space-between" flexWrap="wrap" spacing={3}>
-            <Button variant="outline" onClick={loadDefault}>
-              Charger le modèle par défaut
-            </Button>
-            <HStack spacing={3}>
-              {hasCustom && (
-                <Button variant="ghost" colorScheme="red" onClick={handleReset} isLoading={saving}>
-                  Réinitialiser au défaut
-                </Button>
-              )}
-              <Button colorScheme="accent" onClick={handleSave} isLoading={saving}>
-                Enregistrer
+          <HStack justify="flex-end" flexWrap="wrap" spacing={3}>
+            {hasCustom && (
+              <Button variant="ghost" colorScheme="red" onClick={handleReset} isLoading={saving}>
+                Réinitialiser au défaut
               </Button>
-            </HStack>
+            )}
+            <Button colorScheme="accent" onClick={handleSave} isLoading={saving}>
+              Enregistrer
+            </Button>
           </HStack>
         </Stack>
       )}
