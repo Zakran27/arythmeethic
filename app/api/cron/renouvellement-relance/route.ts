@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 /**
  * CRON Job: Relance automatique tous les vendredis à 16h
@@ -210,12 +212,19 @@ export async function GET(request: NextRequest) {
           : 'votre enfant';
 
         const emailHtml = generateReminderEmailHtml(recipientName, jeuneName, formUrl);
+        const ovRelance = await getEmailTemplateOverride('cron-renouvellement-relance', {
+          recipientName,
+          jeuneName,
+        });
+        const relanceCta =
+          emailButton(formUrl, 'Donner ma réponse') +
+          `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Merci d'avance pour votre retour !</p>`;
 
         const result = await sendBrevoEmail({
           to: recipientEmail,
           toName: recipientName,
-          subject: 'A Rythme Ethic - Rappel : Votre avis sur le renouvellement',
-          htmlContent: emailHtml,
+          subject: ovRelance?.subject ?? 'A Rythme Ethic - Rappel : Votre avis sur le renouvellement',
+          htmlContent: ovRelance ? renderEmailShell(ovRelance.html, relanceCta) : emailHtml,
         });
 
         if (result.success) {
