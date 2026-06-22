@@ -37,6 +37,18 @@ export function Nav({ onServiceClick }: NavProps) {
             {onServiceClick && (
               <HStack spacing={1} display={{ base: 'none', lg: 'flex' }}>
                 <Button
+                  as={Link}
+                  href="/formations"
+                  variant="ghost"
+                  size="sm"
+                  color="brand.500"
+                  fontWeight="500"
+                  _hover={{ bg: 'sand.100', color: 'brand.600' }}
+                  whiteSpace="nowrap"
+                >
+                  Formations suivies
+                </Button>
+                <Button
                   variant="ghost"
                   size="sm"
                   color="brand.500"
