@@ -26,6 +26,7 @@ const navItems = [
   { label: 'Contacts', href: '/admin/clients' },
   { label: 'Avis Google', href: '/admin/avis' },
   { label: 'Formations', href: '/admin/formations' },
+  { label: 'Templates emails', href: '/admin/email-templates' },
 ];
 
 function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
