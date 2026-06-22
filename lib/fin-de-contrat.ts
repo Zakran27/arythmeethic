@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 const FIN_DE_CONTRAT_TYPE_CODE = 'FIN_DE_CONTRAT';
 
@@ -168,11 +170,19 @@ export async function launchFinDeContratProcedure(params: LaunchFinDeContratPara
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://arythmeethic.fr';
   const uploadUrl = `${origin}/formulaire/fin-de-contrat/${token}`;
 
+  const ovFdc = await getEmailTemplateOverride('fin-de-contrat', {
+    recipientName: params.recipientName,
+  });
+  const fdcCta =
+    emailButton(uploadUrl, 'Déposer les documents') +
+    `<p style="margin:30px 0 16px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Ce fut un plaisir d'accompagner votre enfant, je lui souhaite le meilleur pour la suite et de la réussite dans ses projets.</p><p style="margin:0 0 16px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Pour information, si besoin, j'effectue des sessions de révisions du brevet et du BAC ponctuellement dans l'année, n'hésitez pas à me contacter si le besoin s'en fait sentir.</p><p style="margin:0;color:#a97761;font-size:14px;line-height:1.6;">Belle journée,</p>`;
   await sendBrevoEmail({
     to: params.recipientEmail,
     toName: params.recipientName,
-    subject: 'A Rythme Ethic - Fin de contrat - documents à transmettre',
-    htmlContent: buildEmailHtml(params.recipientName, uploadUrl),
+    subject: ovFdc?.subject ?? 'A Rythme Ethic - Fin de contrat - documents à transmettre',
+    htmlContent: ovFdc
+      ? renderEmailShell(ovFdc.html, fdcCta)
+      : buildEmailHtml(params.recipientName, uploadUrl),
   });
 
   await supabase.from('procedure_status_history').insert({

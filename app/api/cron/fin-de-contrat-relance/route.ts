@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 /**
  * CRON Job: Relance fin-de-contrat tous les 3 jours à 18h
@@ -146,11 +148,21 @@ export async function GET(request: NextRequest) {
       const uploadUrl = `${origin}/formulaire/fin-de-contrat/${p.download_token}`;
       const missingLabels = missing.map(k => KIND_LABELS[k]);
 
+      const ovRelanceFdc = await getEmailTemplateOverride('cron-fin-de-contrat-relance', {
+        recipientName,
+      });
+      const relanceFdcBlock =
+        `<ul style="margin:0 0 20px 0;color:#7b4a31;font-size:15px;line-height:1.8;padding-left:24px;">${missingLabels.map(m => `<li>${m}</li>`).join('')}</ul>` +
+        `<p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Vous pouvez les déposer en cliquant sur le bouton ci-dessous :</p>` +
+        emailButton(uploadUrl, 'Déposer les documents') +
+        `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Merci d'avance pour votre retour,</p>`;
       const result = await sendBrevoEmail({
         to: p.recipient_email,
         toName: recipientName,
-        subject: 'A Rythme Ethic - Rappel : documents de fin de contrat',
-        htmlContent: buildRelanceHtml(recipientName, uploadUrl, missingLabels),
+        subject: ovRelanceFdc?.subject ?? 'A Rythme Ethic - Rappel : documents de fin de contrat',
+        htmlContent: ovRelanceFdc
+          ? renderEmailShell(ovRelanceFdc.html, relanceFdcBlock)
+          : buildRelanceHtml(recipientName, uploadUrl, missingLabels),
       });
 
       if (result.success) {
