@@ -68,6 +68,7 @@ export default function ClientDetailPage() {
   const cancelDocRef = useRef<HTMLButtonElement>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingDoc, setIsDeletingDoc] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
   const [docToDelete, setDocToDelete] = useState<{
     id: string;
     storage_path?: string | null;
@@ -379,6 +380,43 @@ export default function ClientDetailPage() {
   const handleClientUpdated = () => {
     refetch();
     onClose();
+  };
+
+  const handleArchiveToggle = async () => {
+    if (!client) return;
+    setIsArchiving(true);
+    try {
+      const supabase = createClient();
+      const isArchived = client.client_status === 'Archivé';
+      const { error } = await supabase
+        .from('clients')
+        .update({
+          client_status: isArchived ? 'Client' : 'Archivé',
+          archived_at: isArchived ? null : new Date().toISOString(),
+        })
+        .eq('id', clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: isArchived ? 'Client désarchivé' : 'Client archivé',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      refetch();
+    } catch {
+      toast({
+        title: 'Erreur',
+        description: "Une erreur est survenue lors de l'archivage.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsArchiving(false);
+    }
   };
 
   const handleDeleteClient = async () => {
@@ -975,9 +1013,33 @@ export default function ClientDetailPage() {
         <Heading color="brand.500" fontFamily="heading">
           {getDisplayName()}
         </Heading>
-        <HStack spacing={3} flexShrink={0}>
+        <HStack spacing={3} flexShrink={0} flexWrap="wrap">
+          <Button
+            variant="ghost"
+            onClick={() =>
+              router.push(
+                `/admin/clients?tab=${
+                  client.client_status === 'Archivé'
+                    ? 'archives'
+                    : client.client_status === 'Client'
+                      ? 'clients'
+                      : 'prospects'
+                }`
+              )
+            }
+          >
+            ← Retour
+          </Button>
           <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
             Modifier
+          </Button>
+          <Button
+            variant="outline"
+            colorScheme={client.client_status === 'Archivé' ? 'green' : 'orange'}
+            onClick={handleArchiveToggle}
+            isLoading={isArchiving}
+          >
+            {client.client_status === 'Archivé' ? 'Désarchiver' : 'Archiver'}
           </Button>
           <Button variant="outline" colorScheme="red" onClick={onDeleteOpen}>
             Supprimer

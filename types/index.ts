@@ -11,7 +11,7 @@ export type ClientType = 'Particulier' | 'École';
 
 export type ClientSubType = 'Jeune' | 'Parent' | null;
 
-export type ClientStatus = 'Prospect' | 'Client';
+export type ClientStatus = 'Prospect' | 'Client' | 'Archivé';
 
 export type DocumentKind = 'CONTRACT' | 'CONTRACT_SIGNED' | 'ANNEX' | 'SUPPORTING_DOC';
 
@@ -33,6 +33,7 @@ export interface Client {
   type_client: ClientType;
   sub_type?: ClientSubType;
   client_status: ClientStatus;
+  archived_at?: string;
   organisation?: string;
   address_line1?: string;
   postal_code?: string;

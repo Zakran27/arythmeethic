@@ -9,6 +9,7 @@ interface ClientsTableProps {
   clients: Client[];
   loading: boolean;
   error: string | null;
+  showArchivedDate?: boolean;
 }
 
 // Helper function to get the display name based on client type
@@ -65,7 +66,12 @@ function getDisplayType(client: Client): string {
   return client.sub_type || 'Particulier';
 }
 
-export function ClientsTable({ clients, loading, error }: ClientsTableProps) {
+export function ClientsTable({
+  clients,
+  loading,
+  error,
+  showArchivedDate = false,
+}: ClientsTableProps) {
   const router = useRouter();
 
   if (loading) {
@@ -120,6 +126,19 @@ export function ClientsTable({ clients, loading, error }: ClientsTableProps) {
           sortable: true,
           render: (client: Client) => new Date(client.created_at).toLocaleDateString('fr-FR'),
         },
+        ...(showArchivedDate
+          ? [
+              {
+                key: 'archived_at',
+                label: 'Archivé le',
+                sortable: true,
+                render: (client: Client) =>
+                  client.archived_at
+                    ? new Date(client.archived_at).toLocaleDateString('fr-FR')
+                    : '-',
+              },
+            ]
+          : []),
       ]}
       data={clients}
       onRowClick={client => router.push(`/admin/clients/${client.id}`)}
