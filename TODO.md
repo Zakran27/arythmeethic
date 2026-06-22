@@ -23,11 +23,11 @@
 
 ## 🟡 Item 12 (suite) — câbler les 10 templates emails restants
 
-L'infra + l'UI **rich-text** sont faites, et **2 routes câblées** (récap + preparation-rdv1) prouvent le pattern (avec/sans bloc dynamique). Reste **10 routes**, **une par une**, en testant un **envoi réel Brevo** à chaque fois (non testable en local/CI → prudence).
+L'infra + l'UI **rich-text** sont faites, **3 routes câblées** (récap, preparation-rdv1, souhait-renouvellement) + helper `emailButton(href, label)` réutilisable pour les emails à bouton. Reste **10 routes**, **une par une**, en testant un **envoi réel Brevo** à chaque fois (non testable en local/CI → prudence).
 
 Pour chaque route : (1) repérer le `subject`/`html` par défaut + les variables ; (2) ajouter le **corps par défaut** (texte simple, sans habillage) dans `DEFAULT_TEMPLATE_CONTENT` (`lib/email-templates.ts`) ; (3) `wired: true` dans `EMAIL_TEMPLATES` ; (4) dans la route : `const ov = await getEmailTemplateOverride(key, vars); const html = ov ? renderEmailShell(ov.html, blocsCalculés) : defaultHtml;` (+ `subject`) ; (5) tester l'envoi réel.
 
-Routes restantes (clés du registre) : `contact-notif`, `recueil-informations`, `contractualisation-particulier`, `contractualisation-ecole`, `envoi-cv-casier`, `souhait-renouvellement`, `renouvellement-accuse`, `cron-renouvellement-envoi`, `cron-renouvellement-relance`, `cron-fin-de-contrat-relance`, `fin-de-contrat`.
+Routes restantes (clés du registre) : `contact-notif`, `recueil-informations`, `contractualisation-particulier`, `contractualisation-ecole`, `envoi-cv-casier`, `renouvellement-accuse`, `cron-renouvellement-envoi`, `cron-renouvellement-relance`, `cron-fin-de-contrat-relance`, `fin-de-contrat`. Les 2 crons renouvellement reprennent le même corps que `souhait-renouvellement`.
 
 ---
 
