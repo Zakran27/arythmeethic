@@ -153,7 +153,6 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   if (formationTypeLabel) {
     write(`  Type de formation : ${formationTypeLabel}`, 9);
   }
-  write(`  Formation à destination ${client.ecole_classes_noms || ''}`, 9);
   write(
     `  Période : année scolaire ${anneeScolaire} à compter du 1er septembre et jusqu'au 31 août`,
     9
