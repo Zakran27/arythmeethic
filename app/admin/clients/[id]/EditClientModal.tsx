@@ -58,6 +58,7 @@ interface EditClientModalProps {
 
 export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClientModalProps) {
   const [loading, setLoading] = useState(false);
+  const [adresseCoursDifferente, setAdresseCoursDifferente] = useState(!!client.adresse_cours);
   const toast = useToast();
   const supabase = createClient();
 
@@ -722,14 +723,25 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   <Text fontWeight="bold" color="brand.500">
                     Lieu et disponibilités
                   </Text>
-                  <FormControl>
-                    <FormLabel>Adresse des cours</FormLabel>
-                    <Input
-                      value={formData.adresse_cours}
-                      onChange={e => handleChange('adresse_cours', e.target.value)}
-                      placeholder="Adresse où se dérouleront les cours"
-                    />
-                  </FormControl>
+                  <Checkbox
+                    isChecked={adresseCoursDifferente}
+                    onChange={e => {
+                      setAdresseCoursDifferente(e.target.checked);
+                      if (!e.target.checked) handleChange('adresse_cours', '');
+                    }}
+                  >
+                    Adresse des cours différente de l&apos;adresse du client
+                  </Checkbox>
+                  {adresseCoursDifferente && (
+                    <FormControl>
+                      <FormLabel>Adresse des cours</FormLabel>
+                      <Input
+                        value={formData.adresse_cours}
+                        onChange={e => handleChange('adresse_cours', e.target.value)}
+                        placeholder="Adresse où se dérouleront les cours"
+                      />
+                    </FormControl>
+                  )}
 
                   <FormControl>
                     <FormLabel>Jours disponibles</FormLabel>

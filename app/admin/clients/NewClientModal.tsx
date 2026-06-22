@@ -46,6 +46,7 @@ const initialFormData = {
   postal_code: '',
   city: '',
   country: '',
+  adresse_cours: '',
   notes: '',
   // Jeune fields
   first_name_jeune: '',
@@ -86,6 +87,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   const toast = useToast();
   const supabase = createClient();
   const [formData, setFormData] = useState(initialFormData);
+  const [adresseCoursDifferente, setAdresseCoursDifferente] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +149,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           postal_code: formData.postal_code || null,
           city: formData.city || null,
           country: formData.country || null,
+          adresse_cours: formData.adresse_cours || null,
           notes: formData.notes || null,
           // Jeune fields (for Jeune type)
           first_name_jeune: formData.first_name_jeune || null,
@@ -813,6 +816,26 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </FormControl>
                 </GridItem>
               </Grid>
+
+              <Checkbox
+                isChecked={adresseCoursDifferente}
+                onChange={e => {
+                  setAdresseCoursDifferente(e.target.checked);
+                  if (!e.target.checked) handleChange('adresse_cours', '');
+                }}
+              >
+                Adresse des cours différente de l&apos;adresse du client
+              </Checkbox>
+              {adresseCoursDifferente && (
+                <FormControl>
+                  <FormLabel>Adresse des cours</FormLabel>
+                  <Input
+                    value={formData.adresse_cours}
+                    onChange={e => handleChange('adresse_cours', e.target.value)}
+                    placeholder="Adresse où se dérouleront les cours"
+                  />
+                </FormControl>
+              )}
 
               <FormControl>
                 <FormLabel>Notes</FormLabel>
