@@ -5,6 +5,9 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const origin = requestUrl.origin;
+  // Destination après échange du code. Uniquement des chemins internes (anti open-redirect).
+  const next = requestUrl.searchParams.get('next');
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/admin/clients';
 
   if (code) {
     const supabase = await createClient();
@@ -12,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     if (!error) {
       // Force a hard redirect to ensure cookies are sent
-      return NextResponse.redirect(`${origin}/admin/clients`, { status: 303 });
+      return NextResponse.redirect(`${origin}${safeNext}`, { status: 303 });
     }
   }
 
