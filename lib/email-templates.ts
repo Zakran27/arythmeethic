@@ -24,8 +24,8 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: 'recap-heures',
     name: 'Récapitulatif des heures (mensuel)',
     description:
-      "Envoyé au client/parent avec le PDF récapitulatif des heures du mois. Le tableau des montants est injecté automatiquement via {{montantsTable}}.",
-    variables: ['clientName', 'moisLabel', 'montantsTable', 'total'],
+      "Envoyé au client/parent avec le PDF récapitulatif. Vous éditez le texte d'introduction ; le tableau des montants et la note « pièce jointe » sont ajoutés automatiquement.",
+    variables: ['clientName', 'moisLabel'],
     wired: true,
   },
   {
@@ -132,33 +132,46 @@ export interface RenderedTemplate {
   html: string;
 }
 
+// Habillage de marque (en-tête + pied) appliqué automatiquement autour du corps
+// éditable. `dynamicBlock` (optionnel) = blocs calculés injectés après le corps
+// (ex. tableau des montants du récap). Fonction pure → utilisable client + serveur.
+export function renderEmailShell(bodyHtml: string, dynamicBlock = ''): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light only"></head>
+<body style="margin:0;padding:0;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica','Arial',sans-serif;background-color:#fafafa;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fafafa;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <tr><td style="padding:40px 40px 20px;text-align:center;background:linear-gradient(to bottom,#f9f3ee,#efe3d7);border-radius:16px 16px 0 0;">
+          <h1 style="margin:0;color:#6e3a25;font-family:'Georgia',serif;font-size:28px;font-weight:600;">A Rythme Ethic</h1>
+          <p style="margin:10px 0 0 0;color:#c3826e;font-size:16px;">Accompagnement humain et bienveillant</p>
+        </td></tr>
+        <tr><td style="padding:40px;color:#7b4a31;font-size:16px;line-height:1.6;">
+          ${bodyHtml}
+          ${dynamicBlock}
+        </td></tr>
+        <tr><td style="padding:30px 40px;background-color:#f9f3ee;border-radius:0 0 16px 16px;text-align:center;">
+          <a href="https://arythmeethic.fr" style="text-decoration:none;color:inherit;display:block;">
+            <p style="margin:0;color:#6e3a25;font-size:14px;font-weight:600;">Florence Louazel</p>
+            <p style="margin:5px 0 0 0;color:#a97761;font-size:13px;">A Rythme Ethic</p>
+          </a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // Modèle par défaut proposé dans l'éditeur (bouton « charger le modèle par
 // défaut ») pour les templates câblés. Sert de point de départ éditable ; tant
 // qu'il n'est pas enregistré, la route garde son HTML d'origine.
+// Corps par défaut (texte éditable uniquement — l'habillage de marque et les
+// blocs calculés sont ajoutés automatiquement par la route via renderEmailShell).
 export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'recap-heures': {
     subject: 'Récapitulatif heures - {{clientName}} - {{moisLabel}}',
-    html: `<div style="font-family: 'Inter', Arial, sans-serif; background:#fafafa; padding:40px 20px;">
-  <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-    <div style="padding:40px 40px 20px; text-align:center; background:linear-gradient(to bottom,#f9f3ee,#efe3d7);">
-      <h1 style="margin:0; color:#6e3a25; font-family:Georgia,serif; font-size:28px;">A Rythme Ethic</h1>
-      <p style="margin:10px 0 0; color:#c3826e; font-size:16px;">Accompagnement humain et bienveillant</p>
-    </div>
-    <div style="padding:40px;">
-      <p style="color:#7b4a31; font-size:16px; line-height:1.6;">Bonjour,</p>
-      <p style="color:#7b4a31; font-size:16px; line-height:1.6;">
-        Veuillez trouver ci-joint le récapitulatif des heures pour <strong>{{clientName}}</strong> - <strong>{{moisLabel}}</strong>.
-      </p>
-      {{montantsTable}}
-      <p style="margin-top:28px; color:#a97761; font-size:14px; line-height:1.6;">
-        Le récapitulatif complet est également disponible en pièce jointe (PDF).
-      </p>
-    </div>
-    <div style="padding:30px 40px; background:#f9f3ee; text-align:center;">
-      <p style="margin:0; color:#6e3a25; font-size:14px; font-weight:600;">Florence Louazel</p>
-      <p style="margin:5px 0 0; color:#a97761; font-size:13px;">A Rythme Ethic</p>
-    </div>
-  </div>
-</div>`,
+    html: `<p>Bonjour,</p><p>Veuillez trouver ci-dessous le récapitulatif des heures pour <strong>{{clientName}}</strong> — <strong>{{moisLabel}}</strong>.</p>`,
   },
 };

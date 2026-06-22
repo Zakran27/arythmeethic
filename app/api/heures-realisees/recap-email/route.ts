@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell } from '@/lib/email-templates';
 
 interface RecapEntryInput {
   clientId: string;
@@ -418,10 +419,11 @@ export async function POST(request: NextRequest) {
       const override = await getEmailTemplateOverride('recap-heures', {
         clientName: entry.clientName,
         moisLabel: recap.moisLabel,
-        montantsTable: buildMontantsTable(recap),
-        total: `${recap.total.toFixed(2)} €`,
       });
-      const htmlContent = override?.html ?? defaultHtml;
+      // Corps édité (override) entouré de l'habillage de marque + blocs calculés
+      // (tableau des montants + note PJ) injectés automatiquement. Sinon HTML d'origine.
+      const dynamicBlock = `${buildMontantsTable(recap)}<p style="margin-top:28px;color:#a97761;font-size:14px;line-height:1.6;">Le récapitulatif complet est également disponible en pièce jointe (PDF).</p>`;
+      const htmlContent = override ? renderEmailShell(override.html, dynamicBlock) : defaultHtml;
       const emailSubject =
         override?.subject ?? `Récapitulatif heures - ${entry.clientName} - ${recap.moisLabel}`;
 
