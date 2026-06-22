@@ -14,7 +14,7 @@
 - **Heures réalisées** : table `heures_realisees` (hors `schema.sql` ; colonnes `heures`, `report_in`, `tarif_horaire`, `temps_a_reporter`, `km`, `bareme_km`, `heures_annulation`, `recap_email_*`). Récap email/PDF par client via `app/api/heures-realisees/recap-email/route.ts` + `SendRecapModal` (gère cumul du report + heures d'annulation).
 - **Contrats PDF** : `lib/pdf-contract-generator.ts` (établissement — imprime le type de formation à l'Article 2) et `lib/pdf-contract-particulier-generator.ts` (particulier). Génération + preview via `app/api/procedures/contractualisation-{ecole,particulier}/` (mêmes générateurs).
 - **Emails (~13 templates HTML inline)** : routes `app/api/procedures/*`, `app/api/cron/*`, `lib/fin-de-contrat.ts`, `recap-email`. Envoi via **Brevo** (`BREVO_SENDER_EMAIL`). Notif Florence uniquement sur « Prendre contact » (`app/api/contact/route.ts`). Salutations particuliers = prénom seul.
-- **Éditeur de templates emails** : table `email_templates(key, subject, html)`, registre + helpers dans `lib/email-templates.ts` (client-safe : registre, `substituteVars`, `DEFAULT_TEMPLATE_CONTENT`) et `lib/email-templates-server.ts` (`getEmailTemplateOverride`, server-only). UI `/admin/email-templates` (+ `[key]`). **Pattern de câblage** : dans une route, `const override = await getEmailTemplateOverride(key, vars); const html = override?.html ?? defaultHtml; const subject = override?.subject ?? defaultSubject;`. Seule la route `recap-heures` est câblée pour l'instant.
+- **Éditeur de templates emails** (rich-text) : table `email_templates(key, subject, html)` où `html` = **corps éditable** (sortie TipTap, PAS le HTML complet). `lib/email-templates.ts` (client-safe : registre `EMAIL_TEMPLATES`, `substituteVars`, `renderEmailShell` = habillage de marque auto, `DEFAULT_TEMPLATE_CONTENT`) + `lib/email-templates-server.ts` (`getEmailTemplateOverride`, server-only). UI `/admin/email-templates` (+ `[key]`) avec éditeur `components/RichTextEditor.tsx` (TipTap). Florence édite seulement le texte ; en-tête/pied + blocs calculés (ex. tableau montants) injectés automatiquement. **Pattern de câblage d'une route** : `const ov = await getEmailTemplateOverride(key, vars); const html = ov ? renderEmailShell(ov.html, blocsCalculés) : defaultHtml; const subject = ov?.subject ?? defaultSubject;`. Seule `recap-heures` est câblée.
 - **Auth admin** : pages `app/admin/login|forgot-password|reset-password/page.tsx` + `middleware.ts` (garde de session `@supabase/ssr`) + `lib/auth.ts`. ⚠️ Pas de `lib/hooks/useAuth.ts` (n'existe pas). Login revu le 22/06 : code correct (`signInWithPassword`, reset via `window.location.origin`). Si un souci mobile persiste → vérifier la config **Site URL / Redirect URLs** dans le dashboard Supabase Auth (pas un bug de code).
 - **Site vitrine** : `components/Nav.tsx` a un lien « Formations suivies » → `/formations`. Prod : domaine `arythmeethic.fr` (OVH/DNS), Vercel, M365, Brevo, Supabase, DocuSeal.
 
@@ -22,13 +22,11 @@
 
 ## 🟡 Item 12 (suite) — câbler les 11 autres templates emails
 
-L'infra + l'UI + le câblage pilote (récap) sont faits. Reste à câbler les **11 autres routes** au pattern `getEmailTemplateOverride`, **une par une**, en testant un **envoi réel Brevo** à chaque fois (impossible à tester en local/CI → faire prudemment).
+L'infra + l'UI **rich-text** + le câblage pilote (récap) sont faits. Reste à câbler les **11 autres routes**, **une par une**, en testant un **envoi réel Brevo** à chaque fois (non testable en local/CI → prudence).
 
-Pour chaque route : (1) identifier le `subject` + `html` par défaut et les variables, (2) ajouter l'entrée correspondante dans `DEFAULT_TEMPLATE_CONTENT` (`lib/email-templates.ts`), (3) passer `wired: true` dans `EMAIL_TEMPLATES`, (4) appliquer le pattern fallback dans la route, (5) tester l'envoi.
+Pour chaque route : (1) repérer le `subject`/`html` par défaut + les variables ; (2) ajouter le **corps par défaut** (texte simple, sans habillage) dans `DEFAULT_TEMPLATE_CONTENT` (`lib/email-templates.ts`) ; (3) `wired: true` dans `EMAIL_TEMPLATES` ; (4) dans la route : `const ov = await getEmailTemplateOverride(key, vars); const html = ov ? renderEmailShell(ov.html, blocsCalculés) : defaultHtml;` (+ `subject`) ; (5) tester l'envoi réel.
 
 Routes restantes (clés du registre) : `contact-notif`, `preparation-rdv1`, `recueil-informations`, `contractualisation-particulier`, `contractualisation-ecole`, `envoi-cv-casier`, `souhait-renouvellement`, `renouvellement-accuse`, `cron-renouvellement-envoi`, `cron-renouvellement-relance`, `cron-fin-de-contrat-relance`, `fin-de-contrat`.
-
-> ⚠️ Pour Florence (non-tech), éditer du HTML brut reste difficile. Envisager à terme un éditeur plus simple (champs texte / WYSIWYG) plutôt que la textarea HTML actuelle.
 
 ---
 
