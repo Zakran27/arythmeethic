@@ -14,7 +14,6 @@ import {
   Button,
   useDisclosure,
 } from '@chakra-ui/react';
-import { keyframes } from '@emotion/react';
 import { createClient } from '@/lib/supabase-client';
 
 interface SiteMessage {
@@ -23,12 +22,7 @@ interface SiteMessage {
   message: string;
 }
 
-const marquee = keyframes`
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-`;
-
-// Bandeau défilant (sticky en haut) + popup central, pilotés depuis /admin/bandeaux.
+// Bandeau fixe (sticky en haut, texte centré) + popup central, pilotés depuis /admin/bandeaux.
 // Ne rend rien tant que les messages ne sont pas activés.
 export function SiteMessages() {
   const [banner, setBanner] = useState<SiteMessage | null>(null);
@@ -68,24 +62,17 @@ export function SiteMessages() {
           position="sticky"
           top={0}
           zIndex={2000}
-          bg="accent.500"
-          color="white"
-          overflow="hidden"
-          py={2}
+          bg="#f6ede2"
+          color="#6e3a25"
+          borderBottom="1px solid #e2cbb8"
+          py={2.5}
+          px={4}
+          textAlign="center"
           aria-label="Information importante"
         >
-          <Box
-            display="inline-block"
-            whiteSpace="nowrap"
-            sx={{ animation: `${marquee} 24s linear infinite`, willChange: 'transform' }}
-          >
-            <Text as="span" fontSize="sm" fontWeight="500" px={10}>
-              {banner.message}
-            </Text>
-            <Text as="span" fontSize="sm" fontWeight="500" px={10}>
-              {banner.message}
-            </Text>
-          </Box>
+          <Text fontSize="sm" fontWeight="500" maxW="container.lg" mx="auto">
+            {banner.message}
+          </Text>
         </Box>
       )}
 
