@@ -453,6 +453,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                     >
                       <option value="Prospect">Prospect</option>
                       <option value="Client">Client</option>
+                      <option value="Archivé">Archivé</option>
                     </Select>
                   </FormControl>
                 </GridItem>

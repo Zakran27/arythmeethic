@@ -143,6 +143,19 @@ export default function ClientsPage() {
     return filterClients(clientsList);
   }, [clients, searchQuery, filters]);
 
+  const archivedClients = useMemo(() => {
+    const clientsList = clients.filter(c => c.client_status === 'Archivé');
+    return filterClients(clientsList);
+  }, [clients, searchQuery, filters]);
+
+  // Onglet actif piloté par ?tab= (utilisé par le bouton "Retour" des fiches)
+  const [tabIndex, setTabIndex] = useState(0);
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    const map: Record<string, number> = { prospects: 0, clients: 1, archives: 2 };
+    if (tab && map[tab] !== undefined) setTabIndex(map[tab]);
+  }, []);
+
   return (
     <Stack spacing={6}>
       <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'stretch', md: 'center' }} spacing={3}>
@@ -211,7 +224,7 @@ export default function ClientsPage() {
       </Stack>
 
       {/* Tabs for Prospects and Clients */}
-      <Tabs variant="enclosed" colorScheme="accent">
+      <Tabs index={tabIndex} onChange={setTabIndex} variant="enclosed" colorScheme="accent">
         <TabList>
           <Tab>
             Prospects
@@ -223,6 +236,12 @@ export default function ClientsPage() {
             Clients
             <Badge ml={2} colorScheme="green" borderRadius="full">
               {activeClients.length}
+            </Badge>
+          </Tab>
+          <Tab>
+            Archivés
+            <Badge ml={2} colorScheme="gray" borderRadius="full">
+              {archivedClients.length}
             </Badge>
           </Tab>
         </TabList>
@@ -244,6 +263,20 @@ export default function ClientsPage() {
               </Box>
             ) : (
               <ClientsTable clients={activeClients} loading={loading} error={error} />
+            )}
+          </TabPanel>
+          <TabPanel px={0}>
+            {archivedClients.length === 0 && !loading ? (
+              <Box textAlign="center" py={10} bg="white" borderRadius="md">
+                <Text color="gray.500">Aucun client archivé</Text>
+              </Box>
+            ) : (
+              <ClientsTable
+                clients={archivedClients}
+                loading={loading}
+                error={error}
+                showArchivedDate
+              />
             )}
           </TabPanel>
         </TabPanels>
