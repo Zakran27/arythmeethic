@@ -38,9 +38,10 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'preparation-rdv1',
     name: 'Préparation du 1er rendez-vous',
-    description: 'Email envoyé pour préparer le premier rendez-vous.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description:
+      'Email envoyé pour préparer le premier rendez-vous (liste des documents à apporter).',
+    variables: ['recipientName', 'jeuneName'],
+    wired: true,
   },
   {
     key: 'recueil-informations',
@@ -173,5 +174,9 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'recap-heures': {
     subject: 'Récapitulatif heures - {{clientName}} - {{moisLabel}}',
     html: `<p>Bonjour,</p><p>Veuillez trouver ci-dessous le récapitulatif des heures pour <strong>{{clientName}}</strong> — <strong>{{moisLabel}}</strong>.</p>`,
+  },
+  'preparation-rdv1': {
+    subject: 'A Rythme Ethic - Préparation du premier rendez-vous',
+    html: `<p>Bonjour {{recipientName}},</p><p>Afin de préparer au mieux notre premier rendez-vous avec {{jeuneName}}, je vous invite à rassembler les documents suivants :</p><ul><li>Les 3 derniers bulletins de notes</li><li>Les 2 dernières évaluations de mathématiques</li><li>Le(s) cahier(s) ou classeur de mathématiques</li></ul><p>Ces éléments me permettront de mieux comprendre le parcours scolaire et d'adapter mon accompagnement.</p><p>Si vous avez des questions, n'hésitez pas à me contacter.</p>`,
   },
 };

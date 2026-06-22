@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell } from '@/lib/email-templates';
 
 // Send email via Brevo API
 async function sendBrevoEmail({
@@ -204,12 +206,16 @@ export async function POST(request: NextRequest) {
 </html>
     `.trim();
 
+    const ovPrep = await getEmailTemplateOverride('preparation-rdv1', { recipientName, jeuneName });
+    const prepSubject = ovPrep?.subject ?? 'A Rythme Ethic - Préparation du premier rendez-vous';
+    const prepHtml = ovPrep ? renderEmailShell(ovPrep.html) : emailHtml;
+
     try {
       const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
-        subject: 'A Rythme Ethic - Préparation du premier rendez-vous',
-        htmlContent: emailHtml,
+        subject: prepSubject,
+        htmlContent: prepHtml,
       });
 
       if (!emailResult.success) {
