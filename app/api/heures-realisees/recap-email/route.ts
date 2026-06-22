@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates';
 
 interface RecapEntryInput {
   clientId: string;
@@ -178,6 +179,34 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
+}
+
+// Tableau des montants (rendu HTML) — exposé comme variable {{montantsTable}}
+// pour le template personnalisable du récap.
+function buildMontantsTable(d: RecapData): string {
+  const row = (label: string, montant: string) =>
+    `<tr><td style="padding:12px 16px;color:#7b4a31;border-bottom:1px solid #f0e4d8;">${label}</td><td style="padding:12px 16px;text-align:right;color:#7b4a31;border-bottom:1px solid #f0e4d8;">${montant}</td></tr>`;
+  let rows = row(
+    `Heures réalisées (${d.heuresMois} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
+    `${(d.heuresMois * d.tarifHoraire).toFixed(2)} €`
+  );
+  if (d.reportIn > 0) {
+    rows += row(
+      `Heures reportées du mois précédent (${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
+      `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`
+    );
+  }
+  if (d.heuresAnnulation > 0) {
+    rows += row(
+      `Heures d'annulation facturées (${d.heuresAnnulation} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
+      `${(d.heuresAnnulation * d.tarifHoraire).toFixed(2)} €`
+    );
+  }
+  rows += row(
+    `Frais de déplacement (${d.km} km × ${d.baremeKm.toFixed(3)} €/km)`,
+    `${d.montantKm.toFixed(2)} €`
+  );
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:15px;margin:8px 0;"><tbody>${rows}<tr style="background-color:#f9f3ee;"><td style="padding:14px 16px;color:#6e3a25;font-weight:700;">Total</td><td style="padding:14px 16px;text-align:right;color:#6e3a25;font-weight:700;">${d.total.toFixed(2)} €</td></tr></tbody></table>`;
 }
 
 function buildEmailHtml(d: RecapData): string {
@@ -385,7 +414,16 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      const htmlContent = buildEmailHtml(recap);
+      const defaultHtml = buildEmailHtml(recap);
+      const override = await getEmailTemplateOverride('recap-heures', {
+        clientName: entry.clientName,
+        moisLabel: recap.moisLabel,
+        montantsTable: buildMontantsTable(recap),
+        total: `${recap.total.toFixed(2)} €`,
+      });
+      const htmlContent = override?.html ?? defaultHtml;
+      const emailSubject =
+        override?.subject ?? `Récapitulatif heures - ${entry.clientName} - ${recap.moisLabel}`;
 
       const moisShort = moisIso.slice(0, 7);
       const emailPayload = {
@@ -394,7 +432,7 @@ export async function POST(request: NextRequest) {
           email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr',
         },
         to: [{ email: entry.parentEmail }],
-        subject: `Récapitulatif heures - ${entry.clientName} - ${recap.moisLabel}`,
+        subject: emailSubject,
         htmlContent,
         attachment: [
           {
