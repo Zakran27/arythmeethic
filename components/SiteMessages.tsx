@@ -40,18 +40,13 @@ export function SiteMessages() {
         if (b && b.enabled && b.message?.trim()) setBanner(b);
         if (p && p.enabled && p.message?.trim()) {
           setPopup(p);
-          if (!sessionStorage.getItem('arythme_popup_dismissed')) onOpen();
+          onOpen(); // s'ouvre à chaque visite de la home
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closePopup = () => {
-    try {
-      sessionStorage.setItem('arythme_popup_dismissed', '1');
-    } catch {
-      /* sessionStorage indisponible : on ferme quand même */
-    }
     onClose();
   };
 
