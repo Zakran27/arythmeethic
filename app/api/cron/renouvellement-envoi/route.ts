@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { randomBytes } from 'crypto';
 
 /**
@@ -236,12 +238,19 @@ export async function GET(request: NextRequest) {
           : 'votre enfant';
 
         const emailHtml = generateRenewalEmailHtml(recipientName, jeuneName, formUrl);
+        const ovEnvoi = await getEmailTemplateOverride('cron-renouvellement-envoi', {
+          recipientName,
+          jeuneName,
+        });
+        const envoiCta =
+          emailButton(formUrl, 'Donner ma réponse') +
+          `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Ce lien est valable pendant 30 jours. Si vous avez des questions, n'hésitez pas à me contacter.</p>`;
 
         const result = await sendBrevoEmail({
           to: recipientEmail,
           toName: recipientName,
-          subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
-          htmlContent: emailHtml,
+          subject: ovEnvoi?.subject ?? "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
+          htmlContent: ovEnvoi ? renderEmailShell(ovEnvoi.html, envoiCta) : emailHtml,
         });
 
         if (result.success) {

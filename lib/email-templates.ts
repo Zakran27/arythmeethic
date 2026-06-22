@@ -80,24 +80,24 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   },
   {
     key: 'renouvellement-accuse',
-    name: 'Renouvellement — accusé de réception',
-    description: 'Email de confirmation après réponse au formulaire de renouvellement.',
+    name: 'Renouvellement — accusé / avis Google',
+    description: 'Email de remerciement + demande d’avis Google après réponse au renouvellement (bouton « Laisser un avis Google » ajouté automatiquement).',
     variables: ['recipientName'],
-    wired: false,
+    wired: true,
   },
   {
     key: 'cron-renouvellement-envoi',
     name: 'Renouvellement — envoi automatique (cron)',
-    description: 'Email automatique de lancement du renouvellement.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email automatique de lancement du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
+    variables: ['recipientName', 'jeuneName'],
+    wired: true,
   },
   {
     key: 'cron-renouvellement-relance',
     name: 'Renouvellement — relance (cron)',
-    description: 'Email automatique de relance du renouvellement.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email automatique de relance du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
+    variables: ['recipientName', 'jeuneName'],
+    wired: true,
   },
   {
     key: 'cron-fin-de-contrat-relance',
@@ -187,5 +187,17 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'souhait-renouvellement': {
     subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
     html: `<p>Bonjour {{recipientName}},</p><p>L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que vous m'avez accordée pour l'accompagnement de {{jeuneName}}.</p><p>Afin de préparer sereinement la rentrée prochaine, j'aimerais savoir si vous envisagez de poursuivre l'accompagnement l'année suivante.</p><p>Bien sûr, votre réponse n'est en aucun cas un engagement. C'est simplement une indication qui m'aidera à organiser mon planning pour la rentrée.</p><p>Si vous avez déjà une idée, vous pouvez me faire part de votre souhait en cliquant sur le bouton ci-dessous :</p>`,
+  },
+  'cron-renouvellement-envoi': {
+    subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
+    html: `<p>Bonjour {{recipientName}},</p><p>L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que vous m'avez accordée pour l'accompagnement de {{jeuneName}}.</p><p>Afin de préparer la rentrée prochaine, <strong>souhaitez-vous poursuivre l'accompagnement l'année suivante ?</strong></p><p>Merci de me faire part de votre décision en cliquant sur le bouton ci-dessous :</p>`,
+  },
+  'cron-renouvellement-relance': {
+    subject: 'A Rythme Ethic - Rappel : Votre avis sur le renouvellement',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de vous relancer concernant le renouvellement de l'accompagnement de {{jeuneName}} pour l'année prochaine.</p><p><strong>Votre réponse m'aiderait à organiser au mieux mon planning pour la rentrée.</strong></p><p>Cela ne prend que quelques secondes :</p>`,
+  },
+  'renouvellement-accuse': {
+    subject: 'A Rythme Ethic - Votre avis compte !',
+    html: `<p>Bonjour {{recipientName}},</p><p>Merci pour votre réponse concernant le renouvellement de l'accompagnement !</p><p>Si vous avez été satisfait(e) de nos échanges et du suivi de votre enfant, <strong>pourriez-vous prendre quelques instants pour laisser un avis Google ?</strong></p><p>Votre témoignage est précieux et aide d'autres familles à découvrir mes services.</p>`,
   },
 };

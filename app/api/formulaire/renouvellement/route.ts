@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 // Send email via Brevo API
 async function sendBrevoEmail({
@@ -300,11 +302,20 @@ export async function POST(request: NextRequest) {
     const recipientName = client.first_name_parent1 || client.first_name_jeune || client.first_name;
 
     try {
-      const emailHtml = generateGoogleReviewEmailHtml(recipientName);
+      const googleReviewUrl =
+        process.env.GOOGLE_REVIEW_URL ||
+        'https://www.google.com/search?client=opera-gx&hs=6VG&sca_esv=35cc2770783c4fd6&sxsrf=ANbL-n6bYbkzt6xGvHh1_otCAXk20Au6KQ:1768676583605&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOS6yz36kfP72E4isVy8v8-pFookA6FMMRDADc8El-4xFDUMXGbnFcfunlKbeZg9huqxDGg5poe5Dz1Nsz59GQE2_MvgA&q=A+Rythme+Ethic+Avis&sa=X&ved=2ahUKEwib5_PboZOSAxVVU6QEHQrTNJkQ0bkNegQIRxAF&cshid=1768676643833155&biw=2132&bih=1064&dpr=0.9&aic=0#lrd=0x4805e5f079b17ced:0xd6262e0deee7ceb8,3,,,,';
+      const ovAccuse = await getEmailTemplateOverride('renouvellement-accuse', { recipientName });
+      const accuseCta =
+        emailButton(googleReviewUrl, '⭐ Laisser un avis Google') +
+        `<p style="margin:30px 0 16px 0;color:#7b4a31;font-size:15px;line-height:1.6;">Le bouche-à-oreille peut être également plus efficace, n'hésitez pas à en parler autour de vous !</p><p style="margin:0;color:#a97761;font-size:14px;line-height:1.6;">Un grand merci pour votre soutien !</p>`;
+      const emailHtml = ovAccuse
+        ? renderEmailShell(ovAccuse.html, accuseCta)
+        : generateGoogleReviewEmailHtml(recipientName);
       const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
-        subject: 'A Rythme Ethic - Votre avis compte !',
+        subject: ovAccuse?.subject ?? 'A Rythme Ethic - Votre avis compte !',
         htmlContent: emailHtml,
       });
 
