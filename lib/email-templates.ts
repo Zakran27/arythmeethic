@@ -53,16 +53,16 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'contractualisation-particulier',
     name: 'Contractualisation — particulier',
-    description: 'Email d’envoi du contrat à signer (particulier).',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email envoyé au client pour signer le contrat (particulier). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
+    variables: ['recipientName'],
+    wired: true,
   },
   {
     key: 'contractualisation-ecole',
     name: 'Contractualisation — établissement',
-    description: 'Email d’envoi du contrat à signer (établissement).',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email envoyé au client pour signer le contrat de prestation (établissement). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
+    variables: ['recipientName'],
+    wired: true,
   },
   {
     key: 'envoi-cv-casier',
@@ -207,5 +207,13 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'envoi-cv-casier': {
     subject: 'A Rythme Ethic - Documents à télécharger',
     html: `<p>Bonjour {{recipientName}},</p><p>Je vous transmets ci-dessous les documents demandés (CV actualisé et/ou extrait de casier judiciaire).</p><p>Cliquez sur le bouton ci-dessous pour accéder à la page de téléchargement :</p>`,
+  },
+  'contractualisation-particulier': {
+    subject: 'A Rythme Ethic - Signature du contrat',
+    html: `<p>Bonjour {{recipientName}},</p><p>Florence Louazel vous invite à signer le contrat d'accompagnement A Rythme Ethic.</p>`,
+  },
+  'contractualisation-ecole': {
+    subject: 'A Rythme Ethic - Signature du contrat',
+    html: `<p>Bonjour {{recipientName}},</p><p>Florence Louazel vous invite à signer le contrat de prestation A Rythme Ethic.</p>`,
   },
 };
