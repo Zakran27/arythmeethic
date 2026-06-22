@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 // Send email via Brevo API
 async function sendBrevoEmail({
@@ -225,12 +227,17 @@ export async function POST(request: NextRequest) {
 </html>
     `.trim();
 
+    const ovCvCasier = await getEmailTemplateOverride('envoi-cv-casier', { recipientName });
+    const cvCasierCta =
+      emailButton(downloadUrl, 'Télécharger les documents') +
+      `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Ce lien est valable jusqu'au <strong>${expiresFormatted}</strong>. Si vous rencontrez des difficultés, n'hésitez pas à me contacter.</p>`;
+
     // Send the email
     const emailResult = await sendBrevoEmail({
       to: recipientEmail,
       toName: recipientName,
-      subject: 'A Rythme Ethic - Documents à télécharger',
-      htmlContent: emailHtml,
+      subject: ovCvCasier?.subject ?? 'A Rythme Ethic - Documents à télécharger',
+      htmlContent: ovCvCasier ? renderEmailShell(ovCvCasier.html, cvCasierCta) : emailHtml,
     });
 
     if (!emailResult.success) {

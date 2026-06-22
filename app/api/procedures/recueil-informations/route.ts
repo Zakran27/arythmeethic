@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { randomBytes } from 'crypto';
 
 // Send email via Brevo API
@@ -293,12 +295,17 @@ export async function POST(request: NextRequest) {
 </html>
     `.trim();
 
+    const ovRecueil = await getEmailTemplateOverride('recueil-informations', { recipientName });
+    const recueilCta =
+      emailButton(formUrl, 'Compléter le formulaire') +
+      `<p style="margin:30px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Ce lien est valable pendant 7 jours. Si vous rencontrez des difficultés, n'hésitez pas à me contacter.</p>`;
+
     try {
       const emailResult = await sendBrevoEmail({
         to: recipientEmail,
         toName: recipientName,
-        subject: 'A Rythme Ethic - Formulaire de recueil des informations',
-        htmlContent: emailHtml,
+        subject: ovRecueil?.subject ?? 'A Rythme Ethic - Formulaire de recueil des informations',
+        htmlContent: ovRecueil ? renderEmailShell(ovRecueil.html, recueilCta) : emailHtml,
       });
 
       if (!emailResult.success) {
