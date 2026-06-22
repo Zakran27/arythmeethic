@@ -11,6 +11,7 @@ interface RecapEntryInput {
   tarifHoraire: string;
   km: string;
   baremeKm: string;
+  heuresAnnulation?: string;
 }
 
 interface RecapData {
@@ -24,6 +25,8 @@ interface RecapData {
   reportIn: number; // heures de report intégrées dans ce mois
   montantHeures: number; // (heures + report) × tarif
   montantKm: number;
+  heuresAnnulation: number;
+  montantAnnulation: number;
   total: number;
 }
 
@@ -102,6 +105,13 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
       'Heures reportées (mois précédent)',
       `${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h`,
       `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`,
+    ]);
+  }
+  if (d.heuresAnnulation > 0) {
+    rows.push([
+      "Heures d'annulation facturées",
+      `${d.heuresAnnulation} h × ${d.tarifHoraire.toFixed(2)} €/h`,
+      `${(d.heuresAnnulation * d.tarifHoraire).toFixed(2)} €`,
     ]);
   }
   rows.push([
@@ -183,6 +193,18 @@ function buildEmailHtml(d: RecapData): string {
               </tr>`
       : '';
 
+  const annulationRow =
+    d.heuresAnnulation > 0
+      ? `<tr>
+                <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
+                  Heures d'annulation facturées (${d.heuresAnnulation} h × ${d.tarifHoraire.toFixed(2)} €/h)
+                </td>
+                <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
+                  ${(d.heuresAnnulation * d.tarifHoraire).toFixed(2)} €
+                </td>
+              </tr>`
+      : '';
+
   return `
 <!DOCTYPE html>
 <html>
@@ -222,6 +244,7 @@ function buildEmailHtml(d: RecapData): string {
                     <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${(d.heuresMois * d.tarifHoraire).toFixed(2)} €</td>
                   </tr>
                   ${reportRow}
+                  ${annulationRow}
                   <tr>
                     <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">Frais de déplacement (${d.km} km × ${d.baremeKm.toFixed(3)} €/km)</td>
                     <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${d.montantKm.toFixed(2)} €</td>
@@ -325,9 +348,11 @@ export async function POST(request: NextRequest) {
       const tarifHoraire = parseFloat(entry.tarifHoraire) || 0;
       const km = parseFloat(entry.km) || 0;
       const baremeKm = parseFloat(entry.baremeKm) || 0;
+      const heuresAnnulation = parseFloat(entry.heuresAnnulation ?? '0') || 0;
       const montantHeures = (heuresMois + reportIn) * tarifHoraire;
       const montantKm = km * baremeKm;
-      const total = montantHeures + montantKm;
+      const montantAnnulation = heuresAnnulation * tarifHoraire;
+      const total = montantHeures + montantKm + montantAnnulation;
 
       const recap: RecapData = {
         clientName: entry.clientName,
@@ -340,6 +365,8 @@ export async function POST(request: NextRequest) {
         reportIn,
         montantHeures,
         montantKm,
+        heuresAnnulation,
+        montantAnnulation,
         total,
       };
 

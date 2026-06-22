@@ -9,6 +9,7 @@ import {
   ModalFooter,
   ModalCloseButton,
   Button,
+  Checkbox,
   FormControl,
   FormLabel,
   Input,
@@ -27,6 +28,7 @@ export interface HeuresInitial {
   km?: number | string;
   bareme_km?: number | string;
   temps_a_reporter?: number | string;
+  heures_annulation?: number | string;
 }
 
 interface HeuresRealiséesModalProps {
@@ -63,6 +65,8 @@ export function HeuresRealiséesModal({
   const [nbDeplacements, setNbDeplacements] = useState('0');
   const [baremeKm, setBaremeKm] = useState(defaultBaremeKm);
   const [tempsAReporter, setTempsAReporter] = useState('');
+  const [casAnnulation, setCasAnnulation] = useState(false);
+  const [heuresAnnulation, setHeuresAnnulation] = useState('');
 
   // When opening in edit mode, pre-fill from existing entry.
   useEffect(() => {
@@ -82,6 +86,9 @@ export function HeuresRealiséesModal({
       }
       setBaremeKm(String(initial.bareme_km ?? defaultBaremeKm));
       setTempsAReporter(initial.temps_a_reporter != null ? String(initial.temps_a_reporter) : '');
+      const annul = Number(initial.heures_annulation ?? 0);
+      setCasAnnulation(annul > 0);
+      setHeuresAnnulation(annul > 0 ? String(annul) : '');
     } else {
       setMois(defaultMois);
       setHeures('');
@@ -89,6 +96,8 @@ export function HeuresRealiséesModal({
       setNbDeplacements('0');
       setBaremeKm(defaultBaremeKm);
       setTempsAReporter('');
+      setCasAnnulation(false);
+      setHeuresAnnulation('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initial]);
@@ -103,11 +112,18 @@ export function HeuresRealiséesModal({
     heures && tarifHoraire ? (parseFloat(heures) * parseFloat(tarifHoraire)).toFixed(2) : '-';
   const montantKm =
     kmCalcules && baremeKm ? (parseFloat(kmCalcules) * parseFloat(baremeKm)).toFixed(2) : '-';
+  const montantAnnulation =
+    casAnnulation && heuresAnnulation && tarifHoraire
+      ? (parseFloat(heuresAnnulation) * parseFloat(tarifHoraire)).toFixed(2)
+      : '-';
   const total =
     heures && tarifHoraire && kmCalcules && baremeKm
       ? (
           parseFloat(heures) * parseFloat(tarifHoraire) +
-          parseFloat(kmCalcules) * parseFloat(baremeKm)
+          parseFloat(kmCalcules) * parseFloat(baremeKm) +
+          (casAnnulation && heuresAnnulation
+            ? parseFloat(heuresAnnulation) * parseFloat(tarifHoraire)
+            : 0)
         ).toFixed(2)
       : '-';
 
@@ -137,6 +153,7 @@ export function HeuresRealiséesModal({
           km,
           baremeKm: baremeKm || '0',
           tempsAReporter: tempsAReporter || '0',
+          heuresAnnulation: casAnnulation ? heuresAnnulation || '0' : '0',
         }),
       });
 
@@ -161,6 +178,8 @@ export function HeuresRealiséesModal({
       setNbDeplacements('0');
       setBaremeKm(defaultBaremeKm);
       setTempsAReporter('');
+      setCasAnnulation(false);
+      setHeuresAnnulation('');
     } catch (err) {
       toast({
         title: 'Erreur',
@@ -276,6 +295,29 @@ export function HeuresRealiséesModal({
               </GridItem>
             </Grid>
 
+            <Checkbox
+              isChecked={casAnnulation}
+              onChange={e => {
+                setCasAnnulation(e.target.checked);
+                if (!e.target.checked) setHeuresAnnulation('');
+              }}
+            >
+              Cas d&apos;annulation ce mois-ci
+            </Checkbox>
+            {casAnnulation && (
+              <FormControl>
+                <FormLabel>Heures à facturer en cas d&apos;annulation</FormLabel>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  placeholder="Ex : 2"
+                  value={heuresAnnulation}
+                  onChange={e => setHeuresAnnulation(e.target.value)}
+                />
+              </FormControl>
+            )}
+
             {/* Récapitulatif */}
             <Stack spacing={1} bg="gray.50" borderRadius="md" p={3} fontSize="sm">
               <Grid templateColumns="1fr 1fr" gap={2}>
@@ -285,6 +327,14 @@ export function HeuresRealiséesModal({
                 </Text>
                 <Text color="gray.600">Montant km :</Text>
                 <Text fontWeight="medium">{montantKm !== '-' ? `${montantKm} €` : '-'}</Text>
+                {casAnnulation && (
+                  <>
+                    <Text color="gray.600">Montant annulation :</Text>
+                    <Text fontWeight="medium">
+                      {montantAnnulation !== '-' ? `${montantAnnulation} €` : '-'}
+                    </Text>
+                  </>
+                )}
                 <Text color="gray.600" fontWeight="bold">
                   Total :
                 </Text>

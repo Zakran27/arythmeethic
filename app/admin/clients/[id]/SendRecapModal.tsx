@@ -35,6 +35,7 @@ export interface HeureRow {
   km: number;
   bareme_km: number;
   temps_a_reporter?: number;
+  heures_annulation?: number;
   report_in?: number;
   recap_email_sent_at?: string | null;
   recap_email_to?: string | null;
@@ -113,7 +114,14 @@ export function SendRecapModal({
     if (!selectedEntry) return null;
     const montantHeures = selectedEntry.heures * selectedEntry.tarif_horaire;
     const montantKm = selectedEntry.km * selectedEntry.bareme_km;
-    return { montantHeures, montantKm, total: montantHeures + montantKm };
+    const montantAnnulation =
+      Number(selectedEntry.heures_annulation ?? 0) * selectedEntry.tarif_horaire;
+    return {
+      montantHeures,
+      montantKm,
+      montantAnnulation,
+      total: montantHeures + montantKm + montantAnnulation,
+    };
   }, [selectedEntry]);
 
   const handleSend = async () => {
@@ -135,6 +143,7 @@ export function SendRecapModal({
               tarifHoraire: String(selectedEntry.tarif_horaire),
               km: String(selectedEntry.km),
               baremeKm: String(selectedEntry.bareme_km),
+              heuresAnnulation: String(selectedEntry.heures_annulation ?? 0),
             },
           ],
         }),
@@ -217,7 +226,10 @@ export function SendRecapModal({
                 <RadioGroup value={selectedMois} onChange={setSelectedMois}>
                   <Stack spacing={2}>
                     {unsent.map(h => {
-                      const total = h.heures * h.tarif_horaire + h.km * h.bareme_km;
+                      const total =
+                        h.heures * h.tarif_horaire +
+                        h.km * h.bareme_km +
+                        Number(h.heures_annulation ?? 0) * h.tarif_horaire;
                       return (
                         <Box
                           key={h.id}
@@ -285,6 +297,13 @@ export function SendRecapModal({
                       <Text>
                         Déplacement : {selectedEntry.km} km × {selectedEntry.bareme_km.toFixed(3)}{' '}
                         €/km = {totalsForSelected.montantKm.toFixed(2)} €
+                      </Text>
+                    )}
+                    {Number(selectedEntry.heures_annulation ?? 0) > 0 && (
+                      <Text>
+                        Annulation : {selectedEntry.heures_annulation} h ×{' '}
+                        {selectedEntry.tarif_horaire.toFixed(2)} €/h ={' '}
+                        {totalsForSelected.montantAnnulation.toFixed(2)} €
                       </Text>
                     )}
                     <Text fontWeight="medium" color="brand.600" mt={1}>
