@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Nav } from '@/components/Nav';
 import { ContactModal } from '@/components/ContactModal';
 import { GoogleReviewsCarousel } from '@/components/GoogleReviewsCarousel';
+import { SiteMessages } from '@/components/SiteMessages';
 import { useState, useRef, useEffect, type ReactNode, type CSSProperties } from 'react';
 
 const PARTICULIER_STEPS = [
@@ -158,6 +159,7 @@ export default function HomePage() {
 
   return (
     <>
+      <SiteMessages />
       <Nav onServiceClick={handleNavServiceClick} />
       <ContactModal isOpen={isOpen} onClose={onClose} defaultClientType={defaultClientType} />
 

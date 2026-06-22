@@ -26,6 +26,7 @@ const navItems = [
   { label: 'Contacts', href: '/admin/clients' },
   { label: 'Avis Google', href: '/admin/avis' },
   { label: 'Formations', href: '/admin/formations' },
+  { label: 'Bandeaux / popups', href: '/admin/bandeaux' },
   { label: 'Templates emails', href: '/admin/email-templates' },
 ];
 
