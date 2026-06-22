@@ -33,7 +33,9 @@ export default function ForgotPasswordPage() {
       const origin =
         typeof window !== 'undefined' ? window.location.origin : 'https://arythmeethic.fr';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/admin/reset-password`,
+        // PKCE : le lien doit passer par /auth/callback pour échanger le code,
+        // qui redirige ensuite vers la page de réinitialisation.
+        redirectTo: `${origin}/auth/callback?next=/admin/reset-password`,
       });
       if (error) throw error;
       setSent(true);
