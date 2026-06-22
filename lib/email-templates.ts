@@ -46,9 +46,9 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'recueil-informations',
     name: 'Recueil d’informations (envoi du formulaire)',
-    description: 'Email avec le lien vers le formulaire de recueil d’informations.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email avec le lien vers le formulaire de recueil d’informations (bouton « Compléter le formulaire » ajouté automatiquement).',
+    variables: ['recipientName'],
+    wired: true,
   },
   {
     key: 'contractualisation-particulier',
@@ -67,9 +67,9 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'envoi-cv-casier',
     name: 'Envoi CV / casier judiciaire',
-    description: 'Email d’envoi des documents (CV, casier).',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email d’envoi des documents (CV, casier) — bouton « Télécharger les documents » ajouté automatiquement.',
+    variables: ['recipientName'],
+    wired: true,
   },
   {
     key: 'souhait-renouvellement',
@@ -199,5 +199,13 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'renouvellement-accuse': {
     subject: 'A Rythme Ethic - Votre avis compte !',
     html: `<p>Bonjour {{recipientName}},</p><p>Merci pour votre réponse concernant le renouvellement de l'accompagnement !</p><p>Si vous avez été satisfait(e) de nos échanges et du suivi de votre enfant, <strong>pourriez-vous prendre quelques instants pour laisser un avis Google ?</strong></p><p>Votre témoignage est précieux et aide d'autres familles à découvrir mes services.</p>`,
+  },
+  'recueil-informations': {
+    subject: 'A Rythme Ethic - Formulaire de recueil des informations',
+    html: `<p>Bonjour {{recipientName}},</p><p>Afin de préparer au mieux notre collaboration, je vous invite à compléter le formulaire de recueil des informations en cliquant sur le bouton ci-dessous.</p><p>Ce formulaire me permettra de mieux connaître votre situation et d'adapter mon accompagnement.</p>`,
+  },
+  'envoi-cv-casier': {
+    subject: 'A Rythme Ethic - Documents à télécharger',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je vous transmets ci-dessous les documents demandés (CV actualisé et/ou extrait de casier judiciaire).</p><p>Cliquez sur le bouton ci-dessous pour accéder à la page de téléchargement :</p>`,
   },
 };
