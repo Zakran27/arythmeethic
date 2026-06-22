@@ -26,6 +26,7 @@ import {
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { Client, ClientType, ClientSubType, ClientStatus } from '@/types';
+import { findInvalidContactFields } from '@/lib/validators';
 
 const REGIONS_FRANCE = [
   'Auvergne-Rhône-Alpes',
@@ -249,6 +250,30 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Détrompeur : valider tous les champs email et téléphone avant l'enregistrement
+    const { invalidEmails, invalidPhones } = findInvalidContactFields(formData);
+    if (invalidEmails.length > 0) {
+      toast({
+        title: 'Email invalide',
+        description: 'Vérifiez les adresses email saisies (format attendu : nom@domaine.fr).',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (invalidPhones.length > 0) {
+      toast({
+        title: 'Numéro de téléphone invalide',
+        description: 'Format attendu : 06 12 34 56 78 ou +33 6 12 34 56 78.',
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {

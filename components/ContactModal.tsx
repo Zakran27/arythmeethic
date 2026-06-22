@@ -21,6 +21,7 @@ import {
   GridItem,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
+import { isValidPhone } from '@/lib/validators';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -54,11 +55,16 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
   });
   const [loading, setLoading] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const toast = useToast();
 
   const trimmedEmail = formData.email.trim();
   const emailValid = EMAIL_REGEX.test(trimmedEmail);
   const showEmailError = emailTouched && trimmedEmail.length > 0 && !emailValid;
+
+  const trimmedPhone = formData.phone.trim();
+  const phoneValid = isValidPhone(trimmedPhone);
+  const showPhoneError = phoneTouched && trimmedPhone.length > 0 && !phoneValid;
 
   // Reset form when defaultClientType changes
   useEffect(() => {
@@ -91,6 +97,18 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       toast({
         title: 'Adresse email invalide',
         description: 'Vérifiez la forme : nom@domaine.fr',
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (trimmedPhone.length > 0 && !phoneValid) {
+      setPhoneTouched(true);
+      toast({
+        title: 'Numéro de téléphone invalide',
+        description: 'Format attendu : 06 12 34 56 78 ou +33 6 12 34 56 78.',
         status: 'warning',
         duration: 5000,
         isClosable: true,
@@ -188,14 +206,18 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               )}
             </FormControl>
 
-            <FormControl>
+            <FormControl isInvalid={showPhoneError}>
               <FormLabel>Téléphone</FormLabel>
               <Input
                 type="tel"
                 value={formData.phone}
                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={() => setPhoneTouched(true)}
                 placeholder="06 12 34 56 78"
               />
+              <FormErrorMessage>
+                Numéro invalide. Format : 06 12 34 56 78 ou +33 6 12 34 56 78.
+              </FormErrorMessage>
             </FormControl>
 
             <FormControl isRequired>
@@ -280,14 +302,18 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               )}
             </FormControl>
 
-            <FormControl>
+            <FormControl isInvalid={showPhoneError}>
               <FormLabel>Téléphone</FormLabel>
               <Input
                 type="tel"
                 value={formData.phone}
                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={() => setPhoneTouched(true)}
                 placeholder="06 12 34 56 78"
               />
+              <FormErrorMessage>
+                Numéro invalide. Format : 06 12 34 56 78 ou +33 6 12 34 56 78.
+              </FormErrorMessage>
             </FormControl>
 
             <FormControl isRequired>
@@ -353,14 +379,18 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
               )}
             </FormControl>
 
-            <FormControl>
+            <FormControl isInvalid={showPhoneError}>
               <FormLabel>Téléphone</FormLabel>
               <Input
                 type="tel"
                 value={formData.phone}
                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={() => setPhoneTouched(true)}
                 placeholder="02 40 12 34 56"
               />
+              <FormErrorMessage>
+                Numéro invalide. Format : 06 12 34 56 78 ou +33 6 12 34 56 78.
+              </FormErrorMessage>
             </FormControl>
 
             <FormControl isRequired>
