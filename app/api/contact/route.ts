@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell } from '@/lib/email-templates';
 
 // Strict-ish email validation: requires local@domain.tld with TLD of 2+ chars.
 // Mirrors the client-side regex in ContactModal.tsx.
@@ -301,8 +303,14 @@ ${message}
     const subject =
       `Nouveau message du site — ${clientTypeLabels[clientType] || clientType} : ${firstName || ''} ${lastName || ''}`.trim();
 
+    const ovContact = await getEmailTemplateOverride('contact-notif', {});
+    const contactDataBlock = `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:14px;">${detailRowsHtml}</table><h3 style="margin:24px 0 8px 0;color:#6e3a25;font-size:15px;">Message :</h3><div style="padding:14px 16px;background-color:#f9f3ee;border-radius:8px;color:#7b4a31;font-size:14px;line-height:1.6;white-space:pre-wrap;">${messageHtml || '<em>Aucun message</em>'}</div>`;
     try {
-      const result = await sendBrevoEmail({ to: notifTo, subject, htmlContent });
+      const result = await sendBrevoEmail({
+        to: notifTo,
+        subject: ovContact?.subject ?? subject,
+        htmlContent: ovContact ? renderEmailShell(ovContact.html, contactDataBlock) : htmlContent,
+      });
       if (!result.ok) {
         console.error('Notification email to Florence failed:', result.error);
       }

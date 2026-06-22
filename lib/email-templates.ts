@@ -31,9 +31,9 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'contact-notif',
     name: 'Notification de contact (à Florence)',
-    description: "Email reçu par Florence quand le formulaire « Prendre contact » est rempli.",
-    variables: ['nom', 'email', 'telephone', 'message'],
-    wired: false,
+    description: "Email reçu par Florence quand le formulaire « Prendre contact » est rempli. Vous éditez seulement le texte d'introduction ; le récapitulatif du formulaire est ajouté automatiquement.",
+    variables: [],
+    wired: true,
   },
   {
     key: 'preparation-rdv1',
@@ -102,16 +102,16 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'cron-fin-de-contrat-relance',
     name: 'Fin de contrat — relance (cron)',
-    description: 'Email automatique de relance pour les documents de fin de contrat.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email automatique de relance des documents de fin de contrat (liste des documents manquants + bouton ajoutés automatiquement).',
+    variables: ['recipientName'],
+    wired: true,
   },
   {
     key: 'fin-de-contrat',
     name: 'Fin de contrat (lancement)',
-    description: 'Email de lancement de la procédure de fin de contrat.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email de lancement de la procédure de fin de contrat (bouton « Déposer les documents » + message de clôture ajoutés automatiquement).',
+    variables: ['recipientName'],
+    wired: true,
   },
 ];
 
@@ -215,5 +215,17 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'contractualisation-ecole': {
     subject: 'A Rythme Ethic - Signature du contrat',
     html: `<p>Bonjour {{recipientName}},</p><p>Florence Louazel vous invite à signer le contrat de prestation A Rythme Ethic.</p>`,
+  },
+  'fin-de-contrat': {
+    subject: 'A Rythme Ethic - Fin de contrat - documents à transmettre',
+    html: `<p>Bonjour {{recipientName}},</p><p>L'accompagnement de votre enfant touche à sa fin.</p><p>Pourriez-vous effectuer les démarches sur le site du CESU pour mettre fin à mon contrat qui me lie à vous ? Il est possible de réaliser la déclaration du mois en cours en même temps.</p><p><a href="https://www.cesu.urssaf.fr/info/accueil/question-du-moment/comment-gerer-la-fin-de-contrat.html">Procédure CESU - comment gérer la fin de contrat</a></p><p>Une fois que vous aurez ces trois documents, merci de me les transmettre via le formulaire ci-dessous :</p><ul><li>Reçu pour solde de tout compte</li><li>Attestation employeur</li><li>Certificat de travail</li></ul><p>Je vous retournerai les documents signés.</p>`,
+  },
+  'cron-fin-de-contrat-relance': {
+    subject: 'A Rythme Ethic - Rappel : documents de fin de contrat',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous concernant la fin de contrat. Il manque encore les document(s) suivant(s) :</p>`,
+  },
+  'contact-notif': {
+    subject: 'Nouveau message du site - A Rythme Ethic',
+    html: `<p>Un nouveau message a été envoyé via le formulaire de contact du site.</p>`,
   },
 };
