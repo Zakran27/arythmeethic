@@ -124,6 +124,7 @@ export default function ClientDetailPage() {
     km: number;
     bareme_km: number;
     temps_a_reporter?: number;
+    heures_annulation?: number;
     report_in?: number;
     recap_email_sent_at?: string | null;
     recap_email_to?: string | null;
@@ -1955,7 +1956,8 @@ export default function ClientDetailPage() {
                         const heuresBillees = h.heures + reportIn;
                         const montantHeures = heuresBillees * h.tarif_horaire;
                         const montantKm = h.km * h.bareme_km;
-                        const total = montantHeures + montantKm;
+                        const montantAnnulation = Number(h.heures_annulation ?? 0) * h.tarif_horaire;
+                        const total = montantHeures + montantKm + montantAnnulation;
                         const moisDate = new Date(h.mois + 'T00:00:00');
                         const label = moisDate.toLocaleDateString('fr-FR', {
                           month: '2-digit',
@@ -1972,6 +1974,11 @@ export default function ClientDetailPage() {
                               {reportIn > 0 && (
                                 <Text as="span" color="orange.500" fontSize="xs" ml={1}>
                                   (+{reportIn}h)
+                                </Text>
+                              )}
+                              {Number(h.heures_annulation) > 0 && (
+                                <Text as="span" color="red.500" fontSize="xs" ml={1}>
+                                  (annul. {h.heures_annulation}h)
                                 </Text>
                               )}
                             </Td>
