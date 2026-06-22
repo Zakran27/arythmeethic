@@ -144,6 +144,15 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('Article 2 : Objet du contrat', 11, true);
   br(6);
   write(`  Enseignement dont le thème est : ${client.ecole_module_nom || ''}`, 9);
+  const formationTypeLabel =
+    client.ecole_formation_type === 'initiale_en_alternance'
+      ? 'Formation initiale / en alternance'
+      : client.ecole_formation_type === 'continue'
+        ? 'Formation continue'
+        : '';
+  if (formationTypeLabel) {
+    write(`  Type de formation : ${formationTypeLabel}`, 9);
+  }
   write(`  Formation à destination ${client.ecole_classes_noms || ''}`, 9);
   write(
     `  Période : année scolaire ${anneeScolaire} à compter du 1er septembre et jusqu'au 31 août`,
