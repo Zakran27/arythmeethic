@@ -4,14 +4,15 @@ import { launchFinDeContratProcedure } from '@/lib/fin-de-contrat';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { clientId, recipientEmail, recipientFirstName, recipientLastName } = body;
+    const { clientId, recipientEmail, recipientFirstName } = body;
     if (!clientId || !recipientEmail || !recipientFirstName) {
       return NextResponse.json(
         { success: false, error: 'Paramètres requis manquants' },
         { status: 400 }
       );
     }
-    const recipientName = `${recipientFirstName} ${recipientLastName || ''}`.trim();
+    // Salutation : prénom seul pour les particuliers (retour Florence, item 10)
+    const recipientName = recipientFirstName;
     const result = await launchFinDeContratProcedure({
       clientId,
       recipientEmail,
