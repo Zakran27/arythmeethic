@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
+import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { generateContractParticulierPDF } from '@/lib/pdf-contract-particulier-generator';
 
 const DOCUSEAL_API_URL = 'https://api.docuseal.com';
@@ -106,14 +108,32 @@ async function sendSignatureEmail({
 </body>
 </html>`.trim();
 
+  // Email client : template éditable (override) si défini, sinon HTML par défaut.
+  // La copie de contresignature de Florence (role 'Florence') n'est pas modifiée.
+  let finalSubject = `A Rythme Ethic - Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`;
+  let finalHtml = htmlContent;
+  if (role === 'Client') {
+    const ov = await getEmailTemplateOverride('contractualisation-particulier', {
+      recipientName: toName.split(' ')[0],
+    });
+    if (ov) {
+      finalSubject = ov.subject;
+      finalHtml = renderEmailShell(
+        ov.html,
+        emailButton(signingLink, 'Signer le document') +
+          `<p style="margin:20px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${signingLink}" style="color:#2ba1bd;word-break:break-all;">${signingLink}</a></p>`
+      );
+    }
+  }
+
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify({
       sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
       to: [{ email: to, name: toName }],
-      subject: `A Rythme Ethic - Signature du contrat${role === 'Florence' ? ` (${clientName})` : ''}`,
-      htmlContent,
+      subject: finalSubject,
+      htmlContent: finalHtml,
     }),
   });
   console.log(`[Brevo] Email signature envoyé à ${to} - status: ${res.status}`);
