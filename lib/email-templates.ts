@@ -74,9 +74,9 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'souhait-renouvellement',
     name: 'Souhait de renouvellement (lancement)',
-    description: 'Email demandant si le client souhaite renouveler.',
-    variables: ['recipientName', 'lien'],
-    wired: false,
+    description: 'Email demandant si le client souhaite renouveler (bouton « Donner ma réponse » ajouté automatiquement).',
+    variables: ['recipientName', 'jeuneName'],
+    wired: true,
   },
   {
     key: 'renouvellement-accuse',
@@ -165,6 +165,11 @@ export function renderEmailShell(bodyHtml: string, dynamicBlock = ''): string {
 </html>`;
 }
 
+// Bouton CTA standard, réutilisé comme bloc dynamique dans les emails à lien.
+export function emailButton(href: string, label: string): string {
+  return `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 0;"><a href="${href}" style="display:inline-block;background-color:#2ba1bd;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-size:16px;font-weight:500;">${label}</a></td></tr></table>`;
+}
+
 // Modèle par défaut proposé dans l'éditeur (bouton « charger le modèle par
 // défaut ») pour les templates câblés. Sert de point de départ éditable ; tant
 // qu'il n'est pas enregistré, la route garde son HTML d'origine.
@@ -178,5 +183,9 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'preparation-rdv1': {
     subject: 'A Rythme Ethic - Préparation du premier rendez-vous',
     html: `<p>Bonjour {{recipientName}},</p><p>Afin de préparer au mieux notre premier rendez-vous avec {{jeuneName}}, je vous invite à rassembler les documents suivants :</p><ul><li>Les 3 derniers bulletins de notes</li><li>Les 2 dernières évaluations de mathématiques</li><li>Le(s) cahier(s) ou classeur de mathématiques</li></ul><p>Ces éléments me permettront de mieux comprendre le parcours scolaire et d'adapter mon accompagnement.</p><p>Si vous avez des questions, n'hésitez pas à me contacter.</p>`,
+  },
+  'souhait-renouvellement': {
+    subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
+    html: `<p>Bonjour {{recipientName}},</p><p>L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que vous m'avez accordée pour l'accompagnement de {{jeuneName}}.</p><p>Afin de préparer sereinement la rentrée prochaine, j'aimerais savoir si vous envisagez de poursuivre l'accompagnement l'année suivante.</p><p>Bien sûr, votre réponse n'est en aucun cas un engagement. C'est simplement une indication qui m'aidera à organiser mon planning pour la rentrée.</p><p>Si vous avez déjà une idée, vous pouvez me faire part de votre souhait en cliquant sur le bouton ci-dessous :</p>`,
   },
 };
