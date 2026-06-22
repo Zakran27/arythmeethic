@@ -78,7 +78,7 @@ async function sendSignatureEmail({
         </tr>
         <tr>
           <td style="padding:40px;">
-            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${toName},</p>
+            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${toName.split(' ')[0]},</p>
             <p style="margin:0 0 30px 0;color:#7b4a31;font-size:16px;line-height:1.6;">${intro}</p>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
