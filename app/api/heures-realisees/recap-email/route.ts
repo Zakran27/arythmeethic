@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
-import { getEmailTemplateOverride } from '@/lib/email-templates';
+import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 
 interface RecapEntryInput {
   clientId: string;
