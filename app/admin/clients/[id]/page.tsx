@@ -1933,7 +1933,7 @@ export default function ClientDetailPage() {
                 </Box>
               ) : heuresRealisees.length > 0 ? (
                 <TableContainer>
-                  <Table size="sm" variant="simple">
+                  <Table size="sm" variant="simple" sx={{ 'th, td': { px: 2 } }}>
                     <Thead>
                       <Tr>
                         <Th>Mois</Th>
@@ -1958,7 +1958,7 @@ export default function ClientDetailPage() {
                         const total = montantHeures + montantKm;
                         const moisDate = new Date(h.mois + 'T00:00:00');
                         const label = moisDate.toLocaleDateString('fr-FR', {
-                          month: 'long',
+                          month: '2-digit',
                           year: 'numeric',
                         });
                         const sentAt = h.recap_email_sent_at
