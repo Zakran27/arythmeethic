@@ -10,7 +10,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Textarea,
   useToast,
   Spinner,
   Code,
@@ -21,10 +20,8 @@ import {
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-client';
-import {
-  getEmailTemplateMeta,
-  DEFAULT_TEMPLATE_CONTENT,
-} from '@/lib/email-templates';
+import { getEmailTemplateMeta, DEFAULT_TEMPLATE_CONTENT } from '@/lib/email-templates';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 export default function EmailTemplateEditorPage() {
   const params = useParams();
@@ -193,16 +190,12 @@ export default function EmailTemplateEditorPage() {
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>Contenu (HTML)</FormLabel>
-            <Textarea
-              value={html}
-              onChange={e => setHtml(e.target.value)}
-              bg="white"
-              fontFamily="mono"
-              fontSize="xs"
-              rows={20}
-              placeholder="Cliquez sur « Charger le modèle par défaut » pour partir d’une base."
-            />
+            <FormLabel>Contenu de l’email</FormLabel>
+            <Text fontSize="xs" color="gray.500" mb={2}>
+              L’en-tête, le pied de page et le tableau des montants sont ajoutés automatiquement.
+              Tapez les variables (ex. {'{{clientName}}'}) directement dans le texte.
+            </Text>
+            <RichTextEditor value={html} onChange={setHtml} />
           </FormControl>
 
           <Divider />
