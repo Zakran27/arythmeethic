@@ -340,6 +340,8 @@ export async function POST(request: NextRequest) {
           clientId: client.id,
           recipientEmail,
           recipientName,
+          // Évite de relancer un client qui a déjà complété sa fin de contrat ce mois-ci
+          skipIfSignedThisMonth: true,
         });
       } catch (e) {
         console.error('Auto-trigger fin-de-contrat failed:', e);
