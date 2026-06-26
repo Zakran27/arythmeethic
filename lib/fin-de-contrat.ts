@@ -9,6 +9,13 @@ export interface LaunchFinDeContratParams {
   clientId: string;
   recipientEmail: string;
   recipientName: string;
+  /**
+   * Si true, n'envoie pas de nouvelle procédure si une fin de contrat a déjà été
+   * complétée (SIGNED) pour ce client durant le mois calendaire en cours.
+   * Utilisé par le déclenchement auto depuis le formulaire de renouvellement pour
+   * éviter de relancer un client qui vient de terminer sa fin de contrat.
+   */
+  skipIfSignedThisMonth?: boolean;
 }
 
 interface BrevoEmailParams {
@@ -123,6 +130,7 @@ function buildEmailHtml(recipientName: string, uploadUrl: string): string {
 export async function launchFinDeContratProcedure(params: LaunchFinDeContratParams): Promise<{
   success: boolean;
   procedureId?: string;
+  skipped?: boolean;
   error?: string;
 }> {
   const supabase = createServiceRoleClient();
@@ -145,6 +153,36 @@ export async function launchFinDeContratProcedure(params: LaunchFinDeContratPara
     .eq('code', FIN_DE_CONTRAT_TYPE_CODE)
     .single();
   if (!procedureType) return { success: false, error: 'Type de procédure introuvable' };
+
+  // Si demandé, ne pas relancer si une fin de contrat a déjà été complétée ce mois-ci.
+  // (cas typique : client qui termine sa fin de contrat puis répond "non" au
+  //  renouvellement le même mois → on évite le doublon)
+  if (params.skipIfSignedThisMonth) {
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+    const { data: signedThisMonth } = await supabase
+      .from('procedures')
+      .select('id')
+      .eq('client_id', params.clientId)
+      .eq('procedure_type_id', procedureType.id)
+      .eq('status', 'SIGNED')
+      .gte('updated_at', startOfMonth.toISOString())
+      .limit(1);
+    if (signedThisMonth && signedThisMonth.length > 0) {
+      return { success: true, skipped: true };
+    }
+  }
+
+  // Neutraliser les éventuelles procédures fin de contrat encore en DRAFT pour ce
+  // client : elles sont superseded par celle qu'on s'apprête à créer et, laissées
+  // ouvertes, continueraient à recevoir des relances automatiques.
+  await supabase
+    .from('procedures')
+    .update({ status: 'CLOSED', updated_at: new Date().toISOString() })
+    .eq('client_id', params.clientId)
+    .eq('procedure_type_id', procedureType.id)
+    .eq('status', 'DRAFT');
 
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date();
