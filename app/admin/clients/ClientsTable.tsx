@@ -4,12 +4,16 @@ import { DataTable } from '@/components/DataTable';
 import { Client } from '@/types';
 import { useRouter } from 'next/navigation';
 import { Badge, Spinner, Alert, AlertIcon, Box } from '@chakra-ui/react';
+import { RecueilFormStatus } from '@/lib/hooks/useRecueilStatus';
 
 interface ClientsTableProps {
   clients: Client[];
   loading: boolean;
   error: string | null;
   showArchivedDate?: boolean;
+  // Si fourni, affiche une colonne "Formulaire" (recueil d'informations).
+  // Pas d'entrée pour un client = procédure jamais lancée = pas de badge.
+  recueilStatus?: Record<string, RecueilFormStatus>;
 }
 
 // Helper function to get the display name based on client type
@@ -71,6 +75,7 @@ export function ClientsTable({
   loading,
   error,
   showArchivedDate = false,
+  recueilStatus,
 }: ClientsTableProps) {
   const router = useRouter();
 
@@ -120,6 +125,28 @@ export function ClientsTable({
             </Badge>
           ),
         },
+        ...(recueilStatus
+          ? [
+              {
+                key: 'recueil_status',
+                label: 'Formulaire',
+                render: (client: Client) => {
+                  const status = recueilStatus[client.id];
+                  // Procédure jamais lancée → aucun indicateur
+                  if (!status) return null;
+                  return status === 'rempli' ? (
+                    <Badge bg="green.100" color="green.700" whiteSpace="nowrap">
+                      ✓ Rempli
+                    </Badge>
+                  ) : (
+                    <Badge bg="orange.100" color="orange.700" whiteSpace="nowrap">
+                      En attente
+                    </Badge>
+                  );
+                },
+              },
+            ]
+          : []),
         {
           key: 'created_at',
           label: 'Créé le',

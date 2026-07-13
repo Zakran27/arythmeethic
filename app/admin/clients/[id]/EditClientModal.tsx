@@ -52,17 +52,18 @@ const REGIONS_FRANCE = [
 interface EditClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  // En mode 'duplicate', reçoit l'id du nouveau contact créé
+  onSuccess: (newClientId?: string) => void;
   client: Client;
+  // 'edit' (défaut) : modifie le contact existant.
+  // 'duplicate' : formulaire pré-rempli, nom vidé, création d'un nouveau contact à l'enregistrement.
+  mode?: 'edit' | 'duplicate';
 }
 
-export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClientModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [adresseCoursDifferente, setAdresseCoursDifferente] = useState(!!client.adresse_cours);
-  const toast = useToast();
-  const supabase = createClient();
-
-  const [formData, setFormData] = useState({
+// Construit l'état initial du formulaire à partir du client.
+// En mode duplication, le nom "principal" (selon le type) est vidé pour forcer sa saisie.
+function buildInitialFormData(client: Client, isDuplicate: boolean) {
+  const data = {
     first_name: client.first_name,
     last_name: client.last_name,
     email: client.email,
@@ -154,100 +155,42 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     tarif_horaire: client.tarif_horaire?.toString() || '',
     distance_km: client.distance_km?.toString() || '',
     demarche_volontaire: client.demarche_volontaire || false,
-  });
+  };
+
+  if (isDuplicate) {
+    // Vider le nom affiché selon le type, pour forcer Florence à saisir le nouveau nom
+    if (client.type_client === 'École') {
+      data.organisation = '';
+    } else if (client.sub_type === 'Jeune') {
+      data.first_name_jeune = '';
+      data.last_name_jeune = '';
+    } else if (client.sub_type === 'Parent') {
+      data.first_name_parent1 = '';
+      data.last_name_parent1 = '';
+    }
+  }
+
+  return data;
+}
+
+export function EditClientModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  client,
+  mode = 'edit',
+}: EditClientModalProps) {
+  const isDuplicate = mode === 'duplicate';
+  const [loading, setLoading] = useState(false);
+  const [adresseCoursDifferente, setAdresseCoursDifferente] = useState(!!client.adresse_cours);
+  const toast = useToast();
+  const supabase = createClient();
+
+  const [formData, setFormData] = useState(() => buildInitialFormData(client, isDuplicate));
 
   useEffect(() => {
-    setFormData({
-      first_name: client.first_name,
-      last_name: client.last_name,
-      email: client.email,
-      phone1: client.phone1 || '',
-      type_client: client.type_client as ClientType,
-      sub_type: (client.sub_type || '') as ClientSubType | '',
-      client_status: client.client_status as ClientStatus,
-      organisation: client.organisation || '',
-      address_line1: client.address_line1 || '',
-      postal_code: client.postal_code || '',
-      city: client.city || '',
-      country: client.country || '',
-      notes: client.notes || '',
-      first_name_jeune: client.first_name_jeune || '',
-      last_name_jeune: client.last_name_jeune || '',
-      email_jeune: client.email_jeune || '',
-      phone_jeune: client.phone_jeune || '',
-      niveau_eleve: client.niveau_eleve || '',
-      demande_type: client.demande_type || '',
-      first_name_parent1: client.first_name_parent1 || '',
-      last_name_parent1: client.last_name_parent1 || '',
-      email_parent1: client.email_parent1 || '',
-      phone_parent1: client.phone_parent1 || '',
-      first_name_parent2: client.first_name_parent2 || '',
-      last_name_parent2: client.last_name_parent2 || '',
-      email_parent2: client.email_parent2 || '',
-      phone_parent2: client.phone_parent2 || '',
-      // Recueil des informations fields
-      numero_cesu: client.numero_cesu || '',
-      etablissement_scolaire: client.etablissement_scolaire || '',
-      moyenne_maths: client.moyenne_maths || '',
-      moyenne_generale: client.moyenne_generale || '',
-      adresse_cours: client.adresse_cours || '',
-      jours_disponibles: client.jours_disponibles || [],
-      // École-specific fields
-      ecole_siret: client.ecole_siret || '',
-      ecole_nda: client.ecole_nda || '',
-      ecole_nda_region: client.ecole_nda_region || '',
-      // Frais pris en charge par l'établissement
-      ecole_frais_midi_montant: client.ecole_frais_midi_montant?.toString() || '',
-      ecole_frais_midi_conditions: client.ecole_frais_midi_conditions || '',
-      ecole_frais_deplacement_rembourse: client.ecole_frais_deplacement_rembourse || false,
-      ecole_frais_km_prix: client.ecole_frais_km_prix?.toString() || '',
-      ecole_resp_modules_nom: client.ecole_resp_modules_nom || '',
-      ecole_resp_modules_prenom: client.ecole_resp_modules_prenom || '',
-      ecole_resp_modules_email: client.ecole_resp_modules_email || '',
-      ecole_resp_modules_phone: client.ecole_resp_modules_phone || '',
-      ecole_resp_modules_peut_negocier: client.ecole_resp_modules_peut_negocier || false,
-      ecole_resp_autorisation_nom: client.ecole_resp_autorisation_nom || '',
-      ecole_resp_autorisation_prenom: client.ecole_resp_autorisation_prenom || '',
-      ecole_resp_autorisation_email: client.ecole_resp_autorisation_email || '',
-      ecole_resp_autorisation_phone: client.ecole_resp_autorisation_phone || '',
-      ecole_resp_facturation_nom: client.ecole_resp_facturation_nom || '',
-      ecole_resp_facturation_prenom: client.ecole_resp_facturation_prenom || '',
-      ecole_resp_facturation_email: client.ecole_resp_facturation_email || '',
-      ecole_resp_facturation_phone: client.ecole_resp_facturation_phone || '',
-      ecole_resp_planning_nom: client.ecole_resp_planning_nom || '',
-      ecole_resp_planning_prenom: client.ecole_resp_planning_prenom || '',
-      ecole_resp_planning_email: client.ecole_resp_planning_email || '',
-      ecole_resp_planning_phone: client.ecole_resp_planning_phone || '',
-      ecole_module_nom: client.ecole_module_nom || '',
-      ecole_module_heures: client.ecole_module_heures?.toString() || '',
-      ecole_formation_type: client.ecole_formation_type || '',
-      ecole_classes_noms: client.ecole_classes_noms || '',
-      ecole_groupe_taille: client.ecole_groupe_taille?.toString() || '',
-      ecole_evaluation_modalites: client.ecole_evaluation_modalites || '',
-      ecole_evaluation_nombre_min: client.ecole_evaluation_nombre_min?.toString() || '',
-      ecole_module_periode: client.ecole_module_periode || '',
-      // Enseignant
-      ecole_enseignant_nom: client.ecole_enseignant_nom || '',
-      ecole_enseignant_prenom: client.ecole_enseignant_prenom || '',
-      ecole_enseignant_email: client.ecole_enseignant_email || '',
-      // Facturation
-      ecole_facturation_date_max_paiement:
-        client.ecole_facturation_date_max_paiement?.toString() || '',
-      ecole_periode_facturation: client.ecole_periode_facturation || '',
-      // Responsable notes
-      ecole_notes_saisies_par: client.ecole_notes_saisies_par || '',
-      ecole_resp_notes_nom: client.ecole_resp_notes_nom || '',
-      ecole_resp_notes_prenom: client.ecole_resp_notes_prenom || '',
-      ecole_resp_notes_email: client.ecole_resp_notes_email || '',
-      ecole_resp_notes_phone: client.ecole_resp_notes_phone || '',
-      // Statut juridique
-      ecole_statut_juridique: client.ecole_statut_juridique || '',
-      // Particulier - tarif et distance
-      tarif_horaire: client.tarif_horaire?.toString() || '',
-      distance_km: client.distance_km?.toString() || '',
-      demarche_volontaire: client.demarche_volontaire || false,
-    });
-  }, [client]);
+    setFormData(buildInitialFormData(client, isDuplicate));
+  }, [client, isDuplicate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -295,127 +238,149 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
         }
       }
 
-      const { error } = await supabase
-        .from('clients')
-        .update({
-          first_name: mainFirstName,
-          last_name: mainLastName,
-          email: mainEmail,
-          phone1: formData.phone1 || null,
-          type_client: formData.type_client,
-          sub_type: formData.sub_type || null,
-          client_status: formData.client_status,
-          organisation: formData.organisation || null,
-          address_line1: formData.address_line1 || null,
-          postal_code: formData.postal_code || null,
-          city: formData.city || null,
-          country: formData.country || null,
-          notes: formData.notes || null,
-          // Jeune fields
-          first_name_jeune: formData.first_name_jeune || null,
-          last_name_jeune: formData.last_name_jeune || null,
-          email_jeune: formData.email_jeune || null,
-          phone_jeune: formData.phone_jeune || null,
-          niveau_eleve: formData.niveau_eleve || null,
-          demande_type: formData.demande_type || null,
-          // Parent 1 fields
-          first_name_parent1: formData.first_name_parent1 || null,
-          last_name_parent1: formData.last_name_parent1 || null,
-          email_parent1: formData.email_parent1 || null,
-          phone_parent1: formData.phone_parent1 || null,
-          // Parent 2 fields
-          first_name_parent2: formData.first_name_parent2 || null,
-          last_name_parent2: formData.last_name_parent2 || null,
-          email_parent2: formData.email_parent2 || null,
-          phone_parent2: formData.phone_parent2 || null,
-          // Recueil des informations fields
-          numero_cesu: formData.numero_cesu || null,
-          etablissement_scolaire: formData.etablissement_scolaire || null,
-          moyenne_maths: formData.moyenne_maths || null,
-          moyenne_generale: formData.moyenne_generale || null,
-          adresse_cours: formData.adresse_cours || null,
-          jours_disponibles:
-            formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
-          // École-specific fields
-          ecole_siret: formData.ecole_siret || null,
-          ecole_nda: formData.ecole_nda || null,
-          ecole_nda_region: formData.ecole_nda_region || null,
-          // Frais pris en charge par l'établissement
-          ecole_frais_midi_montant: formData.ecole_frais_midi_montant
-            ? parseFloat(formData.ecole_frais_midi_montant)
-            : null,
-          ecole_frais_midi_conditions: formData.ecole_frais_midi_conditions || null,
-          ecole_frais_deplacement_rembourse: formData.ecole_frais_deplacement_rembourse ?? null,
-          ecole_frais_km_prix: formData.ecole_frais_km_prix
-            ? parseFloat(formData.ecole_frais_km_prix)
-            : null,
-          ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
-          ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,
-          ecole_resp_modules_email: formData.ecole_resp_modules_email || null,
-          ecole_resp_modules_phone: formData.ecole_resp_modules_phone || null,
-          ecole_resp_modules_peut_negocier: formData.ecole_resp_modules_peut_negocier || null,
-          ecole_resp_autorisation_nom: formData.ecole_resp_autorisation_nom || null,
-          ecole_resp_autorisation_prenom: formData.ecole_resp_autorisation_prenom || null,
-          ecole_resp_autorisation_email: formData.ecole_resp_autorisation_email || null,
-          ecole_resp_autorisation_phone: formData.ecole_resp_autorisation_phone || null,
-          ecole_resp_facturation_nom: formData.ecole_resp_facturation_nom || null,
-          ecole_resp_facturation_prenom: formData.ecole_resp_facturation_prenom || null,
-          ecole_resp_facturation_email: formData.ecole_resp_facturation_email || null,
-          ecole_resp_facturation_phone: formData.ecole_resp_facturation_phone || null,
-          ecole_resp_planning_nom: formData.ecole_resp_planning_nom || null,
-          ecole_resp_planning_prenom: formData.ecole_resp_planning_prenom || null,
-          ecole_resp_planning_email: formData.ecole_resp_planning_email || null,
-          ecole_resp_planning_phone: formData.ecole_resp_planning_phone || null,
-          ecole_module_nom: formData.ecole_module_nom || null,
-          ecole_module_heures: formData.ecole_module_heures
-            ? parseInt(formData.ecole_module_heures, 10)
-            : null,
-          ecole_formation_type: formData.ecole_formation_type || null,
-          ecole_classes_noms: formData.ecole_classes_noms || null,
-          ecole_groupe_taille: formData.ecole_groupe_taille
-            ? parseInt(formData.ecole_groupe_taille, 10)
-            : null,
-          ecole_evaluation_modalites: formData.ecole_evaluation_modalites || null,
-          ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min
-            ? parseInt(formData.ecole_evaluation_nombre_min, 10)
-            : null,
-          ecole_module_periode: formData.ecole_module_periode || null,
-          // Enseignant
-          ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
-          ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
-          ecole_enseignant_email: formData.ecole_enseignant_email || null,
-          // Facturation
-          ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
-            ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
-            : null,
-          ecole_periode_facturation: formData.ecole_periode_facturation || null,
-          // Responsable notes
-          ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
-          ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
-          ecole_resp_notes_prenom: formData.ecole_resp_notes_prenom || null,
-          ecole_resp_notes_email: formData.ecole_resp_notes_email || null,
-          ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
-          // Statut juridique
-          ecole_statut_juridique: formData.ecole_statut_juridique || null,
-          // Particulier - tarif
-          tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
-          distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
-          demarche_volontaire: formData.demarche_volontaire || false,
-        })
-        .eq('id', client.id);
+      const payload = {
+        first_name: mainFirstName,
+        last_name: mainLastName,
+        email: mainEmail,
+        phone1: formData.phone1 || null,
+        type_client: formData.type_client,
+        sub_type: formData.sub_type || null,
+        client_status: formData.client_status,
+        organisation: formData.organisation || null,
+        address_line1: formData.address_line1 || null,
+        postal_code: formData.postal_code || null,
+        city: formData.city || null,
+        country: formData.country || null,
+        notes: formData.notes || null,
+        // Jeune fields
+        first_name_jeune: formData.first_name_jeune || null,
+        last_name_jeune: formData.last_name_jeune || null,
+        email_jeune: formData.email_jeune || null,
+        phone_jeune: formData.phone_jeune || null,
+        niveau_eleve: formData.niveau_eleve || null,
+        demande_type: formData.demande_type || null,
+        // Parent 1 fields
+        first_name_parent1: formData.first_name_parent1 || null,
+        last_name_parent1: formData.last_name_parent1 || null,
+        email_parent1: formData.email_parent1 || null,
+        phone_parent1: formData.phone_parent1 || null,
+        // Parent 2 fields
+        first_name_parent2: formData.first_name_parent2 || null,
+        last_name_parent2: formData.last_name_parent2 || null,
+        email_parent2: formData.email_parent2 || null,
+        phone_parent2: formData.phone_parent2 || null,
+        // Recueil des informations fields
+        numero_cesu: formData.numero_cesu || null,
+        etablissement_scolaire: formData.etablissement_scolaire || null,
+        moyenne_maths: formData.moyenne_maths || null,
+        moyenne_generale: formData.moyenne_generale || null,
+        adresse_cours: formData.adresse_cours || null,
+        jours_disponibles:
+          formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
+        // École-specific fields
+        ecole_siret: formData.ecole_siret || null,
+        ecole_nda: formData.ecole_nda || null,
+        ecole_nda_region: formData.ecole_nda_region || null,
+        // Frais pris en charge par l'établissement
+        ecole_frais_midi_montant: formData.ecole_frais_midi_montant
+          ? parseFloat(formData.ecole_frais_midi_montant)
+          : null,
+        ecole_frais_midi_conditions: formData.ecole_frais_midi_conditions || null,
+        ecole_frais_deplacement_rembourse: formData.ecole_frais_deplacement_rembourse ?? null,
+        ecole_frais_km_prix: formData.ecole_frais_km_prix
+          ? parseFloat(formData.ecole_frais_km_prix)
+          : null,
+        ecole_resp_modules_nom: formData.ecole_resp_modules_nom || null,
+        ecole_resp_modules_prenom: formData.ecole_resp_modules_prenom || null,
+        ecole_resp_modules_email: formData.ecole_resp_modules_email || null,
+        ecole_resp_modules_phone: formData.ecole_resp_modules_phone || null,
+        ecole_resp_modules_peut_negocier: formData.ecole_resp_modules_peut_negocier || null,
+        ecole_resp_autorisation_nom: formData.ecole_resp_autorisation_nom || null,
+        ecole_resp_autorisation_prenom: formData.ecole_resp_autorisation_prenom || null,
+        ecole_resp_autorisation_email: formData.ecole_resp_autorisation_email || null,
+        ecole_resp_autorisation_phone: formData.ecole_resp_autorisation_phone || null,
+        ecole_resp_facturation_nom: formData.ecole_resp_facturation_nom || null,
+        ecole_resp_facturation_prenom: formData.ecole_resp_facturation_prenom || null,
+        ecole_resp_facturation_email: formData.ecole_resp_facturation_email || null,
+        ecole_resp_facturation_phone: formData.ecole_resp_facturation_phone || null,
+        ecole_resp_planning_nom: formData.ecole_resp_planning_nom || null,
+        ecole_resp_planning_prenom: formData.ecole_resp_planning_prenom || null,
+        ecole_resp_planning_email: formData.ecole_resp_planning_email || null,
+        ecole_resp_planning_phone: formData.ecole_resp_planning_phone || null,
+        ecole_module_nom: formData.ecole_module_nom || null,
+        ecole_module_heures: formData.ecole_module_heures
+          ? parseInt(formData.ecole_module_heures, 10)
+          : null,
+        ecole_formation_type: formData.ecole_formation_type || null,
+        ecole_classes_noms: formData.ecole_classes_noms || null,
+        ecole_groupe_taille: formData.ecole_groupe_taille
+          ? parseInt(formData.ecole_groupe_taille, 10)
+          : null,
+        ecole_evaluation_modalites: formData.ecole_evaluation_modalites || null,
+        ecole_evaluation_nombre_min: formData.ecole_evaluation_nombre_min
+          ? parseInt(formData.ecole_evaluation_nombre_min, 10)
+          : null,
+        ecole_module_periode: formData.ecole_module_periode || null,
+        // Enseignant
+        ecole_enseignant_nom: formData.ecole_enseignant_nom || null,
+        ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
+        ecole_enseignant_email: formData.ecole_enseignant_email || null,
+        // Facturation
+        ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement
+          ? parseInt(formData.ecole_facturation_date_max_paiement, 10)
+          : null,
+        ecole_periode_facturation: formData.ecole_periode_facturation || null,
+        // Responsable notes
+        ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
+        ecole_resp_notes_nom: formData.ecole_resp_notes_nom || null,
+        ecole_resp_notes_prenom: formData.ecole_resp_notes_prenom || null,
+        ecole_resp_notes_email: formData.ecole_resp_notes_email || null,
+        ecole_resp_notes_phone: formData.ecole_resp_notes_phone || null,
+        // Statut juridique
+        ecole_statut_juridique: formData.ecole_statut_juridique || null,
+        // Particulier - tarif
+        tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
+        distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
+        demarche_volontaire: formData.demarche_volontaire || false,
+      };
 
-      if (error) throw error;
+      if (isDuplicate) {
+        // Duplication : création d'un NOUVEAU contact (nouvel id, nouveau created_at).
+        // Seules les infos de la fiche sont copiées — pas les procédures, documents,
+        // historiques ni tokens de formulaire (ils ne font pas partie du payload).
+        const { data: inserted, error } = await supabase
+          .from('clients')
+          .insert([payload])
+          .select('id')
+          .single();
 
-      toast({
-        title: 'Contact modifié',
-        status: 'success',
-        duration: 3000,
-      });
+        if (error) throw error;
 
-      onSuccess();
+        toast({
+          title: 'Contact dupliqué',
+          status: 'success',
+          duration: 3000,
+        });
+
+        onSuccess(inserted.id);
+      } else {
+        const { error } = await supabase.from('clients').update(payload).eq('id', client.id);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Contact modifié',
+          status: 'success',
+          duration: 3000,
+        });
+
+        onSuccess();
+      }
     } catch (error) {
       toast({
-        title: 'Erreur lors de la modification du contact',
+        title: isDuplicate
+          ? 'Erreur lors de la duplication du contact'
+          : 'Erreur lors de la modification du contact',
         description: error instanceof Error ? error.message : 'Erreur inconnue',
         status: 'error',
         duration: 5000,
@@ -437,7 +402,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader color="brand.500" fontFamily="heading">
-          Modifier le contact
+          {isDuplicate ? 'Dupliquer le contact' : 'Modifier le contact'}
         </ModalHeader>
         <ModalCloseButton color="brand.500" />
         <form onSubmit={handleSubmit} style={{ display: 'contents' }}>
@@ -461,8 +426,10 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                 <GridItem>
                   <FormControl isRequired>
                     <FormLabel>Type</FormLabel>
+                    {/* En duplication, le type doit rester exactement celui de l'original */}
                     <Select
                       value={formData.type_client}
+                      isDisabled={isDuplicate}
                       onChange={e => {
                         handleChange('type_client', e.target.value);
                         handleChange('sub_type', '');
@@ -479,6 +446,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       <FormLabel>Sous-type</FormLabel>
                       <Select
                         value={formData.sub_type || ''}
+                        isDisabled={isDuplicate}
                         onChange={e => handleChange('sub_type', e.target.value)}
                         placeholder="Sélectionnez..."
                       >
@@ -500,7 +468,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
-                      <FormControl>
+                      {/* En duplication d'un contact "Jeune", le nom vidé doit être re-saisi */}
+                      <FormControl isRequired={isDuplicate && formData.sub_type === 'Jeune'}>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.first_name_jeune}
@@ -509,7 +478,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       </FormControl>
                     </GridItem>
                     <GridItem>
-                      <FormControl>
+                      <FormControl isRequired={isDuplicate && formData.sub_type === 'Jeune'}>
                         <FormLabel>Nom</FormLabel>
                         <Input
                           value={formData.last_name_jeune}
@@ -587,7 +556,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                     <GridItem>
-                      <FormControl>
+                      {/* En duplication d'un contact "Parent", le nom vidé doit être re-saisi */}
+                      <FormControl isRequired={isDuplicate && formData.sub_type === 'Parent'}>
                         <FormLabel>Prénom</FormLabel>
                         <Input
                           value={formData.first_name_parent1}
@@ -596,7 +566,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
                       </FormControl>
                     </GridItem>
                     <GridItem>
-                      <FormControl>
+                      <FormControl isRequired={isDuplicate && formData.sub_type === 'Parent'}>
                         <FormLabel>Nom</FormLabel>
                         <Input
                           value={formData.last_name_parent1}
@@ -1515,7 +1485,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
               Annuler
             </Button>
             <Button colorScheme="accent" type="submit" isLoading={loading}>
-              Enregistrer
+              {isDuplicate ? 'Créer la copie' : 'Enregistrer'}
             </Button>
           </ModalFooter>
         </form>
