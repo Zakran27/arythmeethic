@@ -63,6 +63,11 @@ export default function ClientDetailPage() {
   const { client, procedures, procedureHistory, documents, loading, error, refetch } =
     useClientDetail(clientId);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isDuplicateOpen,
+    onOpen: onDuplicateOpen,
+    onClose: onDuplicateClose,
+  } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const cancelDocRef = useRef<HTMLButtonElement>(null);
@@ -1033,6 +1038,14 @@ export default function ClientDetailPage() {
           </Button>
           <Button variant="outline" onClick={onOpen} borderColor="brand.500" color="brand.500">
             Modifier
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onDuplicateOpen}
+            borderColor="brand.500"
+            color="brand.500"
+          >
+            Dupliquer
           </Button>
           <Button
             variant="outline"
@@ -2393,6 +2406,20 @@ export default function ClientDetailPage() {
           isOpen={isOpen}
           onClose={onClose}
           onSuccess={handleClientUpdated}
+          client={client}
+        />
+      )}
+
+      {/* Duplication : mêmes champs pré-remplis, nom vidé, crée un nouveau contact */}
+      {client && (
+        <EditClientModal
+          mode="duplicate"
+          isOpen={isDuplicateOpen}
+          onClose={onDuplicateClose}
+          onSuccess={newClientId => {
+            onDuplicateClose();
+            if (newClientId) router.push(`/admin/clients/${newClientId}`);
+          }}
           client={client}
         />
       )}

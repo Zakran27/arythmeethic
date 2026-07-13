@@ -24,6 +24,7 @@ import { ClientsTable } from './ClientsTable';
 import { NewClientModal } from './NewClientModal';
 import { DeclarerHeuresModal } from './DeclarerHeuresModal';
 import { useClients } from '@/lib/hooks/useClients';
+import { useRecueilStatus } from '@/lib/hooks/useRecueilStatus';
 import { Client } from '@/types';
 import {
   AdvancedFilters,
@@ -34,6 +35,7 @@ import {
 
 export default function ClientsPage() {
   const { clients, loading, error, refetch } = useClients();
+  const { statusByClient } = useRecueilStatus();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isDeclarerOpen,
@@ -253,7 +255,12 @@ export default function ClientsPage() {
                 <Text color="gray.500">Aucun prospect trouvé</Text>
               </Box>
             ) : (
-              <ClientsTable clients={prospects} loading={loading} error={error} />
+              <ClientsTable
+                clients={prospects}
+                loading={loading}
+                error={error}
+                recueilStatus={statusByClient}
+              />
             )}
           </TabPanel>
           <TabPanel px={0}>
