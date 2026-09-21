@@ -44,13 +44,25 @@ import {
   Th,
   Td,
   TableContainer,
+  Textarea,
+  Divider,
 } from '@chakra-ui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { FiChevronLeft, FiChevronRight, FiUpload, FiFile, FiX, FiTrash2 } from 'react-icons/fi';
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiUpload,
+  FiFile,
+  FiX,
+  FiTrash2,
+  FiEdit3,
+  FiRotateCcw,
+} from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels } from '@/types';
+import type { ContractArticle } from '@/lib/contract-ecole-articles';
 import { formatPhone } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
@@ -235,6 +247,103 @@ export default function ClientDetailPage() {
   const [ecolePreviewUrl, setEcolePreviewUrl] = useState<string | null>(null);
   const [particulierPreviewUrl, setParticulierPreviewUrl] = useState<string | null>(null);
 
+  // ===== Articles du contrat École : texte par défaut + modifications manuelles =====
+  const [contractArticles, setContractArticles] = useState<ContractArticle[]>([]);
+  const [contractArticlesLoading, setContractArticlesLoading] = useState(false);
+  const [contractArticleEdits, setContractArticleEdits] = useState<
+    Record<string, { title: string; body: string }>
+  >({});
+  const [selectedArticleId, setSelectedArticleId] = useState('');
+  const [showArticleEditor, setShowArticleEditor] = useState(false);
+
+  // Charge le texte par défaut des articles (et le rafraîchit si l'année ou le tarif change).
+  // Les articles modifiés à la main ne sont pas écrasés.
+  useEffect(() => {
+    if (!isContractualisationOpen || !selectedAnneeScolaire) return;
+    let cancelled = false;
+    setContractArticlesLoading(true);
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams({ clientId, anneeScolaire: selectedAnneeScolaire });
+      if (contractTarifEcole) params.set('tarifHoraireHT', contractTarifEcole);
+      fetch(`/api/procedures/contractualisation-ecole/articles?${params.toString()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (cancelled || !data.success) return;
+          setContractArticles(data.articles as ContractArticle[]);
+          setSelectedArticleId(prev => prev || (data.articles[0]?.id ?? ''));
+        })
+        .catch(() => {
+          // Silencieux : sans éditeur, le contrat garde simplement ses textes par défaut
+        })
+        .finally(() => {
+          if (!cancelled) setContractArticlesLoading(false);
+        });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [isContractualisationOpen, selectedAnneeScolaire, contractTarifEcole, clientId]);
+
+  const contractArticleOverrides = useMemo(
+    () =>
+      Object.entries(contractArticleEdits).map(([id, value]) => ({
+        id,
+        title: value.title,
+        body: value.body,
+      })),
+    [contractArticleEdits]
+  );
+
+  const currentArticle = contractArticles.find(a => a.id === selectedArticleId);
+  const currentArticleEdit = selectedArticleId
+    ? contractArticleEdits[selectedArticleId]
+    : undefined;
+  const currentArticleTitle = currentArticleEdit?.title ?? currentArticle?.title ?? '';
+  const currentArticleBody = currentArticleEdit?.body ?? currentArticle?.body ?? '';
+
+  // Une modification rend l'aperçu affiché obsolète : on le retire pour forcer sa régénération
+  // (l'effet de nettoyage ci-dessous révoque l'URL blob précédente).
+  const invalidateEcolePreview = () => setEcolePreviewUrl(null);
+
+  const updateArticleDraft = (field: 'title' | 'body', value: string) => {
+    if (!selectedArticleId) return;
+    invalidateEcolePreview();
+    const original = contractArticles.find(a => a.id === selectedArticleId);
+    setContractArticleEdits(prev => {
+      const base = prev[selectedArticleId] ?? {
+        title: original?.title ?? '',
+        body: original?.body ?? '',
+      };
+      const next = { ...base, [field]: value };
+      const copy = { ...prev };
+      // Revenu au texte d'origine : on retire la modification (l'article redevient dynamique)
+      if (original && next.title === original.title && next.body === original.body) {
+        delete copy[selectedArticleId];
+      } else {
+        copy[selectedArticleId] = next;
+      }
+      return copy;
+    });
+  };
+
+  const resetArticle = (id: string) => {
+    invalidateEcolePreview();
+    setContractArticleEdits(prev => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
+  };
+
+  const resetContractArticlesState = () => {
+    setContractArticleEdits({});
+    setSelectedArticleId('');
+    setShowArticleEditor(false);
+    setContractArticles([]);
+    setContractArticlesLoading(false);
+  };
+
   useEffect(() => {
     return () => {
       if (ecolePreviewUrl) URL.revokeObjectURL(ecolePreviewUrl);
@@ -253,6 +362,9 @@ export default function ClientDetailPage() {
       formData.append('clientId', clientId);
       formData.append('anneeScolaire', selectedAnneeScolaire);
       if (contractTarifEcole) formData.append('tarifHoraireHT', contractTarifEcole);
+      if (contractArticleOverrides.length > 0) {
+        formData.append('articleOverrides', JSON.stringify(contractArticleOverrides));
+      }
       contractAnnexeFiles.forEach(f => formData.append('annexes', f));
       const res = await fetch('/api/procedures/contractualisation-ecole/preview', {
         method: 'POST',
@@ -767,6 +879,9 @@ export default function ClientDetailPage() {
       if (signerPhone) formData.append('signerPhone', signerPhone);
       formData.append('anneeScolaire', selectedAnneeScolaire);
       if (contractTarifEcole) formData.append('tarifHoraireHT', contractTarifEcole);
+      if (contractArticleOverrides.length > 0) {
+        formData.append('articleOverrides', JSON.stringify(contractArticleOverrides));
+      }
       contractAnnexeFiles.forEach(f => formData.append('annexes', f));
 
       const response = await fetch('/api/procedures/contractualisation-ecole', {
@@ -804,6 +919,7 @@ export default function ClientDetailPage() {
       setSelectedAnneeScolaire('');
       setContractTarifEcole('');
       setContractAnnexeFiles([]);
+      resetContractArticlesState();
       refetch();
     } catch (err) {
       toast({
@@ -2944,6 +3060,7 @@ export default function ClientDetailPage() {
           setSelectedContractualisationSigner('');
           setSelectedAnneeScolaire('');
           setContractTarifEcole('');
+          resetContractArticlesState();
         }}
         isCentered
         size={{ base: 'md', md: '4xl' }}
@@ -3099,6 +3216,155 @@ export default function ClientDetailPage() {
               document.
             </Text>
 
+            {/* Modification des articles avant prévisualisation / envoi */}
+            <Box
+              mt={5}
+              p={3}
+              borderWidth="1px"
+              borderColor="gray.200"
+              borderRadius="md"
+              bg="gray.50"
+            >
+              <HStack justify="space-between" align="center" flexWrap="wrap" spacing={2}>
+                <HStack spacing={2}>
+                  <Icon as={FiEdit3} color="brand.500" />
+                  <Text fontSize="sm" fontWeight="600" color="brand.600">
+                    Articles du contrat
+                  </Text>
+                  {contractArticleOverrides.length > 0 && (
+                    <Badge colorScheme="orange">
+                      {contractArticleOverrides.length} modifié
+                      {contractArticleOverrides.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </HStack>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="brand"
+                  onClick={() => setShowArticleEditor(v => !v)}
+                  isDisabled={!selectedAnneeScolaire}
+                >
+                  {showArticleEditor ? 'Masquer' : 'Modifier le texte'}
+                </Button>
+              </HStack>
+
+              {!selectedAnneeScolaire && (
+                <Text mt={2} fontSize="xs" color="gray.500">
+                  Sélectionnez une année scolaire pour afficher les articles.
+                </Text>
+              )}
+
+              {showArticleEditor && selectedAnneeScolaire && (
+                <Box mt={3}>
+                  {contractArticlesLoading && contractArticles.length === 0 ? (
+                    <HStack spacing={2} py={2}>
+                      <Spinner size="sm" color="brand.500" />
+                      <Text fontSize="sm" color="gray.600">
+                        Chargement des articles...
+                      </Text>
+                    </HStack>
+                  ) : contractArticles.length === 0 ? (
+                    <Text fontSize="sm" color="gray.600">
+                      Impossible de charger les articles. Le contrat sera généré avec les textes par
+                      défaut.
+                    </Text>
+                  ) : (
+                    <Stack spacing={3}>
+                      <FormControl>
+                        <FormLabel fontSize="sm" color="brand.600">
+                          Article à modifier
+                        </FormLabel>
+                        <Select
+                          size="sm"
+                          bg="white"
+                          value={selectedArticleId}
+                          onChange={e => setSelectedArticleId(e.target.value)}
+                        >
+                          {contractArticles.map(article => {
+                            const edited = contractArticleEdits[article.id];
+                            const label = edited?.title ?? article.title;
+                            return (
+                              <option key={article.id} value={article.id}>
+                                {edited ? '• ' : ''}
+                                {label || '(article vidé)'}
+                              </option>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel fontSize="sm" color="brand.600">
+                          Titre de l&apos;article
+                        </FormLabel>
+                        <Input
+                          size="sm"
+                          bg="white"
+                          value={currentArticleTitle}
+                          onChange={e => updateArticleDraft('title', e.target.value)}
+                        />
+                      </FormControl>
+
+                      <FormControl>
+                        <FormLabel fontSize="sm" color="brand.600">
+                          Texte de l&apos;article
+                        </FormLabel>
+                        <Textarea
+                          size="sm"
+                          bg="white"
+                          rows={12}
+                          value={currentArticleBody}
+                          onChange={e => updateArticleDraft('body', e.target.value)}
+                          fontSize="sm"
+                        />
+                        <Text mt={2} fontSize="xs" color="gray.500">
+                          Mise en page : le texte va automatiquement à la ligne.
+                          <br />
+                          <strong>**Texte**</strong> = ligne en gras &nbsp;|&nbsp;{' '}
+                          <strong>- Texte</strong> = puce &nbsp;|&nbsp; <strong>!Texte</strong> =
+                          ligne en rouge &nbsp;|&nbsp; ligne vide = saut de paragraphe.
+                          <br />
+                          Vider le titre et le texte retire l&apos;article du contrat.
+                        </Text>
+                      </FormControl>
+
+                      <HStack spacing={2} flexWrap="wrap">
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          leftIcon={<Icon as={FiRotateCcw} />}
+                          onClick={() => resetArticle(selectedArticleId)}
+                          isDisabled={!currentArticleEdit}
+                        >
+                          Réinitialiser cet article
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          colorScheme="red"
+                          onClick={() => {
+                            invalidateEcolePreview();
+                            setContractArticleEdits({});
+                          }}
+                          isDisabled={contractArticleOverrides.length === 0}
+                        >
+                          Tout réinitialiser
+                        </Button>
+                      </HStack>
+
+                      <Divider />
+                      <Text fontSize="xs" color="gray.500">
+                        Les articles non modifiés restent synchronisés avec la fiche client (tarif,
+                        année scolaire, volume horaire...). Pensez à vérifier l&apos;aperçu avant
+                        l&apos;envoi : c&apos;est ce document qui partira en signature via DocuSeal.
+                      </Text>
+                    </Stack>
+                  )}
+                </Box>
+              )}
+            </Box>
+
             <Box mt={4}>
               <Button
                 size="sm"
@@ -3145,6 +3411,7 @@ export default function ClientDetailPage() {
                 setSelectedAnneeScolaire('');
                 setContractTarifEcole('');
                 setContractAnnexeFiles([]);
+                resetContractArticlesState();
                 if (ecolePreviewUrl) {
                   URL.revokeObjectURL(ecolePreviewUrl);
                   setEcolePreviewUrl(null);

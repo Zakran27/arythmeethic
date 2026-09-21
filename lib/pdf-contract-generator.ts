@@ -3,11 +3,21 @@ import fontkit from '@pdf-lib/fontkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { Client } from '@/types';
+import {
+  ContractArticle,
+  ContractArticleOverride,
+  DEFAULT_TARIF_HORAIRE_HT,
+  applyArticleOverrides,
+  buildContractEcoleArticles,
+} from '@/lib/contract-ecole-articles';
+import { parseRichText, sanitizeText, wrapText } from '@/lib/pdf-rich-text';
 
 interface ContractData {
   client: Client;
   anneeScolaire: string;
   tarifHoraireHT?: number;
+  /** Modifications d'articles saisies depuis l'admin (optionnel) */
+  articleOverrides?: ContractArticleOverride[] | null;
 }
 
 export interface ContractEcoleResult {
@@ -17,10 +27,22 @@ export interface ContractEcoleResult {
   signatureY: number;
   florenceSignatureX: number;
   florenceSignatureY: number;
+  /** Articles réellement imprimés dans le PDF (défauts + modifications) */
+  articles: ContractArticle[];
 }
 
 export async function generateContractPDF(data: ContractData): Promise<ContractEcoleResult> {
-  const { client, anneeScolaire, tarifHoraireHT = 44.8 } = data;
+  const {
+    client,
+    anneeScolaire,
+    tarifHoraireHT = DEFAULT_TARIF_HORAIRE_HT,
+    articleOverrides,
+  } = data;
+
+  const articles = applyArticleOverrides(
+    buildContractEcoleArticles({ client, anneeScolaire, tarifHoraireHT }),
+    articleOverrides
+  );
 
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
@@ -38,6 +60,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   const PAGE_H = 842;
   const MARGIN = 50;
   const BOTTOM_LIMIT = 80;
+  const CONTENT_W = PAGE_W - 2 * MARGIN;
 
   let currentPage: PDFPage = pdfDoc.addPage([PAGE_W, PAGE_H]);
   let y = PAGE_H - MARGIN;
@@ -49,7 +72,7 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
 
   const write = (text: string, size: number, bold = false, indent = 0, italic = false) => {
     if (y < BOTTOM_LIMIT) newPage();
-    currentPage.drawText(text, {
+    currentPage.drawText(sanitizeText(text), {
       x: MARGIN + indent,
       y,
       size,
@@ -59,20 +82,8 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     y -= size + 4;
   };
 
-  const writeRed = (text: string, size: number) => {
-    if (y < BOTTOM_LIMIT) newPage();
-    currentPage.drawText(text, {
-      x: MARGIN,
-      y,
-      size,
-      font: font,
-      color: rgb(0.8, 0, 0),
-    });
-    y -= size + 4;
-  };
-
   const writeRight = (text: string, size: number, atY: number) => {
-    currentPage.drawText(text, {
+    currentPage.drawText(sanitizeText(text), {
       x: MARGIN + 250,
       y: atY,
       size,
@@ -83,6 +94,33 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
 
   const br = (space = 8) => {
     y -= space;
+  };
+
+  /**
+   * Écrit un texte libre (celui d'un article), avec retour à la ligne
+   * automatique : le contenu peut donc être modifié sans casser la mise en page.
+   */
+  const writeRichText = (body: string, size = 9) => {
+    for (const line of parseRichText(body)) {
+      y -= line.spaceBefore;
+      const lineFont = line.bold ? fontBold : font;
+      const color = line.red ? rgb(0.8, 0, 0) : rgb(0, 0, 0);
+      const firstWidth = CONTENT_W - line.indent;
+      const restWidth = firstWidth - line.hanging;
+      const wrapped = wrapText(line.text, lineFont, size, firstWidth, restWidth);
+
+      wrapped.forEach((chunk, idx) => {
+        if (y < BOTTOM_LIMIT) newPage();
+        currentPage.drawText(chunk, {
+          x: MARGIN + line.indent + (idx === 0 ? 0 : line.hanging),
+          y,
+          size,
+          font: lineFont,
+          color,
+        });
+        y -= size + 4;
+      });
+    }
   };
 
   // ===== TITRE =====
@@ -125,451 +163,25 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
   write('Il a été convenu ce qui suit :', 10);
   br(14);
 
-  // ===== ARTICLE 1 =====
-  write('Article 1 : Nature du contrat', 11, true);
-  br(6);
-  write(
-    "Le présent contrat est conclu dans le cadre d'une prestation de formation réalisée par le sous-",
-    9
-  );
-  write("traitant au bénéfice du donneur d'ordre.", 9);
-  write(
-    'Le sous-traitant intervient en toute indépendance, sans exclusivité, et organise librement ses',
-    9
-  );
-  write("méthodes pédagogiques dans le respect du cadre fixé par le donneur d'ordre.", 9);
-  br(12);
+  // ===== ARTICLES (texte par défaut ou modifié depuis l'admin) =====
+  for (const article of articles) {
+    const title = (article.title || '').trim();
+    const body = (article.body || '').trim();
+    // Un article entièrement vidé est simplement retiré du contrat
+    if (!title && !body) continue;
 
-  // ===== ARTICLE 2 =====
-  write('Article 2 : Objet du contrat', 11, true);
-  br(6);
-  write(`  Enseignement dont le thème est : ${client.ecole_module_nom || ''}`, 9);
-  const formationTypeLabel =
-    client.ecole_formation_type === 'initiale_en_alternance'
-      ? 'Formation initiale / en alternance'
-      : client.ecole_formation_type === 'continue'
-        ? 'Formation continue'
-        : '';
-  if (formationTypeLabel) {
-    write(`  Type de formation : ${formationTypeLabel}`, 9);
+    // Évite un titre d'article seul en bas de page
+    if (y < BOTTOM_LIMIT + 40) newPage();
+
+    if (title) {
+      write(title, 11, true);
+      br(6);
+    }
+    if (body) writeRichText(body, 9);
+    br(12);
   }
-  write(
-    `  Période : année scolaire ${anneeScolaire} à compter du 1er septembre et jusqu'au 31 août`,
-    9
-  );
-  write(`  de l'année suivante`, 9);
-  write(
-    `  Volume horaire de face à face pédagogique : ${client.ecole_module_heures || ''} heures`,
-    9
-  );
-  write(`  Nombre prévisionnel d'apprenants : ${client.ecole_groupe_taille || ''}`, 9);
-  write(
-    `  Intervenant(e) : Florence LOUAZEL - Diplôme : Diplôme d'ingénieur généraliste – ECAM Louis de Broglie`,
-    9
-  );
-  br(8);
-  writeRed(
-    "Toute réévaluation fera l'objet d'un avenant précisant le nouveau tarif horaire HT et prendra",
-    9
-  );
-  writeRed('effet après signature des deux parties.', 9);
-  br(12);
 
-  // ===== ARTICLE 3 =====
-  write('Article 3 : Durée du contrat', 11, true);
-  br(6);
-  write(
-    "Le présent contrat est strictement limité à la prestation de formation visée à l'article 2.",
-    9
-  );
-  write(
-    "Il cesse de plein droit à son terme. Le présent contrat ne fait l'objet d'aucune reconduction tacite.",
-    9
-  );
   br(12);
-
-  // ===== ARTICLE 4 =====
-  write('Article 4 : Obligations du sous-traitant', 11, true);
-  br(6);
-  write("Le sous-traitant s'engage à :", 9);
-  write(
-    "  - Communiquer au donneur d'ordre une copie de son attestation d'immatriculation au registre",
-    9
-  );
-  write('    national des entreprises ;', 9);
-  write('  - Préparer les cours ;', 9);
-  write(
-    "  - Animer les cours dans le respect des objectifs fixés par le donneur d'ordre et le syllabus ;",
-    9
-  );
-  write(
-    '  - Mettre à disposition des apprenants les supports pédagogiques via une plateforme en ligne ;',
-    9
-  );
-  write("  - La validation de la présence des élèves sur l'ERP du donneur d'ordre ;", 9);
-  write("  - Réaliser les évaluations écrites ou orales selon l'usage dans l'établissement ;", 9);
-  write("  - Corriger les copies et saisir les notes sur l'ERP du donneur d'ordre.", 9);
-  br(6);
-  write(
-    'Le sous-traitant peut se faire remplacer par un intervenant de qualification équivalente, sous',
-    9
-  );
-  write("réserve d'information préalable du donneur d'ordre.", 9);
-  br(6);
-  write(
-    'Ces obligations sont exécutées librement par le sous-traitant, sans contrôle hiérarchique ni',
-    9
-  );
-  write("pouvoir disciplinaire du donneur d'ordre.", 9);
-  br(6);
-  write(
-    "L'utilisation des outils du donneur d'ordre est strictement limitée aux nécessités pédagogiques et",
-    9
-  );
-  write('administratives de la mission et ne saurait constituer un indice de subordination.', 9);
-  br(12);
-
-  // ===== ARTICLE 5 =====
-  write("Article 5 : Obligations du donneur d'ordre", 11, true);
-  br(6);
-  write("Le donneur d'ordre s'engage à :", 9);
-  write("  - Confier au sous-traitant la formation prévue à l'article 2 ;", 9);
-  write('  - Prendre en charge la gestion administrative et logistique de la formation ;', 9);
-  write(
-    '  - Transmettre au sous-traitant une copie des questionnaires de satisfaction remplis par les',
-    9
-  );
-  write("    élèves à l'issue de la formation ;", 9);
-  write(
-    "  - Prévenir le sous-traitant au moins 8 jours à l'avance en cas d'annulation ou de report.",
-    9
-  );
-  br(6);
-  write(
-    "Pour des raisons de contraintes d'organisation, les dates d'intervention peuvent être modifiées",
-    9
-  );
-  write('selon des modalités convenues et validées par les deux parties.', 9);
-  br(6);
-  write(
-    "Toute annulation moins de 10 jours avant l'intervention donnera lieu à facturation de 25 % des",
-    9
-  );
-  write(
-    "heures prévues si aucun report n'est envisageable. Le report devra intervenir dans un délai",
-    9
-  );
-  write(
-    'maximum de deux (2) mois à compter de la date initialement prévue. À défaut, la facturation',
-    9
-  );
-  write("prévue s'appliquera.", 9);
-  br(12);
-
-  // ===== ARTICLE 6 =====
-  write('Article 6 : Modalités financières', 11, true);
-  br(6);
-  write(
-    `Le sous-traitant percevra une rémunération de ${tarifHoraireHT.toFixed(2)} euros HT par heure de face à face pédagogique.`,
-    9
-  );
-  br(6);
-  {
-    const kmPrice = client.ecole_frais_km_prix ? Number(client.ecole_frais_km_prix) : 0.636;
-    write(
-      `Des frais de déplacement seront appliqués pour ${kmPrice.toFixed(3)} euros/kilomètre.`,
-      9
-    );
-    br(6);
-  }
-  write(
-    "Le sous-traitant s'engage à éditer une facture mensuelle pour les heures réellement effectuées",
-    9
-  );
-  write('durant le mois, pendant toute la durée du contrat.', 9);
-  br(4);
-  write('Le paiement sera effectué selon les modalités suivantes :', 9);
-  write('  paiement sous 30 jours à la réception de la facture ;', 9);
-  write('  paiement par virement.', 9);
-  br(6);
-  write(
-    'En cas de défaut de paiement, des pénalités de retard seront appliquées pour chaque jour de',
-    9
-  );
-  write(
-    'retard (calculées à partir du lendemain de la date de règlement indiquée sur la facture) ainsi',
-    9
-  );
-  write("qu'une indemnité forfaitaire de recouvrement.", 9);
-  write(
-    "Les pénalités de retard sont calculées au taux de trois (3) fois le taux d'intérêt légal, ainsi",
-    9
-  );
-  write(
-    "qu'une indemnité forfaitaire pour frais de recouvrement de 40 euros, conformément à l'article",
-    9
-  );
-  write('L.441-10 du Code de commerce.', 9);
-  br(12);
-
-  // ===== ARTICLE 7 =====
-  write('Article 7 : Résiliation anticipée', 11, true);
-  br(6);
-  write(
-    "En cas de manquement grave à l'une des obligations contractuelles ou en cas de force majeure",
-    9
-  );
-  write(
-    'dûment reconnue, chaque partie pourra résilier le présent contrat de manière anticipée, par',
-    9
-  );
-  write('lettre recommandée avec accusé de réception, moyennant un préavis de 2 semaines.', 9);
-  write(
-    "Les prestations effectuées jusqu'à la date de résiliation devront être intégralement réglées. Les",
-    9
-  );
-  write('sommes déjà perçues par le sous-traitant lui demeureront acquises.', 9);
-  br(12);
-
-  // ===== ARTICLE 8 =====
-  write('Article 8 : Litige', 11, true);
-  br(6);
-  write(
-    "En cas de litige relatif à l'interprétation ou l'exécution du présent contrat, les parties",
-    9
-  );
-  write(
-    "s'efforceront de le résoudre à l'amiable. À défaut, le litige sera porté devant les tribunaux",
-    9
-  );
-  write('compétents du ressort du siège social du sous-traitant.', 9);
-  br(12);
-
-  // ===== ARTICLE 9 =====
-  write('Article 9 : Protection des données personnelles', 11, true);
-  br(6);
-  write(
-    "Le sous-traitant s'engage à respecter les obligations issues du Règlement Général sur la",
-    9
-  );
-  write(
-    "Protection des Données (RGPD). Il ne conservera ni n'utilisera les données personnelles",
-    9
-  );
-  write('auxquelles il pourrait avoir accès en dehors du strict cadre de sa mission.', 9);
-  br(12);
-
-  // ===== ARTICLE 10 =====
-  write('Article 10 : Dispositions diverses', 11, true);
-  br(6);
-  write(
-    '  Le présent contrat ne crée entre les parties aucun lien de subordination, le sous-traitant',
-    9
-  );
-  write(
-    '  demeurant libre et responsable du contenu de la formation dans le respect du syllabus ;',
-    9
-  );
-  write(
-    "  Toute modification éventuelle de la présente convention fera l'objet d'un avenant signé par",
-    9
-  );
-  write('  les parties ;', 9);
-  write(
-    "  Le sous-traitant dispose d'une propriété intellectuelle et/ou artistique sur le contenu de",
-    9
-  );
-  write('  sa formation ;', 9);
-  write(
-    "  Le donneur d'ordre bénéficie d'un droit d'usage strictement limité à l'exécution du présent",
-    9
-  );
-  write("  contrat, à l'exclusion de toute exploitation ultérieure.", 9);
-  br(12);
-
-  // ===== ARTICLE 11 (NOUVEAU) =====
-  write('Article 11 : Référence client et utilisation du nom et du logo', 11, true);
-  br(6);
-  write(
-    "Le Donneur d'ordre autorise le Prestataire à mentionner sa dénomination sociale et à reproduire",
-    9
-  );
-  write(
-    'son logo à titre de référence client, exclusivement afin d\'informer les tiers de l\'existence',
-    9
-  );
-  write("d'une relation contractuelle présente ou passée entre les Parties.", 9);
-  br(6);
-  write('Cette utilisation est strictement encadrée comme suit :', 9);
-  br(4);
-  write('Finalité de l\'usage', 9, true);
-  write(
-    "L'utilisation du nom et du logo est autorisée uniquement à titre informatif dans les supports",
-    9
-  );
-  write(
-    'de communication du Prestataire dédiés à ses références clients (site internet, propositions',
-    9
-  );
-  write('commerciales, plaquettes, présentations).', 9);
-  br(4);
-  write("Absence d'assimilation à une promotion ou recommandation", 9, true);
-  write(
-    'Cette utilisation ne vaut ni partenariat, ni recommandation, ni validation des services du',
-    9
-  );
-  write("Prestataire par le Donneur d'ordre.", 9);
-  br(4);
-  write("Conditions d'utilisation du logo", 9, true);
-  write("Le Prestataire s'engage à :", 9);
-  write("  - utiliser exclusivement le logo fourni par le Donneur d'ordre ;", 9);
-  write('  - ne procéder à aucune modification, altération ou ajout de texte ;', 9);
-  write('  - ne pas mettre le logo en avant par rapport aux autres références clients ;', 9);
-  write('  - limiter la reproduction à une utilisation raisonnable et proportionnée sur un même support.', 9);
-  br(4);
-  write('Usages interdits', 9, true);
-  write(
-    "Toute utilisation du nom ou du logo en dehors des cas ci-dessus, notamment sur des produits,",
-    9
-  );
-  write(
-    "campagnes publicitaires, témoignages, études de cas détaillées ou pages dédiées, nécessite",
-    9
-  );
-  write("l'autorisation écrite préalable du Donneur d'ordre.", 9);
-  br(4);
-  write('Durée et retrait', 9, true);
-  write("L'autorisation est accordée pour une durée indéterminée.", 9);
-  write(
-    "Le Donneur d'ordre peut retirer cette autorisation à tout moment par email envoyé à",
-    9
-  );
-  write(
-    "florence.louazel@ARythmeEthic.fr, avec accusé de réception, sous réserve qu'un email de",
-    9
-  );
-  write('confirmation du Prestataire soit adressé pour valider la réception.', 9);
-  write(
-    "Le Prestataire disposera alors d'un délai de trente (30) jours à compter de la confirmation",
-    9
-  );
-  write('de réception pour cesser tout usage.', 9);
-  br(12);
-
-  // ===== ARTICLE 12 =====
-  write('Article 12 : Confidentialité', 11, true);
-  br(6);
-  write(
-    "Le sous-traitant s'engage à conserver strictement confidentielles toutes les informations,",
-    9
-  );
-  write(
-    'documents et données de toute nature dont il pourrait avoir connaissance dans le cadre de',
-    9
-  );
-  write(
-    "l'exécution du présent contrat, et notamment les informations pédagogiques, administratives,",
-    9
-  );
-  write("commerciales ou stratégiques du donneur d'ordre.", 9);
-  write(
-    "Cette obligation de confidentialité s'applique pendant toute la durée du contrat et subsiste",
-    9
-  );
-  write('pendant une durée de cinq (5) ans après son expiration ou sa résiliation.', 9);
-  br(6);
-  write('Ne sont pas considérées comme confidentielles les informations :', 9);
-  write('  tombées dans le domaine public sans faute du sous-traitant ;', 9);
-  write('  déjà connues du sous-traitant avant leur communication ;', 9);
-  write('  obtenues légalement auprès de tiers.', 9);
-  br(12);
-
-  // ===== ARTICLE 13 =====
-  write('Article 13 : Assurance – Responsabilité civile professionnelle', 11, true);
-  br(6);
-  write(
-    "Le sous-traitant déclare être titulaire d'une assurance de responsabilité civile professionnelle",
-    9
-  );
-  write(
-    "couvrant les dommages corporels, matériels et immatériels pouvant résulter de l'exécution de",
-    9
-  );
-  write('la prestation de formation.', 9);
-  write(
-    "Une attestation d'assurance en cours de validité pourra être fournie au donneur d'ordre sur",
-    9
-  );
-  write('simple demande.', 9);
-  write(
-    'La responsabilité du sous-traitant est limitée aux dommages directs prouvés et ne saurait en',
-    9
-  );
-  write(
-    "aucun cas couvrir les dommages indirects, pertes d'exploitation ou préjudices commerciaux.",
-    9
-  );
-  br(12);
-
-  // ===== ARTICLE 14 =====
-  write('Article 14 : Non-exclusivité', 11, true);
-  br(6);
-  write("Le présent contrat n'emporte aucune obligation d'exclusivité.", 9);
-  write(
-    "Le sous-traitant demeure libre de fournir des prestations similaires ou concurrentes à d'autres",
-    9
-  );
-  write(
-    'établissements, organismes ou entreprises, y compris pendant la durée du présent contrat, sous',
-    9
-  );
-  write('réserve du respect de ses obligations de confidentialité et de loyauté.', 9);
-  br(12);
-
-  // ===== ARTICLE 15 =====
-  write('Article 15 : Force majeure', 11, true);
-  br(6);
-  write(
-    "Aucune des parties ne pourra être tenue responsable de l'inexécution ou du retard dans",
-    9
-  );
-  write(
-    "l'exécution de l'une quelconque de ses obligations lorsque cette inexécution résulte d'un cas de",
-    9
-  );
-  write("force majeure au sens de l'article 1218 du Code civil.", 9);
-  write(
-    'Sont notamment considérés comme cas de force majeure : les catastrophes naturelles, incendies,',
-    9
-  );
-  write(
-    'pandémies, grèves, conflits sociaux, interruptions des réseaux de communication ou de transport,',
-    9
-  );
-  write(
-    'décisions administratives, ou toute autre circonstance indépendante de la volonté des parties.',
-    9
-  );
-  write(
-    "La partie invoquant un cas de force majeure devra en informer l'autre partie dans les meilleurs",
-    9
-  );
-  write(
-    "délais. L'exécution du contrat sera suspendue pendant la durée du cas de force majeure.",
-    9
-  );
-  br(12);
-
-  // ===== ARTICLE 16 =====
-  write('Article 16 : Cession du contrat', 11, true);
-  br(6);
-  write("Le présent contrat est conclu intuitu personae à l'égard du sous-traitant.", 9);
-  write(
-    "Il ne pourra être cédé, transféré ou apporté, en tout ou partie, par le donneur d'ordre, à",
-    9
-  );
-  write("quelque titre que ce soit, sans l'accord préalable et écrit du sous-traitant.", 9);
-  br(24);
 
   // ===== SIGNATURES =====
   if (y < 160) newPage();
@@ -600,5 +212,6 @@ export async function generateContractPDF(data: ContractData): Promise<ContractE
     signatureY,
     florenceSignatureX,
     florenceSignatureY,
+    articles,
   };
 }
