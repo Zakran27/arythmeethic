@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { generateContractPDF } from '@/lib/pdf-contract-generator';
+import { parseArticleOverrides } from '@/lib/contract-ecole-articles';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +10,7 @@ export async function POST(request: NextRequest) {
     const clientId = formData.get('clientId') as string | null;
     const anneeScolaire = formData.get('anneeScolaire') as string | null;
     const tarifHoraireHT = formData.get('tarifHoraireHT') as string | null;
+    const articleOverrides = parseArticleOverrides(formData.get('articleOverrides'));
     const annexes = formData.getAll('annexes') as File[];
 
     if (!clientId || !anneeScolaire) {
@@ -32,6 +34,7 @@ export async function POST(request: NextRequest) {
       client,
       anneeScolaire,
       tarifHoraireHT: tarifHoraireHT ? parseFloat(tarifHoraireHT) : undefined,
+      articleOverrides,
     });
 
     // Merge annexes (if any) into a single PDF for preview

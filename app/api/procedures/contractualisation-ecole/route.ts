@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { generateContractPDF } from '@/lib/pdf-contract-generator';
+import { parseArticleOverrides } from '@/lib/contract-ecole-articles';
 
 const DOCUSEAL_API_URL = 'https://api.docuseal.com';
 
@@ -247,6 +248,7 @@ export async function POST(request: NextRequest) {
     const signerLastName = formData.get('signerLastName') as string;
     const anneeScolaire = formData.get('anneeScolaire') as string;
     const tarifHoraireHT = formData.get('tarifHoraireHT') as string | null;
+    const articleOverrides = parseArticleOverrides(formData.get('articleOverrides'));
     const annexes = formData.getAll('annexes') as File[];
 
     if (!clientId || !signerEmail || !signerFirstName || !signerLastName || !anneeScolaire) {
@@ -300,6 +302,7 @@ export async function POST(request: NextRequest) {
         client,
         anneeScolaire,
         tarifHoraireHT: tarifHoraireHT ? parseFloat(tarifHoraireHT) : undefined,
+        articleOverrides,
       });
       pdfBuffer = result.buffer;
       signaturePage = result.signaturePage;
@@ -414,6 +417,7 @@ export async function POST(request: NextRequest) {
           procedureId: newProcedure.id,
           docusealSubmissionId: submissionId,
           signerEmail,
+          articlesModifies: articleOverrides.map(o => o.id),
         },
       });
 
