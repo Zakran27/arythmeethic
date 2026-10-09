@@ -46,6 +46,7 @@ import {
   TableContainer,
   Textarea,
   Divider,
+  Tooltip,
 } from '@chakra-ui/react';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
@@ -62,6 +63,8 @@ import {
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
 import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
+import type { HeureRealisee } from '@/types';
+import { computeReports, formatHeures } from '@/lib/heures-report';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
 import { formatPhone } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
@@ -135,22 +138,9 @@ export default function ClientDetailPage() {
     onOpen: onSendRecapOpen,
     onClose: onSendRecapClose,
   } = useDisclosure();
-  type HeureEntry = {
-    id: string;
-    mois: string;
-    heures: number;
-    tarif_horaire: number;
-    km: number;
-    bareme_km: number;
-    temps_a_reporter?: number;
-    heures_annulation?: number;
-    report_in?: number;
-    recap_email_sent_at?: string | null;
-    recap_email_to?: string | null;
-    created_at: string;
-  };
-  const [heuresRealisees, setHeuresRealisees] = useState<HeureEntry[]>([]);
-  const [editingHeure, setEditingHeure] = useState<HeureEntry | null>(null);
+  const [heuresRealisees, setHeuresRealisees] = useState<HeureRealisee[]>([]);
+  const [editingHeure, setEditingHeure] = useState<HeureRealisee | null>(null);
+  const [recapMois, setRecapMois] = useState<string | undefined>(); // mois présélectionné (Renvoyer)
   const [heuresLoading, setHeuresLoading] = useState(false);
   const now = new Date();
   const defaultFilterFrom = `${now.getFullYear() - 1}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -158,25 +148,34 @@ export default function ClientDetailPage() {
   const [heuresFilterFrom, setHeuresFilterFrom] = useState(defaultFilterFrom);
   const [heuresFilterTo, setHeuresFilterTo] = useState(defaultFilterTo);
 
+  // Tout l'historique est chargé (le compteur de report en dépend) ; le filtre De/À ne
+  // s'applique qu'à l'affichage.
   const fetchHeures = useCallback(async () => {
     setHeuresLoading(true);
     try {
-      const supabase = createClient();
-      const fromDate = heuresFilterFrom ? `${heuresFilterFrom}-01` : undefined;
-      const toDate = heuresFilterTo ? `${heuresFilterTo}-01` : undefined;
-      let query = supabase
+      const { data, error } = await createClient()
         .from('heures_realisees')
         .select('*')
         .eq('client_id', clientId)
         .order('mois', { ascending: false });
-      if (fromDate) query = query.gte('mois', fromDate);
-      if (toDate) query = query.lte('mois', toDate);
-      const { data, error } = await query;
       if (!error) setHeuresRealisees(data || []);
     } finally {
       setHeuresLoading(false);
     }
-  }, [clientId, heuresFilterFrom, heuresFilterTo]);
+  }, [clientId]);
+  const reports = useMemo(
+    () => new Map(computeReports(heuresRealisees).map(l => [l.mois, l])),
+    [heuresRealisees]
+  );
+  // Compteur global = solde après le dernier mois (rows triées par mois décroissant).
+  const soldeReport = heuresRealisees.length
+    ? (reports.get(heuresRealisees[0].mois)?.soldeApres ?? 0)
+    : 0;
+  const heuresAffichees = heuresRealisees.filter(
+    h =>
+      (!heuresFilterFrom || h.mois.slice(0, 7) >= heuresFilterFrom) &&
+      (!heuresFilterTo || h.mois.slice(0, 7) <= heuresFilterTo)
+  );
 
   useEffect(() => {
     if (clientId) fetchHeures();
@@ -2046,9 +2045,25 @@ export default function ClientDetailPage() {
                 align={{ base: 'flex-start', md: 'center' }}
                 spacing={2}
               >
-                <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
-                  Heures réalisées
-                </Heading>
+                <Stack spacing={1}>
+                  <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
+                    Heures réalisées
+                  </Heading>
+                  <Badge
+                    colorScheme={soldeReport < 0 ? 'red' : 'orange'}
+                    fontSize="sm"
+                    w="fit-content"
+                  >
+                    Solde à reporter : {formatHeures(soldeReport)}
+                  </Badge>
+                  <Text fontSize="xs" color="gray.500" maxW="lg">
+                    Temps à reporter et 1ers RDV cumulés, moins les heures reportées facturées ou
+                    prévues. Les « +X h » en italique sont prévisionnels : ils sont figés à
+                    l&apos;envoi du récap ou par « Mettre à jour le compteur » (fenêtre
+                    d&apos;envoi, sans e-mail). Pour corriger le compteur : Modifier un mois → «
+                    Heures reportées facturées ».
+                  </Text>
+                </Stack>
                 <Stack
                   direction={{ base: 'column', sm: 'row' }}
                   spacing={2}
@@ -2059,7 +2074,10 @@ export default function ClientDetailPage() {
                     variant="outline"
                     colorScheme="brand"
                     size="sm"
-                    onClick={onSendRecapOpen}
+                    onClick={() => {
+                      setRecapMois(undefined);
+                      onSendRecapOpen();
+                    }}
                     isDisabled={heuresRealisees.length === 0}
                     w={{ base: '100%', sm: 'auto' }}
                   >
@@ -2113,7 +2131,7 @@ export default function ClientDetailPage() {
                 <Box textAlign="center" py={4}>
                   <Spinner size="sm" color="accent.500" />
                 </Box>
-              ) : heuresRealisees.length > 0 ? (
+              ) : heuresAffichees.length > 0 ? (
                 <TableContainer>
                   <Table size="sm" variant="simple" sx={{ 'th, td': { px: 2 } }}>
                     <Thead>
@@ -2132,8 +2150,10 @@ export default function ClientDetailPage() {
                       </Tr>
                     </Thead>
                     <Tbody>
-                      {heuresRealisees.map(h => {
-                        const reportIn = Number(h.report_in ?? 0);
+                      {heuresAffichees.map(h => {
+                        const line = reports.get(h.mois);
+                        const reportIn = line?.reportIn ?? 0;
+                        const rdvHeures = Number(h.premier_rdv_heures ?? 0);
                         const heuresBillees = h.heures + reportIn;
                         const montantHeures = heuresBillees * h.tarif_horaire;
                         const montantKm = h.km * h.bareme_km;
@@ -2149,14 +2169,43 @@ export default function ClientDetailPage() {
                           ? new Date(h.recap_email_sent_at)
                           : null;
                         return (
-                          <Tr key={h.id}>
-                            <Td textTransform="capitalize">{label}</Td>
+                          <Tr key={h.id} opacity={h.sans_declaration ? 0.5 : 1}>
+                            <Td textTransform="capitalize">
+                              {label}
+                              {rdvHeures > 0 && (
+                                <Badge colorScheme="purple" fontSize="2xs" ml={1}>
+                                  1er RDV{' '}
+                                  {h.premier_rdv_date
+                                    ? new Date(h.premier_rdv_date + 'T00:00:00').toLocaleDateString(
+                                        'fr-FR',
+                                        { day: '2-digit', month: '2-digit' }
+                                      )
+                                    : ''}{' '}
+                                  · {formatHeures(rdvHeures)}
+                                </Badge>
+                              )}
+                            </Td>
                             <Td isNumeric>
                               {h.heures}h
                               {reportIn > 0 && (
-                                <Text as="span" color="orange.500" fontSize="xs" ml={1}>
-                                  (+{reportIn}h)
-                                </Text>
+                                <Tooltip
+                                  label={
+                                    line?.auto
+                                      ? "Report prévisionnel : figé à l'envoi du récap"
+                                      : 'Report facturé (figé)'
+                                  }
+                                  hasArrow
+                                >
+                                  <Text
+                                    as="span"
+                                    color="orange.500"
+                                    fontSize="xs"
+                                    ml={1}
+                                    fontStyle={line?.auto ? 'italic' : undefined}
+                                  >
+                                    (+{reportIn}h)
+                                  </Text>
+                                </Tooltip>
                               )}
                               {Number(h.heures_annulation) > 0 && (
                                 <Text as="span" color="red.500" fontSize="xs" ml={1}>
@@ -2174,6 +2223,14 @@ export default function ClientDetailPage() {
                             </Td>
                             <Td isNumeric color={h.temps_a_reporter ? 'orange.500' : 'gray.400'}>
                               {h.temps_a_reporter ? `${h.temps_a_reporter}h` : '-'}
+                              {line && (
+                                <Text
+                                  fontSize="2xs"
+                                  color={line.soldeApres < 0 ? 'red.500' : 'gray.500'}
+                                >
+                                  cumul {formatHeures(line.soldeApres)}
+                                </Text>
+                              )}
                             </Td>
                             <Td>
                               {sentAt ? (
@@ -2186,7 +2243,27 @@ export default function ClientDetailPage() {
                                       à {h.recap_email_to}
                                     </Text>
                                   )}
+                                  <Button
+                                    size="xs"
+                                    variant="link"
+                                    colorScheme="brand"
+                                    w="fit-content"
+                                    onClick={() => {
+                                      setRecapMois(h.mois);
+                                      onSendRecapOpen();
+                                    }}
+                                  >
+                                    Renvoyer
+                                  </Button>
                                 </Stack>
+                              ) : h.sans_declaration ? (
+                                <Badge colorScheme="gray" fontSize="xs">
+                                  Pas de déclaration
+                                </Badge>
+                              ) : h.report_in != null ? (
+                                <Badge colorScheme="gray" fontSize="xs">
+                                  Compteur validé (sans e-mail)
+                                </Badge>
                               ) : (
                                 <Badge colorScheme="orange" fontSize="xs">
                                   Non envoyé
@@ -3794,6 +3871,7 @@ export default function ClientDetailPage() {
         clientDistanceKm={client?.distance_km}
         defaultBaremeKm={defaultBaremeKm}
         initial={editingHeure}
+        heuresRows={heuresRealisees}
       />
 
       {/* Modal Envoi de la déclaration mensuelle (récap) */}
@@ -3803,6 +3881,7 @@ export default function ClientDetailPage() {
           onClose={onSendRecapClose}
           client={client}
           heures={heuresRealisees}
+          initialMois={recapMois}
           onSuccess={fetchHeures}
         />
       )}

@@ -179,6 +179,29 @@ export interface Document {
   created_at: string;
 }
 
+// Déclaration mensuelle d'heures d'un particulier (une ligne par client et par mois).
+export interface HeureRealisee {
+  id: string;
+  client_id: string;
+  mois: string; // 'YYYY-MM-01'
+  heures: number;
+  tarif_horaire: number;
+  km: number;
+  bareme_km: number;
+  temps_a_reporter: number | null;
+  heures_annulation: number | null;
+  // Heures de report facturées ce mois. NULL = prévisionnel (calculé par lib/heures-report),
+  // un nombre = figé (envoi du récap, « Mettre à jour le compteur » ou saisie manuelle).
+  report_in: number | null;
+  premier_rdv_heures: number; // non facturé ce mois : passe par le compteur de report
+  premier_rdv_date: string | null;
+  sans_declaration: boolean; // pas de déclaration CESU ce mois : n'absorbe jamais de report
+  salaire_recu_le: string | null;
+  recap_email_sent_at: string | null;
+  recap_email_to: string | null;
+  created_at: string;
+}
+
 export interface AuditLog {
   id: number;
   source: string;
