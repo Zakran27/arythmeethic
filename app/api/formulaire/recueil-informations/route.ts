@@ -1,148 +1,178 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { findRecueilClient } from '@/lib/procedures';
+import {
+  RECUEIL_CONTACT_KEYS,
+  RECUEIL_UPLOAD_MAX_BYTES,
+  UPLOAD_MIME,
+  findRecueilContactErrors,
+  uploadExtension,
+} from '@/lib/validators';
+import { RESPONSABLES_LEGAUX, TROUBLES_APPRENTISSAGE, joinSituation } from '@/types';
+
+// Route PUBLIQUE (liste blanche /api/formulaire/ de middleware.ts) : tout passe par le token.
+const fail = (error: string, status: number) =>
+  NextResponse.json({ success: false, error }, { status });
+
+const PREFILL_COLUMNS = [
+  ...RECUEIL_CONTACT_KEYS,
+  'numero_cesu',
+  'adresse_cours',
+  'address_line1',
+  'niveau_eleve',
+  'etablissement_scolaire',
+  'moyenne_maths',
+  'moyenne_generale',
+  'jours_disponibles',
+  'situation_familiale',
+  'troubles_apprentissage',
+  'troubles_autre',
+  'suivi_psy',
+  'aise_avec_diagnostics',
+  'date_dernier_diagnostic',
+].join(', ');
+
+const str = (v: unknown, max = 500) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const ouiNon = (v: unknown) => (v === 'oui' ? true : v === 'non' ? false : null);
+const isPastDate = (d: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(d) &&
+  !isNaN(Date.parse(d)) &&
+  new Date(d).toISOString().startsWith(d) && // refuse 2024-02-31
+  d <= new Date().toISOString().slice(0, 10);
 
 // GET - Fetch client data for pre-filling the form
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
-    }
-
-    const supabase = createServiceRoleClient();
-
-    // Find client by token
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('form_token', token)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Lien invalide ou expiré' },
-        { status: 404 }
-      );
-    }
-
-    // Check if token is expired
-    if (client.form_token_expires_at) {
-      const expiresAt = new Date(client.form_token_expires_at);
-      if (expiresAt < new Date()) {
-        return NextResponse.json(
-          { success: false, error: 'Ce lien a expiré. Veuillez contacter A Rythme Ethic.' },
-          { status: 410 }
-        );
-      }
-    }
-
-    // Return client data (excluding sensitive fields)
-    return NextResponse.json({
-      success: true,
-      client: {
-        id: client.id,
-        first_name_parent1: client.first_name_parent1,
-        last_name_parent1: client.last_name_parent1,
-        phone_parent1: client.phone_parent1,
-        email_parent1: client.email_parent1,
-        first_name_parent2: client.first_name_parent2,
-        last_name_parent2: client.last_name_parent2,
-        phone_parent2: client.phone_parent2,
-        email_parent2: client.email_parent2,
-        numero_cesu: client.numero_cesu,
-        first_name_jeune: client.first_name_jeune,
-        last_name_jeune: client.last_name_jeune,
-        phone_jeune: client.phone_jeune,
-        email_jeune: client.email_jeune,
-        adresse_cours: client.adresse_cours,
-        address_line1: client.address_line1,
-        niveau_eleve: client.niveau_eleve,
-        etablissement_scolaire: client.etablissement_scolaire,
-        moyenne_maths: client.moyenne_maths,
-        moyenne_generale: client.moyenne_generale,
-        jours_disponibles: client.jours_disponibles,
-      },
-    });
+    const found = await findRecueilClient(
+      request.nextUrl.searchParams.get('token'),
+      PREFILL_COLUMNS
+    );
+    if (!found.client) return fail(found.error, found.status);
+    return NextResponse.json({ success: true, client: found.client });
   } catch (error) {
     console.error('Error fetching client for form:', error);
-    return NextResponse.json(
-      { success: false, error: 'Erreur lors du chargement du formulaire' },
-      { status: 500 }
-    );
+    return fail('Erreur lors du chargement du formulaire', 500);
   }
 }
 
-// POST - Update client with form data
+// POST - Update client with form data (consomme le token : à appeler APRÈS les uploads)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { token, ...formData } = body;
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
-    }
-
+    const { token, uploads, consentement_sante, gestionnaire, ...f } = await request.json();
     const supabase = createServiceRoleClient();
+    const found = await findRecueilClient(token, 'address_line1, sub_type');
+    if (!found.client) return fail(found.error, found.status);
+    const client = found.client;
 
-    // Find client by token
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .select('id, form_token_expires_at, address_line1')
-      .eq('form_token', token)
-      .single();
+    // 1. Responsables légaux : Parent 2 seulement pour « Les deux parents » (sinon effacé : un
+    //    parent écarté ne doit plus recevoir les mails des procédures)
+    const situation = str(f.situation);
+    if (!RESPONSABLES_LEGAUX.includes(situation)) {
+      return fail("Merci d'indiquer qui sont les responsables légaux de votre enfant.", 400);
+    }
+    const deuxParents = situation === RESPONSABLES_LEGAUX[0];
+    const precisions = str(f.situation_precisions, 2000);
 
-    if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Lien invalide ou expiré' },
-        { status: 404 }
-      );
+    const c: Record<string, string> = {};
+    for (const key of RECUEIL_CONTACT_KEYS) {
+      c[key] = deuxParents || !key.endsWith('parent2') ? str(f[key], 200) : '';
+    }
+    const errors = Object.values(findRecueilContactErrors(c, deuxParents));
+    if (errors.length > 0) {
+      return fail(`Merci de vérifier les coordonnées : ${[...new Set(errors)].join(' / ')}`, 400);
     }
 
-    // Check if token is expired
-    if (client.form_token_expires_at) {
-      const expiresAt = new Date(client.form_token_expires_at);
-      if (expiresAt < new Date()) {
-        return NextResponse.json(
-          { success: false, error: 'Ce lien a expiré. Veuillez contacter A Rythme Ethic.' },
-          { status: 410 }
-        );
+    // 2. Gestion administrative : le parent choisi devient Parent 1 (destinataire par défaut
+    //    de toutes les procédures)
+    if (deuxParents && gestionnaire !== 'parent1' && gestionnaire !== 'parent2') {
+      return fail("Merci d'indiquer qui fait la gestion administrative.", 400);
+    }
+    if (deuxParents && gestionnaire === 'parent2') {
+      for (const field of ['first_name', 'last_name', 'phone', 'email']) {
+        [c[`${field}_parent1`], c[`${field}_parent2`]] = [
+          c[`${field}_parent2`],
+          c[`${field}_parent1`],
+        ];
       }
     }
 
-    // Build update data
+    // 3. Besoins particuliers (données de santé) : consentement explicite obligatoire
+    const troubles = Array.isArray(f.troubles_apprentissage)
+      ? TROUBLES_APPRENTISSAGE.filter(t => f.troubles_apprentissage.includes(t))
+      : [];
+    const troublesAutre = str(f.troubles_autre) || null;
+    const hasTroubles = troubles.length > 0 || !!troublesAutre;
+    const suiviPsy = ouiNon(f.suivi_psy);
+    const dateDiag = str(f.date_dernier_diagnostic);
+    // (« Non » au suivi psy seul n'est pas une donnée de santé : pas de consentement exigé)
+    if ((hasTroubles || suiviPsy === true) && consentement_sante !== true) {
+      return fail(
+        'Merci de cocher la case de consentement pour les informations sur les besoins particuliers.',
+        400
+      );
+    }
+
+    // 4. Pièces jointes déjà envoyées au Storage (URL signées) : seulement sous le dossier de ce
+    //    client, réellement présentes, ≤ 15 Mo et du type MIME de leur extension (celui avec
+    //    lequel le Storage les servira). Les autres sont ignorées.
+    const prefix = `recueil/${client.id}/`;
+    const wanted = (Array.isArray(uploads) ? uploads : [])
+      .slice(0, 6)
+      .filter(
+        u =>
+          typeof u?.path === 'string' &&
+          new RegExp(`^${prefix}[a-f0-9]{32}\\.\\w+$`).test(u.path) &&
+          (u.kind === 'edt' || (u.kind === 'bilan' && hasTroubles))
+      )
+      .filter((u, i, all) => all.findIndex(x => x.path === u.path) === i);
+    let docs: typeof wanted = [];
+    if (wanted.length > 0) {
+      const { data: objects } = await supabase.storage
+        .from('client-files')
+        .list(`recueil/${client.id}`, { limit: 1000 });
+      const stored = new Map((objects || []).map(o => [o.name, o.metadata]));
+      // ponytail: un fichier refusé ici reste orphelin dans le dossier (effacé avec le client)
+      docs = wanted.filter(u => {
+        const meta = stored.get(u.path.slice(prefix.length));
+        const mime = UPLOAD_MIME[uploadExtension(u.path) ?? ''];
+        return !!mime && meta?.mimetype === mime && Number(meta?.size) <= RECUEIL_UPLOAD_MAX_BYTES;
+      });
+    }
+
     const updateData: Record<string, unknown> = {
-      first_name_parent1: formData.first_name_parent1 || null,
-      last_name_parent1: formData.last_name_parent1 || null,
-      phone_parent1: formData.phone_parent1 || null,
-      email_parent1: formData.email_parent1 || null,
-      first_name_parent2: formData.first_name_parent2 || null,
-      last_name_parent2: formData.last_name_parent2 || null,
-      phone_parent2: formData.phone_parent2 || null,
-      email_parent2: formData.email_parent2 || null,
-      numero_cesu: formData.numero_cesu || null,
-      first_name_jeune: formData.first_name_jeune || null,
-      last_name_jeune: formData.last_name_jeune || null,
-      phone_jeune: formData.phone_jeune || null,
-      email_jeune: formData.email_jeune || null,
-      adresse_cours: formData.adresse_cours || null,
-      niveau_eleve: formData.niveau_eleve || null,
-      etablissement_scolaire: formData.etablissement_scolaire || null,
-      moyenne_maths: formData.moyenne_maths || null,
-      moyenne_generale: formData.moyenne_generale || null,
-      jours_disponibles: formData.jours_disponibles || null,
+      ...Object.fromEntries(RECUEIL_CONTACT_KEYS.map(key => [key, c[key] || null])),
+      situation_familiale: joinSituation(situation, precisions),
+      numero_cesu: str(f.numero_cesu) || null,
+      adresse_cours: str(f.adresse_cours) || null,
+      niveau_eleve: str(f.niveau_eleve) || null,
+      etablissement_scolaire: str(f.etablissement_scolaire) || null,
+      moyenne_maths: str(f.moyenne_maths) || null,
+      moyenne_generale: str(f.moyenne_generale) || null,
+      jours_disponibles: Array.isArray(f.jours_disponibles)
+        ? f.jours_disponibles.filter((j: unknown) => typeof j === 'string')
+        : null,
+      troubles_apprentissage: troubles.length > 0 ? troubles : null,
+      troubles_autre: troublesAutre,
+      suivi_psy: suiviPsy,
+      aise_avec_diagnostics: hasTroubles ? ouiNon(f.aise_avec_diagnostics) : null,
+      date_dernier_diagnostic: hasTroubles && isPastDate(dateDiag) ? dateDiag : null,
       // Clear the token after successful submission
       form_token: null,
       form_token_expires_at: null,
     };
 
-    // If address_line1 is empty and adresse_cours is provided, copy it
-    if (!client.address_line1 && formData.adresse_cours) {
-      updateData.address_line1 = formData.adresse_cours;
+    // Contact « Parent » : le nom / email principal suit le Parent 1 (comme EditClientModal)
+    if (client.sub_type === 'Parent') {
+      updateData.first_name = c.first_name_parent1;
+      updateData.last_name = c.last_name_parent1;
+      updateData.email = c.email_parent1;
     }
 
-    // Update client with form data
+    // If address_line1 is empty and adresse_cours is provided, copy it
+    if (!client.address_line1 && updateData.adresse_cours) {
+      updateData.address_line1 = updateData.adresse_cours;
+    }
+
     const { error: updateError } = await supabase
       .from('clients')
       .update(updateData)
@@ -150,21 +180,16 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating client:', updateError);
-      return NextResponse.json(
-        { success: false, error: 'Erreur lors de la mise à jour des informations' },
-        { status: 500 }
-      );
+      return fail('Erreur lors de la mise à jour des informations', 500);
     }
 
-    // Find the RECUEIL_INFORMATIONS procedure type
+    // Find the most recent RECUEIL_INFORMATIONS procedure for this client
     const { data: procedureType } = await supabase
       .from('procedure_types')
       .select('id')
       .eq('code', 'RECUEIL_INFORMATIONS')
       .single();
 
-    // Update the procedure status to PDF_GENERATED (or next step)
-    // Find the most recent RECUEIL_INFORMATIONS procedure for this client
     const { data: procedure } = await supabase
       .from('procedures')
       .select('id')
@@ -172,7 +197,7 @@ export async function POST(request: NextRequest) {
       .eq('procedure_type_id', procedureType?.id)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (procedure) {
       await supabase
@@ -180,30 +205,45 @@ export async function POST(request: NextRequest) {
         .update({ status: 'PDF_GENERATED', updated_at: new Date().toISOString() })
         .eq('id', procedure.id);
 
-      // Add status to history
       await supabase.from('procedure_status_history').insert({
         procedure_id: procedure.id,
         status: 'FORMULAIRE_REMPLI',
       });
     }
 
-    // Log to audit
+    if (docs.length > 0) {
+      const { error: docsError } = await supabase.from('documents').insert(
+        docs.map(u => {
+          // Nom téléchargé par Florence : toujours terminé par l'extension réellement stockée
+          const ext = uploadExtension(u.path);
+          const name = str(u.original_filename, 200) || 'document';
+          return {
+            client_id: client.id,
+            procedure_id: procedure?.id ?? null,
+            kind: 'SUPPORTING_DOC',
+            title: u.kind === 'bilan' ? 'Bilan / diagnostic' : 'Emploi du temps',
+            storage_path: u.path,
+            uploaded_by: 'CLIENT',
+            original_filename: uploadExtension(name) === ext ? name : `${name}.${ext}`,
+          };
+        })
+      );
+      if (docsError) console.error('Error recording recueil documents:', docsError);
+    }
+
+    // Audit : jamais de valeur de santé, seulement la trace du consentement
     await supabase.from('audit_log').insert({
       source: 'FORM',
       event: 'RECUEIL_COMPLETED',
-      payload: { client_id: client.id },
+      payload:
+        consentement_sante === true
+          ? { client_id: client.id, consentement_sante: true }
+          : { client_id: client.id },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Informations enregistrées avec succès',
-      procedureId: procedure?.id || null,
-    });
+    return NextResponse.json({ success: true, message: 'Informations enregistrées avec succès' });
   } catch (error) {
     console.error('Error updating client from form:', error);
-    return NextResponse.json(
-      { success: false, error: "Erreur lors de l'envoi du formulaire" },
-      { status: 500 }
-    );
+    return fail("Erreur lors de l'envoi du formulaire", 500);
   }
 }

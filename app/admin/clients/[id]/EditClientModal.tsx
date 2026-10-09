@@ -22,6 +22,10 @@ import {
   Divider,
   Text,
   SimpleGrid,
+  Alert,
+  AlertIcon,
+  Badge,
+  HStack,
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
@@ -31,8 +35,12 @@ import {
   ClientSubType,
   ClientStatus,
   PERIODE_FACTURATION_LABELS,
+  RESPONSABLES_LEGAUX,
+  TROUBLES_APPRENTISSAGE,
+  joinSituation,
+  splitSituation,
 } from '@/types';
-import { findInvalidContactFields } from '@/lib/validators';
+import { findDuplicateContacts, findInvalidContactFields } from '@/lib/validators';
 
 const REGIONS_FRANCE = [
   'Auvergne-Rhône-Alpes',
@@ -65,6 +73,8 @@ interface EditClientModalProps {
   // 'duplicate' : formulaire pré-rempli, nom vidé, création d'un nouveau contact à l'enregistrement.
   mode?: 'edit' | 'duplicate';
 }
+
+const ouiNon = (b?: boolean | null) => (b == null ? '' : b ? 'oui' : 'non');
 
 // Construit l'état initial du formulaire à partir du client.
 // En mode duplication, le nom "principal" (selon le type) est vidé pour forcer sa saisie.
@@ -162,6 +172,13 @@ function buildInitialFormData(client: Client, isDuplicate: boolean) {
     distance_km: client.distance_km?.toString() || '',
     demarche_volontaire: client.demarche_volontaire || false,
     mode_facturation: client.mode_facturation || '',
+    situation_familiale: client.situation_familiale || '',
+    // Besoins particuliers : données de santé propres au jeune → jamais copiées à la duplication
+    troubles_apprentissage: (isDuplicate ? null : client.troubles_apprentissage) || [],
+    troubles_autre: (isDuplicate ? null : client.troubles_autre) || '',
+    suivi_psy: isDuplicate ? '' : ouiNon(client.suivi_psy),
+    aise_avec_diagnostics: isDuplicate ? '' : ouiNon(client.aise_avec_diagnostics),
+    date_dernier_diagnostic: (isDuplicate ? null : client.date_dernier_diagnostic) || '',
   };
 
   if (isDuplicate) {
@@ -199,6 +216,14 @@ export function EditClientModal({
     setFormData(buildInitialFormData(client, isDuplicate));
     setAdresseCoursDifferente(!!client.adresse_cours);
   }, [client, isDuplicate]);
+
+  const isParticulier = formData.type_client === 'Particulier';
+  const isEcole = formData.type_client === 'École';
+  // Doublons de coordonnées (règle du recueil) : simple avertissement, les fiches existantes
+  // ne la respectent pas toutes
+  const doublons = isParticulier ? Object.values(findDuplicateContacts(formData)) : [];
+  // Même format que le recueil public, pour qu'un renvoi du formulaire présélectionne le choix
+  const situation = splitSituation(formData.situation_familiale);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -354,6 +379,18 @@ export function EditClientModal({
         demarche_volontaire: formData.demarche_volontaire || false,
         mode_facturation:
           formData.type_client === 'Particulier' ? formData.mode_facturation || null : null,
+        situation_familiale: isParticulier ? formData.situation_familiale.trim() || null : null,
+        troubles_apprentissage:
+          isParticulier && formData.troubles_apprentissage.length > 0
+            ? formData.troubles_apprentissage
+            : null,
+        troubles_autre: isParticulier ? formData.troubles_autre.trim() || null : null,
+        suivi_psy: isParticulier && formData.suivi_psy ? formData.suivi_psy === 'oui' : null,
+        aise_avec_diagnostics:
+          isParticulier && formData.aise_avec_diagnostics
+            ? formData.aise_avec_diagnostics === 'oui'
+            : null,
+        date_dernier_diagnostic: (isParticulier && formData.date_dernier_diagnostic) || null,
       };
 
       if (isDuplicate) {
@@ -405,9 +442,6 @@ export function EditClientModal({
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
-  const isParticulier = formData.type_client === 'Particulier';
-  const isEcole = formData.type_client === 'École';
 
   return (
     <Modal
@@ -657,6 +691,56 @@ export function EditClientModal({
                     </GridItem>
                   </Grid>
 
+                  <FormControl>
+                    <FormLabel>Responsables légaux</FormLabel>
+                    <Select
+                      value={situation.choix}
+                      onChange={e =>
+                        handleChange(
+                          'situation_familiale',
+                          joinSituation(e.target.value, situation.precisions)
+                        )
+                      }
+                      placeholder="Non renseigné"
+                    >
+                      {RESPONSABLES_LEGAUX.map(option => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Situation familiale (précisions, confidentiel)</FormLabel>
+                    <Textarea
+                      value={situation.precisions}
+                      onChange={e =>
+                        handleChange(
+                          'situation_familiale',
+                          joinSituation(situation.choix, e.target.value)
+                        )
+                      }
+                      rows={2}
+                      placeholder="Ex : garde alternée"
+                    />
+                  </FormControl>
+
+                  {doublons.length > 0 && (
+                    <Alert status="warning" borderRadius="md" alignItems="flex-start">
+                      <AlertIcon />
+                      <Stack spacing={1}>
+                        <Text fontWeight="medium">
+                          Coordonnées en double (enregistrement possible)
+                        </Text>
+                        {doublons.map(message => (
+                          <Text key={message} fontSize="sm">
+                            {message}
+                          </Text>
+                        ))}
+                      </Stack>
+                    </Alert>
+                  )}
+
                   {/* Lieu des cours */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
@@ -771,6 +855,83 @@ export function EditClientModal({
                   >
                     Démarche volontaire du jeune
                   </Checkbox>
+
+                  {/* Besoins particuliers (données de santé) */}
+                  <Divider />
+                  <HStack>
+                    <Text fontWeight="bold" color="brand.500">
+                      Besoins particuliers
+                    </Text>
+                    <Badge colorScheme="red" variant="subtle">
+                      Confidentiel
+                    </Badge>
+                  </HStack>
+                  <SimpleGrid columns={{ base: 2, md: 3 }} spacing={2}>
+                    {TROUBLES_APPRENTISSAGE.map(trouble => (
+                      <Checkbox
+                        key={trouble}
+                        isChecked={formData.troubles_apprentissage.includes(trouble)}
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            troubles_apprentissage: e.target.checked
+                              ? [...prev.troubles_apprentissage, trouble]
+                              : prev.troubles_apprentissage.filter(t => t !== trouble),
+                          }))
+                        }
+                        colorScheme="accent"
+                      >
+                        {trouble}
+                      </Checkbox>
+                    ))}
+                  </SimpleGrid>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Autre trouble</FormLabel>
+                        <Input
+                          value={formData.troubles_autre}
+                          onChange={e => handleChange('troubles_autre', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Suivi par un psychologue / professionnel</FormLabel>
+                        <Select
+                          value={formData.suivi_psy}
+                          onChange={e => handleChange('suivi_psy', e.target.value)}
+                          placeholder="Non renseigné"
+                        >
+                          <option value="oui">Oui</option>
+                          <option value="non">Non</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>À l&apos;aise avec ses diagnostics</FormLabel>
+                        <Select
+                          value={formData.aise_avec_diagnostics}
+                          onChange={e => handleChange('aise_avec_diagnostics', e.target.value)}
+                          placeholder="Non renseigné"
+                        >
+                          <option value="oui">Oui</option>
+                          <option value="non">Non</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Date du dernier diagnostic</FormLabel>
+                        <Input
+                          type="date"
+                          value={formData.date_dernier_diagnostic}
+                          onChange={e => handleChange('date_dernier_diagnostic', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
 
                   {/* Informations CESU */}
                   <Divider />

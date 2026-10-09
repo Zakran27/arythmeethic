@@ -74,3 +74,31 @@ export async function launchProcedure({
   }
   return { success: true, procedureId: procedure.id };
 }
+
+// Recueil des informations (particulier) : client du token `form_token`, s'il est encore valide.
+// `columns` = colonnes à relire en plus. Utilisé par le formulaire public et sa route d'upload.
+export async function findRecueilClient(
+  token: unknown,
+  columns: string
+): Promise<{ client: Client } | { client: null; error: string; status: number }> {
+  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
+    return { client: null, error: 'Lien invalide ou expiré', status: 404 };
+  }
+  const { data: client } = await createServiceRoleClient()
+    .from('clients')
+    .select<string, Client>(`id, type_client, form_token_expires_at, ${columns}`)
+    .eq('form_token', token)
+    .maybeSingle();
+  // Le token École (même colonne) ouvre l'autre formulaire, pas celui-ci
+  if (!client || client.type_client === 'École') {
+    return { client: null, error: 'Lien invalide ou expiré', status: 404 };
+  }
+  if (client.form_token_expires_at && new Date(client.form_token_expires_at) < new Date()) {
+    return {
+      client: null,
+      error: 'Ce lien a expiré. Veuillez contacter A Rythme Ethic.',
+      status: 410,
+    };
+  }
+  return { client };
+}

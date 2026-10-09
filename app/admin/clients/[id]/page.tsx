@@ -605,12 +605,21 @@ export default function ClientDetailPage() {
       // RGPD : effacer aussi les fichiers et les lignes documents liées aux procédures
       // (procedure_id passe à NULL à la suppression du client). Fait APRÈS la suppression :
       // un échec laisse des orphelins (comme avant) sans jamais perdre les fichiers d'un client.
+      // + pièces du recueil jamais rattachées (formulaire abandonné après l'upload d'un bilan)
+      const { data: recueilFiles } = await supabase.storage
+        .from('client-files')
+        .list(`recueil/${clientId}`, { limit: 1000 });
+      const paths = [
+        ...new Set([
+          ...documents.flatMap(d => (d.storage_path ? [d.storage_path] : [])),
+          ...(recueilFiles || []).map(f => `recueil/${clientId}/${f.name}`),
+        ]),
+      ];
+      if (paths.length > 0) {
+        const { error: storageError } = await supabase.storage.from('client-files').remove(paths);
+        if (storageError) console.error('Storage cleanup error:', storageError);
+      }
       if (documents.length > 0) {
-        const paths = documents.flatMap(d => (d.storage_path ? [d.storage_path] : []));
-        if (paths.length > 0) {
-          const { error: storageError } = await supabase.storage.from('client-files').remove(paths);
-          if (storageError) console.error('Storage cleanup error:', storageError);
-        }
         const { error: docsError } = await supabase
           .from('documents')
           .delete()
@@ -1187,6 +1196,7 @@ export default function ClientDetailPage() {
 
   const isParticulier = client.type_client === 'Particulier';
   const isEcole = client.type_client === 'École';
+  const bilansCount = documents.filter(d => d.title === 'Bilan / diagnostic').length;
   // Souhait d'accompagnement : dernière procédure envoyée (procedures triées par date décroissante)
   const confirmationProc = procedures.find(
     p => p.procedure_type?.code === 'CONFIRMATION_ACCOMPAGNEMENT'
@@ -1508,6 +1518,17 @@ export default function ClientDetailPage() {
               </Stack>
             </CardBody>
           </Card>
+
+          {client.situation_familiale && (
+            <GridItem colSpan={{ base: 1, lg: 3 }}>
+              <Text fontSize="sm" whiteSpace="pre-wrap">
+                <Text as="span" color="gray.500">
+                  Responsables légaux :{' '}
+                </Text>
+                {client.situation_familiale}
+              </Text>
+            </GridItem>
+          )}
         </Grid>
       )}
 
@@ -1592,6 +1613,83 @@ export default function ClientDetailPage() {
                   </Text>
                 </GridItem>
               </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Besoins particuliers (données de santé) - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <HStack>
+                <Heading size="sm" color="brand.500" fontFamily="heading">
+                  Besoins particuliers
+                </Heading>
+                <Badge colorScheme="red" variant="subtle">
+                  Confidentiel
+                </Badge>
+              </HStack>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                <GridItem colSpan={{ base: 1, md: 3 }}>
+                  <Text fontSize="sm" color="gray.500">
+                    Troubles / neuroatypie
+                  </Text>
+                  {client.troubles_apprentissage?.length || client.troubles_autre ? (
+                    <HStack spacing={2} flexWrap="wrap" mt={1}>
+                      {(client.troubles_apprentissage || []).map(t => (
+                        <Badge key={t} colorScheme="accent">
+                          {t}
+                        </Badge>
+                      ))}
+                      {client.troubles_autre && (
+                        <Text fontWeight="medium">Autre : {client.troubles_autre}</Text>
+                      )}
+                    </HStack>
+                  ) : (
+                    <Text fontWeight="medium">-</Text>
+                  )}
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Suivi psy / professionnel
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.suivi_psy == null ? '-' : client.suivi_psy ? 'Oui' : 'Non'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    À l&apos;aise avec ses diagnostics
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.aise_avec_diagnostics == null
+                      ? '-'
+                      : client.aise_avec_diagnostics
+                        ? 'Oui'
+                        : 'Non'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Dernier diagnostic
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.date_dernier_diagnostic
+                      ? new Date(client.date_dernier_diagnostic).toLocaleDateString('fr-FR', {
+                          timeZone: 'UTC',
+                        })
+                      : '-'}
+                  </Text>
+                </GridItem>
+              </Grid>
+              {bilansCount > 0 && (
+                <Text fontSize="sm" color="gray.500">
+                  {bilansCount} bilan{bilansCount > 1 ? 's' : ''} joint{bilansCount > 1 ? 's' : ''}{' '}
+                  par la famille : voir Documents
+                </Text>
+              )}
             </Stack>
           </CardBody>
         </Card>
@@ -2968,16 +3066,12 @@ export default function ClientDetailPage() {
                         {client.email_parent2}&gt; (Parent 2)
                       </option>
                     )}
-                    {client?.email_jeune && (
-                      <option value={client.email_jeune}>
-                        {client.first_name_jeune} {client.last_name_jeune} &lt;{client.email_jeune}
-                        &gt; (Jeune)
-                      </option>
-                    )}
+                    {/* Jamais le jeune : le formulaire (données de santé, consentement
+                        parental, situation familiale) s'adresse aux responsables légaux */}
                     {client?.email &&
                       !client?.email_parent1 &&
                       !client?.email_parent2 &&
-                      !client?.email_jeune && (
+                      client.email !== client.email_jeune && (
                         <option value={client.email}>
                           {client.first_name} {client.last_name} &lt;{client.email}&gt;
                         </option>

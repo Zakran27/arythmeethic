@@ -80,11 +80,9 @@ async function sendBrevoSMS({ recipient, content }: { recipient: string; content
 
   const formattedPhone = formatPhoneNumber(recipient);
   if (!formattedPhone) {
-    console.warn('Invalid phone number format:', recipient);
+    console.warn('SMS not sent: invalid phone number format');
     return { success: false, reason: 'Invalid phone number format' };
   }
-
-  console.log('Attempting to send SMS to:', formattedPhone);
 
   const smsPayload = {
     sender: 'ARythmeEth', // Max 11 characters for alphanumeric sender
@@ -92,8 +90,6 @@ async function sendBrevoSMS({ recipient, content }: { recipient: string; content
     content,
     type: 'transactional',
   };
-
-  console.log('SMS payload:', JSON.stringify(smsPayload));
 
   const response = await fetch('https://api.brevo.com/v3/transactionalSMS/send', {
     method: 'POST',
@@ -106,9 +102,6 @@ async function sendBrevoSMS({ recipient, content }: { recipient: string; content
   });
 
   const responseText = await response.text();
-  console.log('Brevo SMS API response status:', response.status);
-  console.log('Brevo SMS API response:', responseText);
-
   if (!response.ok) {
     console.error('Brevo SMS API error:', responseText);
     return { success: false, reason: responseText };
@@ -200,7 +193,7 @@ export async function POST(request: NextRequest) {
     // For École clients, use client.email directly (main contact)
     const recipientEmail = isEcole
       ? requestedEmail || client.email
-      : requestedEmail || client.email_parent1 || client.email_jeune || client.email;
+      : requestedEmail || client.email_parent1 || client.email;
 
     // Determine recipient name and phone based on the email used
     let recipientName = client.first_name;
@@ -338,7 +331,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Procédure lancée avec succès',
-      formUrl, // Return for testing/debugging
     });
   } catch (error) {
     console.error('Error launching procedure:', error);

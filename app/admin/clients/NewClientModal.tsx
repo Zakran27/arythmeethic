@@ -21,11 +21,13 @@ import {
   useToast,
   Divider,
   Text,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { ClientType, ClientSubType, ClientStatus, PERIODE_FACTURATION_LABELS } from '@/types';
-import { findInvalidContactFields } from '@/lib/validators';
+import { findDuplicateContacts, findInvalidContactFields } from '@/lib/validators';
 
 interface NewClientModalProps {
   isOpen: boolean;
@@ -237,6 +239,8 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   const isEcole = formData.type_client === 'École';
   const isJeune = formData.sub_type === 'Jeune';
   const isParent = formData.sub_type === 'Parent';
+  // Doublons de coordonnées (règle du recueil) : simple avertissement, non bloquant
+  const doublons = isParticulier ? Object.values(findDuplicateContacts(formData)) : [];
 
   // Sous niveau / type de demande (Jeune comme Parent), comme « Informations scolaires » de la fiche
   const demarcheVolontaireCheckbox = (
@@ -575,6 +579,20 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                   </Grid>
                   {demarcheVolontaireCheckbox}
                 </>
+              )}
+
+              {doublons.length > 0 && (
+                <Alert status="warning" borderRadius="md" alignItems="flex-start">
+                  <AlertIcon />
+                  <Stack spacing={1}>
+                    <Text fontWeight="medium">Coordonnées en double (enregistrement possible)</Text>
+                    {doublons.map(message => (
+                      <Text key={message} fontSize="sm">
+                        {message}
+                      </Text>
+                    ))}
+                  </Stack>
+                </Alert>
               )}
 
               {/* ========== INFORMATIONS CESU (Particulier) ========== */}
