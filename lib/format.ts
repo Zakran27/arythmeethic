@@ -34,3 +34,16 @@ export function formatPhone(raw?: string | null): string {
   // Fallback: return original input
   return trimmed;
 }
+
+// ISO → « 28/04/2025 à 09:03 » (heure locale du navigateur)
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+// 45 → « 45 min » ; 75 → « 1 h 15 » ; 120 → « 2 h »
+export function formatMinutes(min: number): string {
+  if (min < 60) return `${min} min`;
+  const m = min % 60;
+  return `${Math.floor(min / 60)} h${m ? ` ${String(m).padStart(2, '0')}` : ''}`;
+}

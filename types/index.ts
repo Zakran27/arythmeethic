@@ -136,6 +136,8 @@ export interface Client {
   demarche_volontaire?: boolean;
   // Particulier - mode de facturation (affichage seulement pour l'instant)
   mode_facturation?: 'CESU' | 'Ponctuel' | null;
+  // Liste d'attente : date d'inscription (null = pas sur la liste)
+  liste_attente_depuis?: string | null;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
@@ -199,6 +201,20 @@ export interface HeureRealisee {
   salaire_recu_le: string | null;
   recap_email_sent_at: string | null;
   recap_email_to: string | null;
+  created_at: string;
+}
+
+export type ContactCanal = 'Appel' | 'SMS' | 'Message vocal' | 'Email' | 'Rendez-vous' | 'Autre';
+
+// Prise de contact (suivi admin) avec un particulier ou un établissement.
+export interface ContactLog {
+  id: string;
+  client_id: string;
+  canal: ContactCanal;
+  contacted_at: string;
+  duree_minutes: number;
+  notes: string | null;
+  a_recontacter_le: string | null;
   created_at: string;
 }
 
