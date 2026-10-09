@@ -25,6 +25,7 @@ import {
 import { FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
+import { PERIODE_FACTURATION_LABELS } from '@/types';
 
 const FORMATION_TYPES = [
   { value: 'initiale_en_alternance', label: 'Formation initiale / en alternance' },
@@ -829,15 +830,18 @@ function RecueilEcoleFormContent() {
                         />
                       </FormControl>
                       <FormControl>
-                        <FormLabel color="brand.600">Période de facturation</FormLabel>
+                        <FormLabel color="brand.600">Délai de paiement</FormLabel>
                         <Select
                           name="ecole_periode_facturation"
                           value={formData.ecole_periode_facturation}
                           onChange={handleChange}
                           placeholder="Sélectionner..."
                         >
-                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
-                          <option value="mois_suivant">Mois suivant</option>
+                          {Object.entries(PERIODE_FACTURATION_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                         </Select>
                       </FormControl>
                     </SimpleGrid>

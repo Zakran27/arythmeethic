@@ -95,6 +95,16 @@ export default function ClientsPage() {
       ],
     },
     { key: 'organisation', label: 'Organisation', type: 'text' },
+    { key: 'ecole_module_nom', label: 'Nom du module', type: 'text' },
+    {
+      key: 'mode_facturation',
+      label: 'Mode de facturation',
+      type: 'select',
+      options: [
+        { value: 'CESU', label: 'CESU' },
+        { value: 'Ponctuel', label: 'Ponctuel' },
+      ],
+    },
     { key: 'city', label: 'Ville', type: 'text' },
     { key: 'postal_code', label: 'Code postal', type: 'text' },
     { key: 'first_name_jeune', label: 'Prénom jeune', type: 'text' },
@@ -121,6 +131,7 @@ export default function ClientsPage() {
         client.last_name?.toLowerCase().includes(searchLower) ||
         client.email?.toLowerCase().includes(searchLower) ||
         client.organisation?.toLowerCase().includes(searchLower) ||
+        client.ecole_module_nom?.toLowerCase().includes(searchLower) ||
         client.first_name_jeune?.toLowerCase().includes(searchLower) ||
         client.last_name_jeune?.toLowerCase().includes(searchLower) ||
         client.first_name_parent1?.toLowerCase().includes(searchLower) ||
@@ -160,7 +171,12 @@ export default function ClientsPage() {
 
   return (
     <Stack spacing={6}>
-      <Stack direction={{ base: 'column', md: 'row' }} justify="space-between" align={{ base: 'stretch', md: 'center' }} spacing={3}>
+      <Stack
+        direction={{ base: 'column', md: 'row' }}
+        justify="space-between"
+        align={{ base: 'stretch', md: 'center' }}
+        spacing={3}
+      >
         <Heading color="brand.500" fontFamily="heading">
           Gestion des contacts
         </Heading>
@@ -214,7 +230,7 @@ export default function ClientsPage() {
               <FiSearch color="gray.400" />
             </InputLeftElement>
             <Input
-              placeholder="Rechercher par nom, email, organisation..."
+              placeholder="Rechercher par nom, élève, module, email..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               bg="white"

@@ -160,6 +160,7 @@ export async function POST(request: NextRequest) {
 
     const { error: insertError } = await supabase.from('documents').insert({
       procedure_id: procedure.id,
+      client_id: procedure.client_id,
       kind: 'SUPPORTING_DOC',
       title: KIND_LABELS[kind],
       storage_path: storagePath,

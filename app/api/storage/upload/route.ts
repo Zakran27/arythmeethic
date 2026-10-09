@@ -36,9 +36,17 @@ export async function POST(req: NextRequest) {
       throw uploadError;
     }
 
+    // Rattacher aussi le document au client (reste visible sur la fiche si la procédure disparaît)
+    const { data: procedure } = await supabase
+      .from('procedures')
+      .select('client_id')
+      .eq('id', procedureId)
+      .single();
+
     // Insert document record
     const { error: insertError } = await supabase.from('documents').insert({
       procedure_id: procedureId,
+      client_id: procedure?.client_id ?? null,
       title,
       kind,
       storage_path: path,

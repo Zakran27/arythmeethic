@@ -48,9 +48,8 @@ export function useClientDetail(clientId: string) {
       setProcedures(proceduresData || []);
 
       // Fetch procedure status history for all procedures of this client
+      const procedureIds = (proceduresData || []).map(p => p.id);
       if (proceduresData && proceduresData.length > 0) {
-        const procedureIds = proceduresData.map(p => p.id);
-
         // Fetch status history
         const { data: historyData, error: historyError } = await supabase
           .from('procedure_status_history')
@@ -73,20 +72,24 @@ export function useClientDetail(clientId: string) {
           };
         });
         setProcedureHistory(historyEntries);
-
-        // Fetch documents
-        const { data: documentsData, error: documentsError } = await supabase
-          .from('documents')
-          .select('*')
-          .in('procedure_id', procedureIds)
-          .order('created_at', { ascending: false });
-
-        if (documentsError) throw documentsError;
-        setDocuments(documentsData || []);
       } else {
         setProcedureHistory([]);
-        setDocuments([]);
       }
+
+      // Documents : liés au client (ajout manuel, nouveaux uploads) OU à une de ses procédures.
+      // Une seule requête OR → pas de doublon quand un document a les deux liens.
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('documents')
+        .select('*')
+        .or(
+          procedureIds.length > 0
+            ? `client_id.eq.${clientId},procedure_id.in.(${procedureIds.join(',')})`
+            : `client_id.eq.${clientId}`
+        )
+        .order('created_at', { ascending: false });
+
+      if (documentsError) throw documentsError;
+      setDocuments(documentsData || []);
 
       setError(null);
     } catch (err) {

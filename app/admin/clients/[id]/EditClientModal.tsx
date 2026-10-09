@@ -25,7 +25,13 @@ import {
 } from '@chakra-ui/react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { Client, ClientType, ClientSubType, ClientStatus } from '@/types';
+import {
+  Client,
+  ClientType,
+  ClientSubType,
+  ClientStatus,
+  PERIODE_FACTURATION_LABELS,
+} from '@/types';
 import { findInvalidContactFields } from '@/lib/validators';
 
 const REGIONS_FRANCE = [
@@ -155,6 +161,7 @@ function buildInitialFormData(client: Client, isDuplicate: boolean) {
     tarif_horaire: client.tarif_horaire?.toString() || '',
     distance_km: client.distance_km?.toString() || '',
     demarche_volontaire: client.demarche_volontaire || false,
+    mode_facturation: client.mode_facturation || '',
   };
 
   if (isDuplicate) {
@@ -190,6 +197,7 @@ export function EditClientModal({
 
   useEffect(() => {
     setFormData(buildInitialFormData(client, isDuplicate));
+    setAdresseCoursDifferente(!!client.adresse_cours);
   }, [client, isDuplicate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -274,7 +282,9 @@ export function EditClientModal({
         etablissement_scolaire: formData.etablissement_scolaire || null,
         moyenne_maths: formData.moyenne_maths || null,
         moyenne_generale: formData.moyenne_generale || null,
-        adresse_cours: formData.adresse_cours || null,
+        // Champs particulier masqués pour une école : remis à null si le type a changé
+        adresse_cours:
+          formData.type_client === 'Particulier' ? formData.adresse_cours || null : null,
         jours_disponibles:
           formData.jours_disponibles.length > 0 ? formData.jours_disponibles : null,
         // École-specific fields
@@ -342,6 +352,8 @@ export function EditClientModal({
         tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
         distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
         demarche_volontaire: formData.demarche_volontaire || false,
+        mode_facturation:
+          formData.type_client === 'Particulier' ? formData.mode_facturation || null : null,
       };
 
       if (isDuplicate) {
@@ -398,7 +410,12 @@ export function EditClientModal({
   const isEcole = formData.type_client === 'École';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={{ base: 'full', md: '2xl' }} scrollBehavior="inside">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={{ base: 'full', md: '2xl' }}
+      scrollBehavior="inside"
+    >
       <ModalOverlay />
       <ModalContent maxH="90vh">
         <ModalHeader color="brand.500" fontFamily="heading">
@@ -640,6 +657,41 @@ export function EditClientModal({
                     </GridItem>
                   </Grid>
 
+                  {/* Lieu des cours */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Lieu des cours
+                  </Text>
+                  <Checkbox
+                    isChecked={adresseCoursDifferente}
+                    onChange={e => {
+                      setAdresseCoursDifferente(e.target.checked);
+                      if (!e.target.checked) handleChange('adresse_cours', '');
+                    }}
+                  >
+                    Adresse des cours différente de l&apos;adresse des parents
+                  </Checkbox>
+                  {adresseCoursDifferente && (
+                    <FormControl>
+                      <FormLabel>Adresse des cours</FormLabel>
+                      <Input
+                        value={formData.adresse_cours}
+                        onChange={e => handleChange('adresse_cours', e.target.value)}
+                        placeholder="Adresse où se dérouleront les cours"
+                      />
+                    </FormControl>
+                  )}
+                  <FormControl>
+                    <FormLabel>Distance domicile → cours (km)</FormLabel>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Ex: 12.5"
+                      value={formData.distance_km}
+                      onChange={e => handleChange('distance_km', e.target.value)}
+                    />
+                  </FormControl>
+
                   {/* Informations scolaires */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
@@ -676,42 +728,7 @@ export function EditClientModal({
                         />
                       </FormControl>
                     </GridItem>
-                    <GridItem colSpan={2}>
-                      <FormControl>
-                        <FormLabel>Numéro CESU</FormLabel>
-                        <Input
-                          value={formData.numero_cesu}
-                          onChange={e => handleChange('numero_cesu', e.target.value)}
-                          placeholder="Numéro CESU si applicable"
-                        />
-                      </FormControl>
-                    </GridItem>
                   </Grid>
-
-                  {/* Lieu et disponibilités */}
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">
-                    Lieu et disponibilités
-                  </Text>
-                  <Checkbox
-                    isChecked={adresseCoursDifferente}
-                    onChange={e => {
-                      setAdresseCoursDifferente(e.target.checked);
-                      if (!e.target.checked) handleChange('adresse_cours', '');
-                    }}
-                  >
-                    Adresse des cours différente de l&apos;adresse du client
-                  </Checkbox>
-                  {adresseCoursDifferente && (
-                    <FormControl>
-                      <FormLabel>Adresse des cours</FormLabel>
-                      <Input
-                        value={formData.adresse_cours}
-                        onChange={e => handleChange('adresse_cours', e.target.value)}
-                        placeholder="Adresse où se dérouleront les cours"
-                      />
-                    </FormControl>
-                  )}
 
                   <FormControl>
                     <FormLabel>Jours disponibles</FormLabel>
@@ -748,17 +765,42 @@ export function EditClientModal({
                       ))}
                     </SimpleGrid>
                   </FormControl>
-                </>
-              )}
+                  <Checkbox
+                    isChecked={formData.demarche_volontaire}
+                    onChange={e => handleChange('demarche_volontaire', e.target.checked)}
+                  >
+                    Démarche volontaire du jeune
+                  </Checkbox>
 
-              {/* ========== TARIF HORAIRE (Particulier) ========== */}
-              {isParticulier && (
-                <>
+                  {/* Informations CESU */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
-                    Informations contrat
+                    Informations CESU
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Mode de facturation</FormLabel>
+                        <Select
+                          value={formData.mode_facturation}
+                          onChange={e => handleChange('mode_facturation', e.target.value)}
+                          placeholder="Non renseigné"
+                        >
+                          <option value="CESU">CESU</option>
+                          <option value="Ponctuel">Ponctuel (facturé via A Rythme Ethic)</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Numéro CESU</FormLabel>
+                        <Input
+                          value={formData.numero_cesu}
+                          onChange={e => handleChange('numero_cesu', e.target.value)}
+                          placeholder="Numéro CESU si applicable"
+                        />
+                      </FormControl>
+                    </GridItem>
                     <GridItem>
                       <FormControl>
                         <FormLabel>Tarif horaire net (€)</FormLabel>
@@ -771,25 +813,7 @@ export function EditClientModal({
                         />
                       </FormControl>
                     </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Distance domicile → cours (km)</FormLabel>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="Ex: 12.5"
-                          value={formData.distance_km}
-                          onChange={e => handleChange('distance_km', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
                   </Grid>
-                  <Checkbox
-                    isChecked={formData.demarche_volontaire}
-                    onChange={e => handleChange('demarche_volontaire', e.target.checked)}
-                  >
-                    Démarche volontaire du jeune
-                  </Checkbox>
                 </>
               )}
 
@@ -824,7 +848,114 @@ export function EditClientModal({
                     </Select>
                   </FormControl>
 
-                  <Text fontWeight="bold" color="brand.500" mt={2}>
+                  {/* Informations module */}
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations module
+                  </Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom du module</FormLabel>
+                        <Input
+                          value={formData.ecole_module_nom}
+                          onChange={e => handleChange('ecole_module_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nombre d'heures</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_module_heures}
+                          onChange={e => handleChange('ecole_module_heures', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Type de formation</FormLabel>
+                        <Select
+                          value={formData.ecole_formation_type}
+                          onChange={e => handleChange('ecole_formation_type', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="initiale_en_alternance">
+                            Formation initiale / en alternance
+                          </option>
+                          <option value="continue">Formation continue</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom de la/des classe(s)</FormLabel>
+                        <Input
+                          value={formData.ecole_classes_noms}
+                          onChange={e => handleChange('ecole_classes_noms', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Taille du groupe</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_groupe_taille}
+                          onChange={e => handleChange('ecole_groupe_taille', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nb évaluations min.</FormLabel>
+                        <Input
+                          type="number"
+                          value={formData.ecole_evaluation_nombre_min}
+                          onChange={e =>
+                            handleChange('ecole_evaluation_nombre_min', e.target.value)
+                          }
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Période du module</FormLabel>
+                        <Input
+                          value={formData.ecole_module_periode}
+                          onChange={e => handleChange('ecole_module_periode', e.target.value)}
+                          placeholder="Ex: Septembre 2026 - Janvier 2027"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Modalités d'évaluation</FormLabel>
+                        <Textarea
+                          value={formData.ecole_evaluation_modalites}
+                          onChange={e => handleChange('ecole_evaluation_modalites', e.target.value)}
+                          rows={2}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Notes élèves saisies par</FormLabel>
+                        <Select
+                          value={formData.ecole_notes_saisies_par}
+                          onChange={e => handleChange('ecole_notes_saisies_par', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="A Rythme Ethic">A Rythme Ethic</option>
+                          <option value="Personne tierce">Personne tierce</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
                     Contact de l'établissement
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -1073,6 +1204,57 @@ export function EditClientModal({
                     </GridItem>
                   </Grid>
 
+                  {/* Responsable notes (si les notes sont saisies par une personne tierce) */}
+                  {formData.ecole_notes_saisies_par === 'Personne tierce' && (
+                    <>
+                      <Divider />
+                      <Text fontWeight="bold" color="brand.500">
+                        Responsable notes
+                      </Text>
+                      <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Prénom</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_prenom}
+                              onChange={e =>
+                                handleChange('ecole_resp_notes_prenom', e.target.value)
+                              }
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Nom</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_nom}
+                              onChange={e => handleChange('ecole_resp_notes_nom', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Téléphone</FormLabel>
+                            <Input
+                              value={formData.ecole_resp_notes_phone}
+                              onChange={e => handleChange('ecole_resp_notes_phone', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                        <GridItem>
+                          <FormControl>
+                            <FormLabel>Email</FormLabel>
+                            <Input
+                              type="email"
+                              value={formData.ecole_resp_notes_email}
+                              onChange={e => handleChange('ecole_resp_notes_email', e.target.value)}
+                            />
+                          </FormControl>
+                        </GridItem>
+                      </Grid>
+                    </>
+                  )}
+
                   {/* Informations structure */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
@@ -1177,99 +1359,6 @@ export function EditClientModal({
                     )}
                   </Grid>
 
-                  {/* Informations module */}
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">
-                    Informations module
-                  </Text>
-                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Nom du module</FormLabel>
-                        <Input
-                          value={formData.ecole_module_nom}
-                          onChange={e => handleChange('ecole_module_nom', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Nombre d'heures</FormLabel>
-                        <Input
-                          type="number"
-                          value={formData.ecole_module_heures}
-                          onChange={e => handleChange('ecole_module_heures', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Type de formation</FormLabel>
-                        <Select
-                          value={formData.ecole_formation_type}
-                          onChange={e => handleChange('ecole_formation_type', e.target.value)}
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="initiale_en_alternance">
-                            Formation initiale / en alternance
-                          </option>
-                          <option value="continue">Formation continue</option>
-                        </Select>
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Nom de la/des classe(s)</FormLabel>
-                        <Input
-                          value={formData.ecole_classes_noms}
-                          onChange={e => handleChange('ecole_classes_noms', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Taille du groupe</FormLabel>
-                        <Input
-                          type="number"
-                          value={formData.ecole_groupe_taille}
-                          onChange={e => handleChange('ecole_groupe_taille', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Nb évaluations min.</FormLabel>
-                        <Input
-                          type="number"
-                          value={formData.ecole_evaluation_nombre_min}
-                          onChange={e =>
-                            handleChange('ecole_evaluation_nombre_min', e.target.value)
-                          }
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem colSpan={2}>
-                      <FormControl>
-                        <FormLabel>Période du module</FormLabel>
-                        <Input
-                          value={formData.ecole_module_periode}
-                          onChange={e => handleChange('ecole_module_periode', e.target.value)}
-                          placeholder="Ex: Septembre 2026 - Janvier 2027"
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem colSpan={2}>
-                      <FormControl>
-                        <FormLabel>Modalités d'évaluation</FormLabel>
-                        <Textarea
-                          value={formData.ecole_evaluation_modalites}
-                          onChange={e => handleChange('ecole_evaluation_modalites', e.target.value)}
-                          rows={2}
-                        />
-                      </FormControl>
-                    </GridItem>
-                  </Grid>
-
                   {/* Enseignant */}
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
@@ -1338,8 +1427,11 @@ export function EditClientModal({
                           onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
                           placeholder="Sélectionnez..."
                         >
-                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
-                          <option value="mois_suivant">Mois suivant</option>
+                          {Object.entries(PERIODE_FACTURATION_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                         </Select>
                       </FormControl>
                     </GridItem>
@@ -1357,79 +1449,13 @@ export function EditClientModal({
                       </FormControl>
                     </GridItem>
                   </Grid>
-
-                  {/* Saisie des notes élèves */}
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">
-                    Saisie des notes élèves
-                  </Text>
-                  <FormControl>
-                    <FormLabel>Notes élèves saisies par</FormLabel>
-                    <Select
-                      value={formData.ecole_notes_saisies_par}
-                      onChange={e => handleChange('ecole_notes_saisies_par', e.target.value)}
-                      placeholder="Sélectionnez..."
-                    >
-                      <option value="A Rythme Ethic">A Rythme Ethic</option>
-                      <option value="Personne tierce">Personne tierce</option>
-                    </Select>
-                  </FormControl>
-
-                  {formData.ecole_notes_saisies_par === 'Personne tierce' && (
-                    <>
-                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">
-                        Responsable Notes
-                      </Text>
-                      <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                        <GridItem>
-                          <FormControl>
-                            <FormLabel>Prénom</FormLabel>
-                            <Input
-                              value={formData.ecole_resp_notes_prenom}
-                              onChange={e =>
-                                handleChange('ecole_resp_notes_prenom', e.target.value)
-                              }
-                            />
-                          </FormControl>
-                        </GridItem>
-                        <GridItem>
-                          <FormControl>
-                            <FormLabel>Nom</FormLabel>
-                            <Input
-                              value={formData.ecole_resp_notes_nom}
-                              onChange={e => handleChange('ecole_resp_notes_nom', e.target.value)}
-                            />
-                          </FormControl>
-                        </GridItem>
-                        <GridItem>
-                          <FormControl>
-                            <FormLabel>Téléphone</FormLabel>
-                            <Input
-                              value={formData.ecole_resp_notes_phone}
-                              onChange={e => handleChange('ecole_resp_notes_phone', e.target.value)}
-                            />
-                          </FormControl>
-                        </GridItem>
-                        <GridItem>
-                          <FormControl>
-                            <FormLabel>Email</FormLabel>
-                            <Input
-                              type="email"
-                              value={formData.ecole_resp_notes_email}
-                              onChange={e => handleChange('ecole_resp_notes_email', e.target.value)}
-                            />
-                          </FormControl>
-                        </GridItem>
-                      </Grid>
-                    </>
-                  )}
                 </>
               )}
 
               {/* ========== COMMON FIELDS: Address & Notes ========== */}
               <Divider />
               <Text fontWeight="bold" color="brand.500">
-                Adresse
+                {isParticulier ? 'Adresse des parents' : 'Adresse'}
               </Text>
               <FormControl>
                 <FormLabel>Adresse</FormLabel>
