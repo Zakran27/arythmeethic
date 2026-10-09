@@ -134,6 +134,8 @@ export interface Client {
   tarif_horaire?: number;
   distance_km?: number;
   demarche_volontaire?: boolean;
+  // Particulier - mode de facturation (affichage seulement pour l'instant)
+  mode_facturation?: 'CESU' | 'Ponctuel' | null;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
@@ -167,6 +169,7 @@ export interface Procedure {
 export interface Document {
   id: string;
   procedure_id?: string;
+  client_id?: string;
   kind: DocumentKind;
   title: string;
   storage_path?: string;
@@ -212,4 +215,13 @@ export const statusLabels: Record<ProcedureStatusLabel, string> = {
   SIGNATURE_DEMANDEE: 'Signature demandée',
   SIGNATURE_EFFECTUEE: 'Signature effectuée',
   SIGNATURE_REFUSEE: 'Signature refusée',
+};
+
+// Délai de paiement (écoles) : libellés affichés pour les valeurs stockées en base
+export const PERIODE_FACTURATION_LABELS: Record<
+  NonNullable<Client['ecole_periode_facturation']>,
+  string
+> = {
+  fin_mois_en_cours: '30 jours fin de mois à réception',
+  mois_suivant: 'Mois suivant',
 };

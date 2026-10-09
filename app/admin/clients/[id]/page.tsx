@@ -61,12 +61,13 @@ import {
 } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail } from '@/lib/hooks/useClientDetail';
-import { statusLabels } from '@/types';
+import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
 import { formatPhone } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 import { SendRecapModal } from './SendRecapModal';
+import { AddDocumentModal } from './AddDocumentModal';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -96,6 +97,7 @@ export default function ClientDetailPage() {
     onOpen: onDeleteDocOpen,
     onClose: onDeleteDocClose,
   } = useDisclosure();
+  const { isOpen: isAddDocOpen, onOpen: onAddDocOpen, onClose: onAddDocClose } = useDisclosure();
   const { isOpen: isRecueilOpen, onOpen: onRecueilOpen, onClose: onRecueilClose } = useDisclosure();
   const { isOpen: isRdv1Open, onOpen: onRdv1Open, onClose: onRdv1Close } = useDisclosure();
   const {
@@ -544,6 +546,25 @@ export default function ClientDetailPage() {
       const { error } = await supabase.from('clients').delete().eq('id', clientId);
 
       if (error) throw error;
+
+      // RGPD : effacer aussi les fichiers et les lignes documents liées aux procédures
+      // (procedure_id passe à NULL à la suppression du client). Fait APRÈS la suppression :
+      // un échec laisse des orphelins (comme avant) sans jamais perdre les fichiers d'un client.
+      if (documents.length > 0) {
+        const paths = documents.flatMap(d => (d.storage_path ? [d.storage_path] : []));
+        if (paths.length > 0) {
+          const { error: storageError } = await supabase.storage.from('client-files').remove(paths);
+          if (storageError) console.error('Storage cleanup error:', storageError);
+        }
+        const { error: docsError } = await supabase
+          .from('documents')
+          .delete()
+          .in(
+            'id',
+            documents.map(d => d.id)
+          );
+        if (docsError) console.error('Documents cleanup error:', docsError);
+      }
 
       toast({
         title: 'Client supprimé',
@@ -1108,6 +1129,13 @@ export default function ClientDetailPage() {
 
   const isParticulier = client.type_client === 'Particulier';
   const isEcole = client.type_client === 'École';
+  // Adresse des parents (repli de l'adresse des cours quand elle n'est pas renseignée)
+  const adresseParents = [
+    client.address_line1,
+    [client.postal_code, client.city].filter(Boolean).join(' '),
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   // Get display name for header
   const getDisplayName = () => {
@@ -1338,6 +1366,202 @@ export default function ClientDetailPage() {
         </Grid>
       )}
 
+      {/* Lot 4 : emplacement réservé à la box « Suivi des prises de contact » (entre les contacts et Lieu des cours) */}
+
+      {/* Lieu des cours - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">
+                Lieu des cours
+              </Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Adresse des cours
+                  </Text>
+                  {/* adresse_cours vide = cours au domicile des parents (case « adresse différente » non cochée) */}
+                  <Text fontWeight="medium">{client.adresse_cours || adresseParents || '-'}</Text>
+                  {!client.adresse_cours && adresseParents && (
+                    <Text fontSize="xs" color="gray.500">
+                      (identique à l&apos;adresse des parents)
+                    </Text>
+                  )}
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Distance domicile → cours
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.distance_km != null ? `${client.distance_km} km` : '-'}
+                  </Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Informations scolaires - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">
+                Informations scolaires
+              </Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Établissement scolaire
+                  </Text>
+                  <Text fontWeight="medium">{client.etablissement_scolaire || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Moyenne maths
+                  </Text>
+                  <Text fontWeight="medium">{client.moyenne_maths || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Moyenne générale
+                  </Text>
+                  <Text fontWeight="medium">{client.moyenne_generale || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Démarche volontaire du jeune
+                  </Text>
+                  <Text fontWeight="medium">{client.demarche_volontaire ? 'Oui' : 'Non'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 4 }}>
+                  <Text fontSize="sm" color="gray.500">
+                    Jours disponibles
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.jours_disponibles && client.jours_disponibles.length > 0
+                      ? client.jours_disponibles.join(', ')
+                      : '-'}
+                  </Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Informations CESU - Particulier uniquement */}
+      {isParticulier && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">
+                Informations CESU
+              </Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Mode de facturation
+                  </Text>
+                  <Text fontWeight="medium">{client.mode_facturation || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Numéro CESU
+                  </Text>
+                  <Text fontWeight="medium">{client.numero_cesu || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Tarif horaire net
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '-'}
+                  </Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* ========== ÉTABLISSEMENT - Informations module (tout en haut) ========== */}
+      {isEcole && (
+        <Card bg="white" shadow="sm">
+          <CardBody>
+            <Stack spacing={4}>
+              <Heading size="sm" color="brand.500" fontFamily="heading">
+                Informations module
+              </Heading>
+              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Nom du module
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_module_nom || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Nombre d'heures
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_module_heures || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Type de formation
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.ecole_formation_type === 'initiale_en_alternance'
+                      ? 'Initiale / Alternance'
+                      : client.ecole_formation_type === 'continue'
+                        ? 'Continue'
+                        : '-'}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Classe(s)
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_classes_noms || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Taille du groupe
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_groupe_taille || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Évaluations min.
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_evaluation_nombre_min || '-'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Text fontSize="sm" color="gray.500">
+                    Période
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_module_periode || '-'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 3 }}>
+                  <Text fontSize="sm" color="gray.500">
+                    Modalités d'évaluation
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_evaluation_modalites || '-'}</Text>
+                </GridItem>
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Notes élèves saisies par
+                  </Text>
+                  <Text fontWeight="medium">{client.ecole_notes_saisies_par || '-'}</Text>
+                </GridItem>
+              </Grid>
+            </Stack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* ========== ÉTABLISSEMENT CONTACT ========== */}
       {isEcole && (
         <Card bg="white" shadow="sm">
@@ -1522,6 +1746,43 @@ export default function ClientDetailPage() {
               </Stack>
             </CardBody>
           </Card>
+
+          {/* Responsable notes (seulement si les notes sont saisies par une personne tierce) */}
+          {client.ecole_notes_saisies_par === 'Personne tierce' && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">
+                    Responsable notes
+                  </Heading>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">
+                      Nom complet
+                    </Text>
+                    <Text fontWeight="medium">
+                      {client.ecole_resp_notes_prenom || client.ecole_resp_notes_nom
+                        ? `${client.ecole_resp_notes_prenom || ''} ${client.ecole_resp_notes_nom || ''}`.trim()
+                        : '-'}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">
+                      Téléphone
+                    </Text>
+                    <Text fontWeight="medium">
+                      {formatPhone(client.ecole_resp_notes_phone) || '-'}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text fontSize="sm" color="gray.500">
+                      Email
+                    </Text>
+                    <Text fontWeight="medium">{client.ecole_resp_notes_email || '-'}</Text>
+                  </Box>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
         </Grid>
       )}
 
@@ -1612,75 +1873,6 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
-      {/* ========== ÉTABLISSEMENT - Informations module ========== */}
-      {isEcole && (
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={4}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">
-                Informations module
-              </Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Nom du module
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_module_nom || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Nombre d'heures
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_module_heures || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Type de formation
-                  </Text>
-                  <Text fontWeight="medium">
-                    {client.ecole_formation_type === 'initiale_en_alternance'
-                      ? 'Initiale / Alternance'
-                      : client.ecole_formation_type === 'continue'
-                        ? 'Continue'
-                        : '-'}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Classe(s)
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_classes_noms || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Taille du groupe
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_groupe_taille || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Évaluations min.
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_evaluation_nombre_min || '-'}</Text>
-                </GridItem>
-                <GridItem colSpan={{ base: 1, md: 2 }}>
-                  <Text fontSize="sm" color="gray.500">
-                    Période
-                  </Text>
-                  <Text fontWeight="medium">{client.ecole_module_periode || '-'}</Text>
-                </GridItem>
-              </Grid>
-              <Box>
-                <Text fontSize="sm" color="gray.500">
-                  Modalités d'évaluation
-                </Text>
-                <Text fontWeight="medium">{client.ecole_evaluation_modalites || '-'}</Text>
-              </Box>
-            </Stack>
-          </CardBody>
-        </Card>
-      )}
-
       {/* ========== ÉTABLISSEMENT - Enseignant ========== */}
       {isEcole && (
         <Card bg="white" shadow="sm">
@@ -1738,11 +1930,9 @@ export default function ClientDetailPage() {
                     Délai de paiement
                   </Text>
                   <Text fontWeight="medium">
-                    {client.ecole_periode_facturation === 'fin_mois_en_cours'
-                      ? 'Fin du mois en cours'
-                      : client.ecole_periode_facturation === 'mois_suivant'
-                        ? 'Mois suivant'
-                        : '-'}
+                    {client.ecole_periode_facturation
+                      ? PERIODE_FACTURATION_LABELS[client.ecole_periode_facturation]
+                      : '-'}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -1752,151 +1942,6 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">
                     {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '-'}
                   </Text>
-                </GridItem>
-              </Grid>
-            </Stack>
-          </CardBody>
-        </Card>
-      )}
-
-      {/* ========== ÉTABLISSEMENT - Saisie des notes élèves ========== */}
-      {isEcole && (
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={4}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">
-                Saisie des notes élèves
-              </Heading>
-              <Box>
-                <Text fontSize="sm" color="gray.500">
-                  Notes élèves saisies par
-                </Text>
-                <Text fontWeight="medium">{client.ecole_notes_saisies_par || '-'}</Text>
-              </Box>
-
-              {client.ecole_notes_saisies_par === 'Personne tierce' && (
-                <>
-                  <Text fontWeight="bold" color="brand.500" fontSize="sm" mt={2}>
-                    Responsable Notes
-                  </Text>
-                  <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
-                    <GridItem>
-                      <Text fontSize="sm" color="gray.500">
-                        Nom complet
-                      </Text>
-                      <Text fontWeight="medium">
-                        {client.ecole_resp_notes_prenom || client.ecole_resp_notes_nom
-                          ? `${client.ecole_resp_notes_prenom || ''} ${client.ecole_resp_notes_nom || ''}`.trim()
-                          : '-'}
-                      </Text>
-                    </GridItem>
-                    <GridItem>
-                      <Text fontSize="sm" color="gray.500">
-                        Téléphone
-                      </Text>
-                      <Text fontWeight="medium">
-                        {formatPhone(client.ecole_resp_notes_phone) || '-'}
-                      </Text>
-                    </GridItem>
-                    <GridItem colSpan={{ base: 1, md: 2 }}>
-                      <Text fontSize="sm" color="gray.500">
-                        Email
-                      </Text>
-                      <Text fontWeight="medium">{client.ecole_resp_notes_email || '-'}</Text>
-                    </GridItem>
-                  </Grid>
-                </>
-              )}
-            </Stack>
-          </CardBody>
-        </Card>
-      )}
-
-      {/* Informations scolaires / Recueil - Particulier uniquement */}
-      {isParticulier && (
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={4}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">
-                Informations scolaires
-              </Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(4, 1fr)' }} gap={4}>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Établissement scolaire
-                  </Text>
-                  <Text fontWeight="medium">{client.etablissement_scolaire || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Moyenne maths
-                  </Text>
-                  <Text fontWeight="medium">{client.moyenne_maths || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Moyenne générale
-                  </Text>
-                  <Text fontWeight="medium">{client.moyenne_generale || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Numéro CESU
-                  </Text>
-                  <Text fontWeight="medium">{client.numero_cesu || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Tarif horaire net
-                  </Text>
-                  <Text fontWeight="medium">
-                    {client.tarif_horaire != null ? `${client.tarif_horaire.toFixed(2)} €/h` : '-'}
-                  </Text>
-                </GridItem>
-              </Grid>
-            </Stack>
-          </CardBody>
-        </Card>
-      )}
-
-      {/* Lieu et disponibilités - Particulier uniquement */}
-      {isParticulier && (
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={4}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">
-                Lieu et disponibilités
-              </Heading>
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={4}>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Adresse des cours
-                  </Text>
-                  <Text fontWeight="medium">{client.adresse_cours || '-'}</Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Jours disponibles
-                  </Text>
-                  <Text fontWeight="medium">
-                    {client.jours_disponibles && client.jours_disponibles.length > 0
-                      ? client.jours_disponibles.join(', ')
-                      : '-'}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Distance domicile → cours
-                  </Text>
-                  <Text fontWeight="medium">
-                    {client.distance_km != null ? `${client.distance_km} km` : '-'}
-                  </Text>
-                </GridItem>
-                <GridItem>
-                  <Text fontSize="sm" color="gray.500">
-                    Démarche volontaire du jeune
-                  </Text>
-                  <Text fontWeight="medium">{client.demarche_volontaire ? 'Oui' : 'Non'}</Text>
                 </GridItem>
               </Grid>
             </Stack>
@@ -1941,47 +1986,54 @@ export default function ClientDetailPage() {
         </Card>
       )}
 
-      {/* Adresse & Notes */}
-      <Grid templateColumns={{ base: '1fr', md: client.notes ? 'repeat(2, 1fr)' : '1fr' }} gap={4}>
-        <Card bg="white" shadow="sm">
-          <CardBody>
-            <Stack spacing={3}>
-              <Heading size="sm" color="brand.500" fontFamily="heading">
-                Adresse
-              </Heading>
-              <Text fontWeight="medium">
-                {client.address_line1 || '-'}
-                {client.postal_code && (
-                  <>
-                    <br />
-                    {client.postal_code}
-                  </>
-                )}
-                {client.city && ` ${client.city}`}
-                {client.country && (
-                  <>
-                    <br />
-                    {client.country}
-                  </>
-                )}
-              </Text>
-            </Stack>
-          </CardBody>
-        </Card>
+      {/* Adresse & Notes (Adresse : établissements seulement, les particuliers l'ont dans Lieu des cours) */}
+      {(isEcole || client.notes) && (
+        <Grid
+          templateColumns={{ base: '1fr', md: isEcole && client.notes ? 'repeat(2, 1fr)' : '1fr' }}
+          gap={4}
+        >
+          {isEcole && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">
+                    Adresse
+                  </Heading>
+                  <Text fontWeight="medium">
+                    {client.address_line1 || '-'}
+                    {client.postal_code && (
+                      <>
+                        <br />
+                        {client.postal_code}
+                      </>
+                    )}
+                    {client.city && ` ${client.city}`}
+                    {client.country && (
+                      <>
+                        <br />
+                        {client.country}
+                      </>
+                    )}
+                  </Text>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
 
-        {client.notes && (
-          <Card bg="white" shadow="sm">
-            <CardBody>
-              <Stack spacing={3}>
-                <Heading size="sm" color="brand.500" fontFamily="heading">
-                  Notes
-                </Heading>
-                <Text>{client.notes}</Text>
-              </Stack>
-            </CardBody>
-          </Card>
-        )}
-      </Grid>
+          {client.notes && (
+            <Card bg="white" shadow="sm">
+              <CardBody>
+                <Stack spacing={3}>
+                  <Heading size="sm" color="brand.500" fontFamily="heading">
+                    Notes
+                  </Heading>
+                  <Text>{client.notes}</Text>
+                </Stack>
+              </CardBody>
+            </Card>
+          )}
+        </Grid>
+      )}
 
       {/* ========== HEURES RÉALISÉES - Particulier uniquement ========== */}
       {isParticulier && (
@@ -2085,7 +2137,8 @@ export default function ClientDetailPage() {
                         const heuresBillees = h.heures + reportIn;
                         const montantHeures = heuresBillees * h.tarif_horaire;
                         const montantKm = h.km * h.bareme_km;
-                        const montantAnnulation = Number(h.heures_annulation ?? 0) * h.tarif_horaire;
+                        const montantAnnulation =
+                          Number(h.heures_annulation ?? 0) * h.tarif_horaire;
                         const total = montantHeures + montantKm + montantAnnulation;
                         const moisDate = new Date(h.mois + 'T00:00:00');
                         const label = moisDate.toLocaleDateString('fr-FR', {
@@ -2383,11 +2436,24 @@ export default function ClientDetailPage() {
       <Card bg="white">
         <CardBody>
           <Stack spacing={4}>
-            <HStack justify="space-between">
+            <Stack
+              direction={{ base: 'column', md: 'row' }}
+              justify="space-between"
+              align={{ base: 'flex-start', md: 'center' }}
+              spacing={2}
+            >
               <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
                 Documents ({documents.length})
               </Heading>
-            </HStack>
+              <Button
+                size="sm"
+                colorScheme="accent"
+                onClick={onAddDocOpen}
+                w={{ base: '100%', md: 'auto' }}
+              >
+                + Ajouter un document
+              </Button>
+            </Stack>
             {documents.length > 0 ? (
               <>
                 <Stack spacing={2}>
@@ -2411,7 +2477,11 @@ export default function ClientDetailPage() {
                             {doc.title}
                           </Text>
                           <Text fontSize="xs" color="gray.500">
-                            De : {docProcedure?.procedure_type?.label || 'Document'} •{' '}
+                            De :{' '}
+                            {doc.procedure_id
+                              ? docProcedure?.procedure_type?.label || 'Document'
+                              : 'Ajout manuel'}{' '}
+                            •{' '}
                             {new Date(doc.created_at).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'short',
@@ -2516,6 +2586,13 @@ export default function ClientDetailPage() {
           </Stack>
         </CardBody>
       </Card>
+
+      <AddDocumentModal
+        isOpen={isAddDocOpen}
+        onClose={onAddDocClose}
+        clientId={clientId}
+        onSuccess={refetch}
+      />
 
       {client && (
         <EditClientModal

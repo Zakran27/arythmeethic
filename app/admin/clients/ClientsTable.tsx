@@ -43,23 +43,10 @@ function getDisplayName(client: Client): string {
   return `${client.first_name} ${client.last_name}`;
 }
 
-// Helper function to get the display email based on client type
-function getDisplayEmail(client: Client): string {
-  if (client.type_client === 'École') {
-    return client.email || '-';
-  }
-
-  // For Particulier
-  if (client.sub_type === 'Jeune') {
-    // Show jeune's email first, then parent1's email as fallback
-    return client.email_jeune || client.email_parent1 || client.email || '-';
-  } else if (client.sub_type === 'Parent') {
-    // Show parent 1's email
-    return client.email_parent1 || client.email || '-';
-  }
-
-  // Fallback to main email
-  return client.email || '-';
+// Colonne « Élève / Module » : nom du jeune (particulier) ou nom du module (école)
+function getEleveOuModule(client: Client): string {
+  if (client.type_client === 'École') return client.ecole_module_nom || '-';
+  return `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim() || '-';
 }
 
 // Helper function to get the display type
@@ -67,7 +54,9 @@ function getDisplayType(client: Client): string {
   if (client.type_client === 'École') {
     return 'Établissement';
   }
-  return client.sub_type || 'Particulier';
+  const label = client.sub_type || 'Particulier';
+  // « Parent - CESU » / « Parent - Ponctuel »
+  return client.mode_facturation ? `${label} - ${client.mode_facturation}` : label;
 }
 
 export function ClientsTable({
@@ -106,10 +95,9 @@ export function ClientsTable({
           render: (client: Client) => getDisplayName(client),
         },
         {
-          key: 'email',
-          label: 'Email',
-          sortable: true,
-          render: (client: Client) => getDisplayEmail(client),
+          key: 'eleve_module',
+          label: 'Élève / Module',
+          render: (client: Client) => getEleveOuModule(client),
         },
         {
           key: 'type_client',

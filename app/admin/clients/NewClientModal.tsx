@@ -24,7 +24,7 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { ClientType, ClientSubType, ClientStatus } from '@/types';
+import { ClientType, ClientSubType, ClientStatus, PERIODE_FACTURATION_LABELS } from '@/types';
 import { findInvalidContactFields } from '@/lib/validators';
 
 interface NewClientModalProps {
@@ -80,6 +80,10 @@ const initialFormData = {
   tarif_horaire: '',
   distance_km: '',
   demarche_volontaire: false,
+  mode_facturation: '',
+  numero_cesu: '',
+  // École - module (affiché dans la liste des contacts)
+  ecole_module_nom: '',
 };
 
 export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalProps) {
@@ -149,7 +153,9 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           postal_code: formData.postal_code || null,
           city: formData.city || null,
           country: formData.country || null,
-          adresse_cours: formData.adresse_cours || null,
+          // Champs particulier masqués pour une école : null si le type a changé en cours de saisie
+          adresse_cours:
+            formData.type_client === 'Particulier' ? formData.adresse_cours || null : null,
           notes: formData.notes || null,
           // Jeune fields (for Jeune type)
           first_name_jeune: formData.first_name_jeune || null,
@@ -186,6 +192,10 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
           tarif_horaire: formData.tarif_horaire ? parseFloat(formData.tarif_horaire) : null,
           distance_km: formData.distance_km ? parseFloat(formData.distance_km) : null,
           demarche_volontaire: formData.demarche_volontaire || false,
+          mode_facturation:
+            formData.type_client === 'Particulier' ? formData.mode_facturation || null : null,
+          numero_cesu: formData.type_client === 'Particulier' ? formData.numero_cesu || null : null,
+          ecole_module_nom: formData.ecole_module_nom || null,
         },
       ]);
 
@@ -198,6 +208,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
       });
 
       setFormData(initialFormData);
+      setAdresseCoursDifferente(false);
       onSuccess();
     } catch (error) {
       console.error('Error creating contact:', error);
@@ -226,6 +237,16 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
   const isEcole = formData.type_client === 'École';
   const isJeune = formData.sub_type === 'Jeune';
   const isParent = formData.sub_type === 'Parent';
+
+  // Sous niveau / type de demande (Jeune comme Parent), comme « Informations scolaires » de la fiche
+  const demarcheVolontaireCheckbox = (
+    <Checkbox
+      isChecked={formData.demarche_volontaire}
+      onChange={e => setFormData(prev => ({ ...prev, demarche_volontaire: e.target.checked }))}
+    >
+      Démarche volontaire du jeune
+    </Checkbox>
+  );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl" scrollBehavior="inside">
@@ -372,6 +393,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                   </Grid>
+                  {demarcheVolontaireCheckbox}
 
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
@@ -551,17 +573,41 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </FormControl>
                     </GridItem>
                   </Grid>
+                  {demarcheVolontaireCheckbox}
                 </>
               )}
 
-              {/* ========== TARIF HORAIRE (Particulier) ========== */}
+              {/* ========== INFORMATIONS CESU (Particulier) ========== */}
               {isParticulier && (
                 <>
                   <Divider />
                   <Text fontWeight="bold" color="brand.500">
-                    Informations contrat
+                    Informations CESU
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem colSpan={2}>
+                      <FormControl>
+                        <FormLabel>Mode de facturation</FormLabel>
+                        <Select
+                          value={formData.mode_facturation}
+                          onChange={e => handleChange('mode_facturation', e.target.value)}
+                          placeholder="Non renseigné"
+                        >
+                          <option value="CESU">CESU</option>
+                          <option value="Ponctuel">Ponctuel (facturé via A Rythme Ethic)</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Numéro CESU</FormLabel>
+                        <Input
+                          value={formData.numero_cesu}
+                          onChange={e => handleChange('numero_cesu', e.target.value)}
+                          placeholder="Numéro CESU si applicable"
+                        />
+                      </FormControl>
+                    </GridItem>
                     <GridItem>
                       <FormControl>
                         <FormLabel>Tarif horaire net (€)</FormLabel>
@@ -574,27 +620,7 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                         />
                       </FormControl>
                     </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Distance domicile → cours (km)</FormLabel>
-                        <Input
-                          type="number"
-                          step="0.1"
-                          placeholder="Ex: 12.5"
-                          value={formData.distance_km}
-                          onChange={e => handleChange('distance_km', e.target.value)}
-                        />
-                      </FormControl>
-                    </GridItem>
                   </Grid>
-                  <Checkbox
-                    isChecked={formData.demarche_volontaire}
-                    onChange={e =>
-                      setFormData(prev => ({ ...prev, demarche_volontaire: e.target.checked }))
-                    }
-                  >
-                    Démarche volontaire du jeune
-                  </Checkbox>
                 </>
               )}
 
@@ -629,7 +655,37 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </Select>
                   </FormControl>
 
-                  <Text fontWeight="bold" color="brand.500" mt={2}>
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Informations module
+                  </Text>
+                  <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Nom du module</FormLabel>
+                        <Input
+                          value={formData.ecole_module_nom}
+                          onChange={e => handleChange('ecole_module_nom', e.target.value)}
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Notes élèves saisies par</FormLabel>
+                        <Select
+                          value={formData.ecole_notes_saisies_par}
+                          onChange={e => handleChange('ecole_notes_saisies_par', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          <option value="A Rythme Ethic">A Rythme Ethic</option>
+                          <option value="Personne tierce">Personne tierce</option>
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
+
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
                     Contact de l'établissement
                   </Text>
                   <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -672,61 +728,11 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                     </GridItem>
                   </Grid>
 
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">
-                    Facturation
-                  </Text>
-                  <Grid templateColumns="repeat(3, 1fr)" gap={4}>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Date max de paiement (jour du mois)</FormLabel>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="31"
-                          value={formData.ecole_facturation_date_max_paiement}
-                          onChange={e =>
-                            handleChange('ecole_facturation_date_max_paiement', e.target.value)
-                          }
-                          placeholder="Ex: 15"
-                        />
-                      </FormControl>
-                    </GridItem>
-                    <GridItem>
-                      <FormControl>
-                        <FormLabel>Période de facturation</FormLabel>
-                        <Select
-                          value={formData.ecole_periode_facturation}
-                          onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
-                          placeholder="Sélectionnez..."
-                        >
-                          <option value="fin_mois_en_cours">Fin du mois en cours</option>
-                          <option value="mois_suivant">Mois suivant</option>
-                        </Select>
-                      </FormControl>
-                    </GridItem>
-                  </Grid>
-
-                  <Divider />
-                  <Text fontWeight="bold" color="brand.500">
-                    Saisie des notes élèves
-                  </Text>
-                  <FormControl>
-                    <FormLabel>Notes élèves saisies par</FormLabel>
-                    <Select
-                      value={formData.ecole_notes_saisies_par}
-                      onChange={e => handleChange('ecole_notes_saisies_par', e.target.value)}
-                      placeholder="Sélectionnez..."
-                    >
-                      <option value="A Rythme Ethic">A Rythme Ethic</option>
-                      <option value="Personne tierce">Personne tierce</option>
-                    </Select>
-                  </FormControl>
-
                   {formData.ecole_notes_saisies_par === 'Personne tierce' && (
                     <>
-                      <Text fontWeight="bold" color="brand.500" mt={2} fontSize="sm">
-                        Responsable Notes
+                      <Divider />
+                      <Text fontWeight="bold" color="brand.500">
+                        Responsable notes
                       </Text>
                       <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                         <GridItem>
@@ -771,13 +777,51 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                       </Grid>
                     </>
                   )}
+
+                  <Divider />
+                  <Text fontWeight="bold" color="brand.500">
+                    Facturation
+                  </Text>
+                  <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Date max d'envoi de la facture (jour du mois)</FormLabel>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="31"
+                          value={formData.ecole_facturation_date_max_paiement}
+                          onChange={e =>
+                            handleChange('ecole_facturation_date_max_paiement', e.target.value)
+                          }
+                          placeholder="Ex: 15"
+                        />
+                      </FormControl>
+                    </GridItem>
+                    <GridItem>
+                      <FormControl>
+                        <FormLabel>Délai de paiement</FormLabel>
+                        <Select
+                          value={formData.ecole_periode_facturation}
+                          onChange={e => handleChange('ecole_periode_facturation', e.target.value)}
+                          placeholder="Sélectionnez..."
+                        >
+                          {Object.entries(PERIODE_FACTURATION_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </GridItem>
+                  </Grid>
                 </>
               )}
 
               {/* ========== COMMON FIELDS: Address & Notes ========== */}
               <Divider />
               <Text fontWeight="bold" color="brand.500">
-                Adresse
+                {isParticulier ? 'Adresse des parents' : 'Adresse'}
               </Text>
               <FormControl>
                 <FormLabel>Adresse</FormLabel>
@@ -817,24 +861,38 @@ export function NewClientModal({ isOpen, onClose, onSuccess }: NewClientModalPro
                 </GridItem>
               </Grid>
 
-              <Checkbox
-                isChecked={adresseCoursDifferente}
-                onChange={e => {
-                  setAdresseCoursDifferente(e.target.checked);
-                  if (!e.target.checked) handleChange('adresse_cours', '');
-                }}
-              >
-                Adresse des cours différente de l&apos;adresse du client
-              </Checkbox>
-              {adresseCoursDifferente && (
-                <FormControl>
-                  <FormLabel>Adresse des cours</FormLabel>
-                  <Input
-                    value={formData.adresse_cours}
-                    onChange={e => handleChange('adresse_cours', e.target.value)}
-                    placeholder="Adresse où se dérouleront les cours"
-                  />
-                </FormControl>
+              {isParticulier && (
+                <>
+                  <Checkbox
+                    isChecked={adresseCoursDifferente}
+                    onChange={e => {
+                      setAdresseCoursDifferente(e.target.checked);
+                      if (!e.target.checked) handleChange('adresse_cours', '');
+                    }}
+                  >
+                    Adresse des cours différente de l&apos;adresse des parents
+                  </Checkbox>
+                  {adresseCoursDifferente && (
+                    <FormControl>
+                      <FormLabel>Adresse des cours</FormLabel>
+                      <Input
+                        value={formData.adresse_cours}
+                        onChange={e => handleChange('adresse_cours', e.target.value)}
+                        placeholder="Adresse où se dérouleront les cours"
+                      />
+                    </FormControl>
+                  )}
+                  <FormControl>
+                    <FormLabel>Distance domicile → cours (km)</FormLabel>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      placeholder="Ex: 12.5"
+                      value={formData.distance_km}
+                      onChange={e => handleChange('distance_km', e.target.value)}
+                    />
+                  </FormControl>
+                </>
               )}
 
               <FormControl>
