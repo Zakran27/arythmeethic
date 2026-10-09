@@ -144,6 +144,14 @@ export interface Client {
   // Réponse à la procédure « Confirmation accompagnement » (null = pas de réponse)
   accompagnement_confirme?: boolean | null;
   accompagnement_confirme_at?: string | null;
+  // Recueil : responsables légaux, « <choix RESPONSABLES_LEGAUX> » ou « <choix> — <précisions> »
+  situation_familiale?: string | null;
+  // Besoins particuliers (données de santé, confidentielles ; jamais copiées à la duplication)
+  troubles_apprentissage?: string[] | null; // valeurs de TROUBLES_APPRENTISSAGE
+  troubles_autre?: string | null;
+  suivi_psy?: boolean | null;
+  aise_avec_diagnostics?: boolean | null;
+  date_dernier_diagnostic?: string | null; // 'YYYY-MM-DD'
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
@@ -268,6 +276,39 @@ export const statusLabels: Record<ProcedureStatusLabel, string> = {
   SIGNATURE_REFUSEE: 'Signature refusée',
   SIGNATURE_ANNULEE: 'Lien de signature annulé',
 };
+
+// Recueil particulier : « Qui sont les responsables légaux de votre enfant ? » (choix unique).
+// Seul le 1er choix affiche un Parent 2 ; sinon tout tombe dans les colonnes Parent 1.
+export const RESPONSABLES_LEGAUX = [
+  'Les deux parents',
+  'Un seul parent',
+  'Un tuteur ou une tutrice, ou une autre personne désignée',
+  'Autre situation',
+];
+
+// situation_familiale (texte) ↔ { choix, precisions } : « <choix> » ou « <choix> — <précisions> ».
+// Un texte hors format (saisie libre) part entièrement dans les précisions.
+export function splitSituation(s?: string | null) {
+  const [choix, ...rest] = (s || '').split(' — ');
+  return RESPONSABLES_LEGAUX.includes(choix)
+    ? { choix, precisions: rest.join(' — ') }
+    : { choix: '', precisions: s || '' };
+}
+export const joinSituation = (choix: string, precisions: string) =>
+  choix && precisions.trim() ? `${choix} — ${precisions}` : choix || precisions;
+
+// Besoins particuliers (recueil + fiche + modale) ; « Autre » = texte libre dans troubles_autre
+export const TROUBLES_APPRENTISSAGE = [
+  'Dyslexie',
+  'Dysgraphie',
+  'Dysorthographie',
+  'Dyscalculie',
+  'Dyspraxie',
+  'TDAH',
+  "Trouble du spectre de l'autisme (TSA)",
+  'HPI',
+  'HPE',
+];
 
 // Délai de paiement (écoles) : libellés affichés pour les valeurs stockées en base
 export const PERIODE_FACTURATION_LABELS: Record<
