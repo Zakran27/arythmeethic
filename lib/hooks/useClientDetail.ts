@@ -14,6 +14,12 @@ export interface ProcedureHistoryEntry {
   created_at: string;
 }
 
+// Date portée par procedures.deadline_at, affichée dans l'historique selon le type de procédure
+const DATE_LABELS: Record<string, string> = {
+  PREPARATION_RDV1: 'RDV le',
+  DEBUT_ACCOMPAGNEMENT: '1er cours le',
+};
+
 export function useClientDetail(clientId: string) {
   const [client, setClient] = useState<Client | null>(null);
   const [procedures, setProcedures] = useState<Procedure[]>([]);
@@ -62,10 +68,15 @@ export function useClientDetail(clientId: string) {
         // Combine history with procedure info
         const historyEntries: ProcedureHistoryEntry[] = (historyData || []).map(h => {
           const proc = proceduresData.find(p => p.id === h.procedure_id);
+          const dateLabel = DATE_LABELS[proc?.procedure_type?.code];
           return {
             id: h.id,
             procedure_id: h.procedure_id,
-            procedure_label: proc?.procedure_type?.label || 'Procédure',
+            procedure_label:
+              (proc?.procedure_type?.label || 'Procédure') +
+              (dateLabel && proc?.deadline_at
+                ? ` (${dateLabel} ${proc.deadline_at.split('-').reverse().join('/')})`
+                : ''),
             procedure_code: proc?.procedure_type?.code || '',
             status: h.status,
             created_at: h.created_at,

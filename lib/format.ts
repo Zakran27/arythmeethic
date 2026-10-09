@@ -47,3 +47,30 @@ export function formatMinutes(min: number): string {
   const m = min % 60;
   return `${Math.floor(min / 60)} h${m ? ` ${String(m).padStart(2, '0')}` : ''}`;
 }
+
+// 'YYYY-MM-DD' (date murale, sans fuseau) → « mardi 14 octobre 2026 » / « jeudi 1er octobre 2026 »
+export function formatDateLongFr(ymd: string): string {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d))
+    .toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    })
+    .replace(/ 1 /, ' 1er ');
+}
+
+// '17:30' → « 17h30 » ; '09:00' → « 9h »
+export function formatHeureFr(hhmm: string): string {
+  const [h, m] = hhmm.split(':');
+  return `${Number(h)}h${m === '00' ? '' : m}`;
+}
+
+// Année scolaire « 2026-2027 » : à partir de juin on parle déjà de l'année suivante
+// (même seuil que procedures.annee_scolaire, cf. database/migration-meeting-oct26.sql).
+export function anneeScolaire(d = new Date()): string {
+  const start = d.getMonth() >= 5 ? d.getFullYear() : d.getFullYear() - 1;
+  return `${start}-${start + 1}`;
+}

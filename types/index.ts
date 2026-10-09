@@ -138,6 +138,12 @@ export interface Client {
   mode_facturation?: 'CESU' | 'Ponctuel' | null;
   // Liste d'attente : date d'inscription (null = pas sur la liste)
   liste_attente_depuis?: string | null;
+  // 1er rendez-vous (procédure Préparation RDV 1) : date + heure murales
+  rdv1_date?: string | null; // 'YYYY-MM-DD'
+  rdv1_heure?: string | null; // 'HH:MM'
+  // Réponse à la procédure « Confirmation accompagnement » (null = pas de réponse)
+  accompagnement_confirme?: boolean | null;
+  accompagnement_confirme_at?: string | null;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
@@ -160,8 +166,10 @@ export interface Procedure {
   procedure_type_id: string;
   status: ProcStatus;
   docuseal_submission_id?: string;
-  deadline_at?: string;
+  deadline_at?: string; // date ; RDV 1 / début accompagnement : date du RDV / du 1er cours
   signed_at?: string;
+  download_token_expires_at?: string | null;
+  recipient_email?: string | null;
   created_at: string;
   updated_at: string;
   client?: Client;
@@ -232,9 +240,11 @@ export type ProcedureStatusLabel =
   | 'FORMULAIRE_REMPLI'
   | 'RELANCE_ENVOYEE'
   | 'MAIL_AVIS_GOOGLE_ENVOYE'
+  | 'RELANCE_AVIS_GOOGLE_ENVOYEE'
   | 'SIGNATURE_DEMANDEE'
   | 'SIGNATURE_EFFECTUEE'
-  | 'SIGNATURE_REFUSEE';
+  | 'SIGNATURE_REFUSEE'
+  | 'SIGNATURE_ANNULEE';
 
 export interface ProcedureStatusHistory {
   id: string;
@@ -251,9 +261,11 @@ export const statusLabels: Record<ProcedureStatusLabel, string> = {
   FORMULAIRE_REMPLI: 'Formulaire rempli',
   RELANCE_ENVOYEE: 'Relance envoyée',
   MAIL_AVIS_GOOGLE_ENVOYE: 'Mail avis Google envoyé',
+  RELANCE_AVIS_GOOGLE_ENVOYEE: 'Relance avis Google envoyée',
   SIGNATURE_DEMANDEE: 'Signature demandée',
   SIGNATURE_EFFECTUEE: 'Signature effectuée',
   SIGNATURE_REFUSEE: 'Signature refusée',
+  SIGNATURE_ANNULEE: 'Signature annulée',
 };
 
 // Délai de paiement (écoles) : libellés affichés pour les valeurs stockées en base

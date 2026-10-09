@@ -39,8 +39,24 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: 'preparation-rdv1',
     name: 'Préparation du 1er rendez-vous',
     description:
-      'Email envoyé pour préparer le premier rendez-vous (liste des documents à apporter).',
-    variables: ['recipientName', 'jeuneName'],
+      "Email envoyé pour préparer le premier rendez-vous (liste des documents à apporter). Si le texte ne contient pas {{rdvDate}}, un encadré « Rendez-vous prévu le … à … » est ajouté automatiquement en bas de l'email.",
+    variables: ['recipientName', 'jeuneName', 'rdvDate', 'rdvHeure'],
+    wired: true,
+  },
+  {
+    key: 'confirmation-accompagnement',
+    name: "Confirmation du souhait d'accompagnement",
+    description:
+      "Email envoyé après le 1er rendez-vous pour confirmer (Oui / Non) le souhait d'accompagnement (bouton « Donner ma réponse » ajouté automatiquement).",
+    variables: ['recipientName', 'jeunePrenom', 'anneeScolaire'],
+    wired: true,
+  },
+  {
+    key: 'debut-accompagnement',
+    name: "Début de l'accompagnement",
+    description:
+      "Email envoyé à la famille (parents et jeune) avant le premier cours. Le texte entre {{#premierCours}} et {{/premierCours}} n'apparaît que si une date de premier cours est saisie.",
+    variables: ['recipientName', 'jeunePrenom', 'premierCours'],
     wired: true,
   },
   {
@@ -122,10 +138,16 @@ export function getEmailTemplateMeta(key: string): EmailTemplateMeta | undefined
 // Substitution simple `{{var}}` -> valeur. Valeurs insérées telles quelles
 // (les templates sont rédigés par une admin de confiance, et certaines
 // variables comme {{montantsTable}} sont du HTML).
+// Section `{{#var}}…{{/var}}` : contenu conservé seulement si `var` est non vide.
 export function substituteVars(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, name: string) =>
-    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name] ?? '') : ''
-  );
+  return template
+    .replace(
+      /\{\{#([a-zA-Z0-9_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,
+      (_m, name: string, inner: string) => (vars[name] ? inner : '')
+    )
+    .replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, name: string) =>
+      Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name] ?? '') : ''
+    );
 }
 
 export interface RenderedTemplate {
@@ -165,6 +187,18 @@ export function renderEmailShell(bodyHtml: string, dynamicBlock = ''): string {
 </html>`;
 }
 
+// Sujet + HTML complet (habillage de marque) d'un template brut (cf. getEmailTemplate côté serveur).
+export function renderTemplate(
+  t: RenderedTemplate,
+  vars: Record<string, string>,
+  dynamicBlock = ''
+): RenderedTemplate {
+  return {
+    subject: substituteVars(t.subject, vars),
+    html: renderEmailShell(substituteVars(t.html, vars), dynamicBlock),
+  };
+}
+
 // Bouton CTA standard, réutilisé comme bloc dynamique dans les emails à lien.
 export function emailButton(href: string, label: string): string {
   return `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 0;"><a href="${href}" style="display:inline-block;background-color:#2ba1bd;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-size:16px;font-weight:500;">${label}</a></td></tr></table>`;
@@ -183,7 +217,7 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   },
   'preparation-rdv1': {
     subject: 'A Rythme Ethic - Préparation du premier rendez-vous',
-    html: `<p>Bonjour {{recipientName}},</p><p>Afin de préparer au mieux notre premier rendez-vous avec {{jeuneName}}, je vous invite à rassembler les documents suivants :</p><ul><li>Les 3 derniers bulletins de notes</li><li>Les 2 dernières évaluations de mathématiques</li><li>Le(s) cahier(s) ou classeur de mathématiques</li></ul><p>Ces éléments me permettront de mieux comprendre le parcours scolaire et d'adapter mon accompagnement.</p><p>Si vous avez des questions, n'hésitez pas à me contacter.</p>`,
+    html: `<p>Bonjour {{recipientName}},</p><p>Je vous confirme notre premier rendez-vous le <strong>{{rdvDate}} à {{rdvHeure}}</strong>.</p><p>Afin de préparer au mieux notre premier rendez-vous avec {{jeuneName}}, je vous invite à rassembler les documents suivants :</p><ul><li>Les 3 derniers bulletins de notes</li><li>Les 2 dernières évaluations de mathématiques</li><li>Le(s) cahier(s) ou classeur de mathématiques</li></ul><p>Ces éléments me permettront de mieux comprendre le parcours scolaire et d'adapter mon accompagnement.</p><p>Si vous avez des questions, n'hésitez pas à me contacter.</p>`,
   },
   'souhait-renouvellement': {
     subject: "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
@@ -224,6 +258,14 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'cron-fin-de-contrat-relance': {
     subject: 'A Rythme Ethic - Rappel : documents de fin de contrat',
     html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous concernant la fin de contrat. Il manque encore les document(s) suivant(s) :</p>`,
+  },
+  'confirmation-accompagnement': {
+    subject: "A Rythme Ethic - Confirmation de votre souhait d'accompagnement",
+    html: `<p>Bonjour {{recipientName}},</p><p>Suite à notre premier rendez-vous, après réflexion, vous pouvez confirmer votre souhait d'accompagnement pour l'année scolaire {{anneeScolaire}}.</p><p>Il vous suffit de cliquer sur le bouton ci-dessous :</p>`,
+  },
+  'debut-accompagnement': {
+    subject: "A Rythme Ethic - Début de l'accompagnement",
+    html: `<p>Bonjour {{recipientName}},</p><p>{{#premierCours}}Notre premier cours aura lieu le <strong>{{premierCours}}</strong>. Ce créneau sera la règle de base pour nos rencontres ; bien sûr, chaque semaine nous échangerons avec {{jeunePrenom}} si nous devons le déplacer. Par la suite, je prendrai les rendez-vous directement avec {{jeunePrenom}} afin de l'accompagner vers plus d'autonomie.{{/premierCours}}</p><p>Merci de préparer les éléments suivants :</p><ul><li>Dernières évaluations</li><li>Cahier/classeur de maths</li><li>Livre de maths s'il y en a un</li><li>Calculatrice</li><li>Feuilles pour faire les exercices</li><li>Fiches cartonnées pour fiches de révision/méthode</li><li>Crayons</li><li>Éventuellement ardoise pour le brouillon ou sinon des feuilles de brouillon</li><li>Liste des éléments prioritaires à aborder si possible, sinon je composerai avec les éléments le moment venu</li></ul><p>À très bientôt,</p>`,
   },
   'contact-notif': {
     subject: 'Nouveau message du site - A Rythme Ethic',
