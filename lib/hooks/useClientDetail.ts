@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { Client, Procedure, Document, ProcedureStatusHistory } from '@/types';
+import { anneeScolaire } from '@/lib/format';
 
 // Combined type for displaying procedure history with procedure info
 export interface ProcedureHistoryEntry {
@@ -19,6 +20,24 @@ const DATE_LABELS: Record<string, string> = {
   PREPARATION_RDV1: 'RDV le',
   DEBUT_ACCOMPAGNEMENT: '1er cours le',
 };
+
+// Numéro de version des contractualisations envoyées, par année scolaire (V1 = la plus ancienne).
+// Absent quand l'année ne compte qu'une version (on n'affiche pas « V1 » seul).
+export function contractVersions(procs: Procedure[]): Record<string, number> {
+  const groups: Record<string, Procedure[]> = {};
+  for (const p of procs) {
+    if (p.procedure_type?.code !== 'CONTRACTUALISATION' || !p.docuseal_submission_id) continue;
+    (groups[p.annee_scolaire ?? anneeScolaire(new Date(p.created_at))] ??= []).push(p);
+  }
+  const versions: Record<string, number> = {};
+  for (const g of Object.values(groups)) {
+    if (g.length < 2) continue;
+    g.sort((a, b) => a.created_at.localeCompare(b.created_at)).forEach(
+      (p, i) => (versions[p.id] = i + 1)
+    );
+  }
+  return versions;
+}
 
 export function useClientDetail(clientId: string) {
   const [client, setClient] = useState<Client | null>(null);
@@ -66,6 +85,7 @@ export function useClientDetail(clientId: string) {
         if (historyError) throw historyError;
 
         // Combine history with procedure info
+        const versions = contractVersions(proceduresData);
         const historyEntries: ProcedureHistoryEntry[] = (historyData || []).map(h => {
           const proc = proceduresData.find(p => p.id === h.procedure_id);
           const dateLabel = DATE_LABELS[proc?.procedure_type?.code];
@@ -74,6 +94,7 @@ export function useClientDetail(clientId: string) {
             procedure_id: h.procedure_id,
             procedure_label:
               (proc?.procedure_type?.label || 'Procédure') +
+              (versions[h.procedure_id] ? ` V${versions[h.procedure_id]}` : '') +
               (dateLabel && proc?.deadline_at
                 ? ` (${dateLabel} ${proc.deadline_at.split('-').reverse().join('/')})`
                 : ''),

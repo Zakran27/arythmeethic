@@ -168,6 +168,7 @@ export interface Procedure {
   docuseal_submission_id?: string;
   deadline_at?: string; // date ; RDV 1 / début accompagnement : date du RDV / du 1er cours
   signed_at?: string;
+  annee_scolaire?: string | null; // contractualisation : « 2026-2027 » (versions V{n} par année)
   download_token_expires_at?: string | null;
   recipient_email?: string | null;
   created_at: string;
@@ -265,7 +266,7 @@ export const statusLabels: Record<ProcedureStatusLabel, string> = {
   SIGNATURE_DEMANDEE: 'Signature demandée',
   SIGNATURE_EFFECTUEE: 'Signature effectuée',
   SIGNATURE_REFUSEE: 'Signature refusée',
-  SIGNATURE_ANNULEE: 'Signature annulée',
+  SIGNATURE_ANNULEE: 'Lien de signature annulé',
 };
 
 // Délai de paiement (écoles) : libellés affichés pour les valeurs stockées en base

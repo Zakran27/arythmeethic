@@ -81,6 +81,22 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     wired: true,
   },
   {
+    key: 'contractualisation-particulier-relance',
+    name: 'Contractualisation — relance particulier (auto)',
+    description:
+      'Relance automatique chaque semaine tant que le parent n’a pas signé le contrat. Bouton « Signer le document » + lien de secours ajoutés automatiquement.',
+    variables: ['recipientName'],
+    wired: true,
+  },
+  {
+    key: 'contractualisation-ecole-relance',
+    name: 'Contractualisation — relance établissement (auto)',
+    description:
+      'Relance automatique tous les 3 jours (jours ouvrés, ≈ 2 fois par semaine) tant que l’établissement n’a pas signé le contrat. Bouton « Signer le document » + lien de secours ajoutés automatiquement.',
+    variables: ['recipientName'],
+    wired: true,
+  },
+  {
     key: 'envoi-cv-casier',
     name: 'Envoi CV / casier judiciaire',
     description: 'Email d’envoi des documents (CV, casier) — bouton « Télécharger les documents » ajouté automatiquement.',
@@ -204,6 +220,14 @@ export function emailButton(href: string, label: string): string {
   return `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 0;"><a href="${href}" style="display:inline-block;background-color:#2ba1bd;color:#ffffff;text-decoration:none;padding:16px 32px;border-radius:8px;font-size:16px;font-weight:500;">${label}</a></td></tr></table>`;
 }
 
+// Bouton « Signer le document » + lien de secours (emails de signature DocuSeal).
+export function signatureLinkBlock(link: string): string {
+  return (
+    emailButton(link, 'Signer le document') +
+    `<p style="margin:20px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${link}" style="color:#2ba1bd;word-break:break-all;">${link}</a></p>`
+  );
+}
+
 // Modèle par défaut proposé dans l'éditeur (bouton « charger le modèle par
 // défaut ») pour les templates câblés. Sert de point de départ éditable ; tant
 // qu'il n'est pas enregistré, la route garde son HTML d'origine (recap-heures :
@@ -250,6 +274,14 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'contractualisation-ecole': {
     subject: 'A Rythme Ethic - Signature du contrat',
     html: `<p>Bonjour {{recipientName}},</p><p>Florence Louazel vous invite à signer le contrat de prestation A Rythme Ethic.</p>`,
+  },
+  'contractualisation-particulier-relance': {
+    subject: 'A Rythme Ethic - Rappel : signature du contrat',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous : le contrat d'accompagnement A Rythme Ethic n'est pas encore signé.</p><p>Vous pouvez le signer en quelques clics grâce au bouton ci-dessous.</p>`,
+  },
+  'contractualisation-ecole-relance': {
+    subject: 'A Rythme Ethic - Rappel : signature du contrat',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous : le contrat de prestation A Rythme Ethic n'est pas encore signé.</p><p>Vous pouvez le signer en quelques clics grâce au bouton ci-dessous.</p>`,
   },
   'fin-de-contrat': {
     subject: 'A Rythme Ethic - Fin de contrat - documents à transmettre',
