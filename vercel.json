@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/signatures",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/preparation-accompagnement",
+      "schedule": "0 16 * * *"
     }
   ]
 }

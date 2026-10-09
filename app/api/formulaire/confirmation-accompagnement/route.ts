@@ -1,51 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { anneeScolaire } from '@/lib/format';
+import { findDraftProcedure } from '@/lib/procedures';
 
 // Route PUBLIQUE (liste blanche /api/formulaire/ de middleware.ts) : tout passe par le token.
-type Supabase = ReturnType<typeof createServiceRoleClient>;
-
 const fail = (error: string, status: number) =>
   NextResponse.json({ success: false, error }, { status });
 
-// Procédure DRAFT valide pour ce token, sinon la réponse d'erreur à renvoyer telle quelle.
-async function findProcedure(supabase: Supabase, token: unknown) {
-  if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
-    return fail('Lien invalide', 404);
-  }
-  const { data: procedure } = await supabase
-    .from('procedures')
-    .select(
-      'id, client_id, status, created_at, download_token_expires_at, procedure_types(code), clients(first_name_jeune)'
-    )
-    .eq('download_token', token)
-    .maybeSingle();
-  // Le token doit appartenir à CETTE procédure (pas à une fin de contrat, etc.)
-  const type = procedure?.procedure_types as unknown as { code: string } | null;
-  if (!procedure || type?.code !== 'CONFIRMATION_ACCOMPAGNEMENT') {
-    return fail('Lien invalide', 404);
-  }
-  if (procedure.status === 'SIGNED') {
-    return fail('Votre réponse a déjà été enregistrée. Merci !', 410);
-  }
-  if (
-    procedure.status !== 'DRAFT' ||
-    (procedure.download_token_expires_at &&
-      new Date(procedure.download_token_expires_at) < new Date())
-  ) {
-    return fail("Ce lien n'est plus valide. Contactez-moi si besoin.", 410);
-  }
-  return procedure;
-}
+const findProcedure = (token: unknown) =>
+  findDraftProcedure<{ clients: { first_name_jeune: string | null } | null }>(
+    token,
+    'CONFIRMATION_ACCOMPAGNEMENT',
+    'clients(first_name_jeune)'
+  );
 
 export async function GET(request: NextRequest) {
-  const supabase = createServiceRoleClient();
-  const procedure = await findProcedure(supabase, request.nextUrl.searchParams.get('token'));
-  if (procedure instanceof NextResponse) return procedure;
-  const client = procedure.clients as unknown as { first_name_jeune: string | null } | null;
+  const found = await findProcedure(request.nextUrl.searchParams.get('token'));
+  if (!found.procedure) return fail(found.error, found.status);
+  const { procedure } = found;
   return NextResponse.json({
     success: true,
-    jeunePrenom: client?.first_name_jeune || null,
+    jeunePrenom: procedure.clients?.first_name_jeune || null,
     anneeScolaire: anneeScolaire(new Date(procedure.created_at)),
   });
 }
@@ -57,8 +32,9 @@ export async function POST(request: NextRequest) {
       return fail('Réponse invalide', 400);
     }
     const supabase = createServiceRoleClient();
-    const procedure = await findProcedure(supabase, token);
-    if (procedure instanceof NextResponse) return procedure;
+    const found = await findProcedure(token);
+    if (!found.procedure) return fail(found.error, found.status);
+    const { procedure } = found;
 
     // Clôture conditionnelle = un seul traitement même en cas de double clic (le lien devient invalide)
     const { data: claimed } = await supabase

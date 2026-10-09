@@ -60,6 +60,22 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     wired: true,
   },
   {
+    key: 'preparation-accompagnement',
+    name: "Préparation de l'accompagnement (emploi du temps, disponibilités)",
+    description:
+      "Email envoyé au parent 1 (automatiquement à partir du 20 août aux familles qui ont confirmé l'accompagnement ou le renouvellement, ou depuis la fiche) avec le lien vers le formulaire : emploi du temps, contraintes extrascolaires, disponibilités. Bouton « Emploi du temps … – Remplir le formulaire » ajouté automatiquement.",
+    variables: ['recipientName', 'jeunePrenom', 'anneeScolaire'],
+    wired: true,
+  },
+  {
+    key: 'preparation-accompagnement-relance',
+    name: "Préparation de l'accompagnement — relance (auto)",
+    description:
+      'Relance automatique unique si le formulaire n’est pas rempli : le 2e vendredi de septembre (ou 7 jours après l’envoi s’il est plus tardif), ou depuis la Synthèse des disponibilités. Même bouton que l’email initial.',
+    variables: ['recipientName', 'jeunePrenom', 'anneeScolaire'],
+    wired: true,
+  },
+  {
     key: 'recueil-informations',
     name: 'Recueil d’informations (envoi du formulaire)',
     description: 'Email avec le lien vers le formulaire de recueil d’informations (bouton « Compléter le formulaire » ajouté automatiquement).',
@@ -298,6 +314,14 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   'debut-accompagnement': {
     subject: "A Rythme Ethic - Début de l'accompagnement",
     html: `<p>Bonjour {{recipientName}},</p><p>{{#premierCours}}Notre premier cours aura lieu le <strong>{{premierCours}}</strong>. Ce créneau sera la règle de base pour nos rencontres ; bien sûr, chaque semaine nous échangerons avec {{jeunePrenom}} si nous devons le déplacer. Par la suite, je prendrai les rendez-vous directement avec {{jeunePrenom}} afin de l'accompagner vers plus d'autonomie.{{/premierCours}}</p><p>Merci de préparer les éléments suivants :</p><ul><li>Dernières évaluations</li><li>Cahier/classeur de maths</li><li>Livre de maths s'il y en a un</li><li>Calculatrice</li><li>Feuilles pour faire les exercices</li><li>Fiches cartonnées pour fiches de révision/méthode</li><li>Crayons</li><li>Éventuellement ardoise pour le brouillon ou sinon des feuilles de brouillon</li><li>Liste des éléments prioritaires à aborder si possible, sinon je composerai avec les éléments le moment venu</li></ul><p>À très bientôt,</p>`,
+  },
+  'preparation-accompagnement': {
+    subject: "A Rythme Ethic - Préparation de l'accompagnement {{anneeScolaire}}",
+    html: `<p>Bonjour {{recipientName}},</p><p>Vous avez souhaité donner suite au bilan ou vous souhaitez continuer l'accompagnement de l'année passée.</p><p>Afin de m'organiser et de recueillir les disponibilités de {{jeunePrenom}}, je vous invite à répondre au formulaire dès que vous aurez reçu l'emploi du temps de l'année scolaire {{anneeScolaire}}.</p><p>Je reprendrai contact avec vous par la suite.</p>`,
+  },
+  'preparation-accompagnement-relance': {
+    subject: "A Rythme Ethic - Rappel : préparation de l'accompagnement {{anneeScolaire}}",
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous : afin d'organiser l'accompagnement de {{jeunePrenom}} pour l'année scolaire {{anneeScolaire}}, pourriez-vous compléter le formulaire avec son emploi du temps et ses disponibilités ?</p><p>Cela ne prend que quelques minutes :</p>`,
   },
   'contact-notif': {
     subject: 'Nouveau message du site - A Rythme Ethic',

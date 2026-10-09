@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import type { Client } from '@/types';
+import { parisDate, preparationRelanceDate } from '@/lib/format';
 
 const LABELS = { parent1: 'Parent 1', parent2: 'Parent 2', jeune: 'Jeune' } as const;
 type Member = keyof typeof LABELS;
@@ -259,6 +260,70 @@ export function DebutAccompagnementModal({ isOpen, onClose, client, onSuccess }:
             isLoading={loading}
             loadingText="Envoi en cours..."
             isDisabled={recipients.length === 0}
+          >
+            Confirmer et envoyer
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+export function PreparationAccompagnementModal({ isOpen, onClose, client, onSuccess }: ModalProps) {
+  const parent1 = familyWithEmail(client).find(m => m.key === 'parent1');
+  const { launch, loading } = useLaunch();
+  const relance = preparationRelanceDate(parisDate(new Date())).split('-').reverse().join('/');
+
+  const handleSubmit = async () => {
+    const ok = await launch(
+      '/api/procedures/preparation-accompagnement',
+      { clientId: client.id },
+      'La demande d’emploi du temps et de disponibilités a été envoyée.'
+    );
+    if (ok) {
+      onSuccess();
+      onClose();
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} isCentered scrollBehavior="inside">
+      <ModalOverlay />
+      <ModalContent maxH="90vh">
+        <ModalHeader color="brand.500" fontFamily="heading">
+          Préparation accompagnement
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Stack spacing={4}>
+            <Text fontSize="sm" color="brand.600">
+              Un email est envoyé au parent 1 avec un lien vers le formulaire : emploi du temps
+              (PDF), contraintes extrascolaires et au moins 2 jours avec un créneau horaire. Les
+              réponses remplacent les jours disponibles de la fiche. Sans réponse, une relance
+              automatique part le {relance}.
+            </Text>
+            <FormControl>
+              <FormLabel color="brand.600">Destinataire</FormLabel>
+              {parent1 ? (
+                <Text fontSize="sm">{memberLabel(parent1)}</Text>
+              ) : (
+                <Text fontSize="sm" color="red.500">
+                  Aucun email renseigné pour le parent 1.
+                </Text>
+              )}
+            </FormControl>
+          </Stack>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="ghost" mr={3} onClick={onClose}>
+            Annuler
+          </Button>
+          <Button
+            colorScheme="accent"
+            onClick={handleSubmit}
+            isLoading={loading}
+            loadingText="Envoi en cours..."
+            isDisabled={!parent1}
           >
             Confirmer et envoyer
           </Button>

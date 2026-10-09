@@ -1,5 +1,6 @@
 // Shared validators for form inputs (emails, French phone numbers).
 // Empty values are considered valid here — "required" is handled separately by the forms.
+import type { Disponibilite } from '@/types';
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -114,4 +115,30 @@ export const UPLOAD_MIME: Record<string, string> = {
 export function uploadExtension(filename: unknown): string | null {
   const ext = (typeof filename === 'string' && /\.(\w+)$/.exec(filename)?.[1].toLowerCase()) || '';
   return Object.hasOwn(UPLOAD_MIME, ext) ? ext : null;
+}
+
+// Disponibilités (Préparation accompagnement) : un créneau par jour coché, du lundi au samedi
+export const JOURS_DISPO = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// Même règle navigateur + API : au moins 2 jours, heures 'HH:MM', fin après début. Renvoie les
+// créneaux nettoyés (jours inconnus / doublons ignorés, triés du lundi au samedi) et l'erreur.
+export function parseDisponibilites(value: unknown): {
+  slots: Disponibilite[];
+  error: string | null;
+} {
+  const list: Partial<Disponibilite>[] = Array.isArray(value) ? value : [];
+  const slots = JOURS_DISPO.flatMap(jour => {
+    const d = list.find(x => x?.jour === jour);
+    return d ? [{ jour, debut: String(d.debut ?? ''), fin: String(d.fin ?? '') }] : [];
+  });
+  const error =
+    slots.length < 2
+      ? 'Merci de cocher au moins 2 jours.'
+      : slots.some(s => !HHMM.test(s.debut) || !HHMM.test(s.fin))
+        ? 'Merci d’indiquer l’heure de début et de fin pour chaque jour coché.'
+        : slots.some(s => s.fin <= s.debut)
+          ? 'L’heure de fin doit être après l’heure de début.'
+          : null;
+  return { slots, error };
 }
