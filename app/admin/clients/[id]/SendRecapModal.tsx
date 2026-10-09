@@ -25,73 +25,51 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { FiCheckCircle, FiXCircle } from 'react-icons/fi';
-import { Client } from '@/types';
-
-export interface HeureRow {
-  id: string;
-  mois: string; // 'YYYY-MM-DD'
-  heures: number;
-  tarif_horaire: number;
-  km: number;
-  bareme_km: number;
-  temps_a_reporter?: number;
-  heures_annulation?: number;
-  report_in?: number;
-  recap_email_sent_at?: string | null;
-  recap_email_to?: string | null;
-}
+import type { Client, HeureRealisee } from '@/types';
+import { createClient } from '@/lib/supabase-client';
+import {
+  computeReports,
+  formatHeures,
+  getClientDisplayName,
+  getDefaultEmail,
+  getEmailOptions,
+  moisLabel,
+} from '@/lib/heures-report';
 
 interface SendRecapModalProps {
   isOpen: boolean;
   onClose: () => void;
   client: Client;
-  heures: HeureRow[];
+  heures: HeureRealisee[];
+  initialMois?: string; // présélection (bouton « Renvoyer » du tableau)
   onSuccess: () => void;
 }
 
-function moisLabel(moisIso: string): string {
-  return new Date(moisIso + 'T00:00:00').toLocaleDateString('fr-FR', {
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function getClientDisplayName(c: Client): string {
-  const first = c.first_name_jeune || c.first_name || '';
-  const last = c.last_name_jeune || c.last_name || '';
-  return `${first} ${last}`.trim();
-}
-
-function getEmailOptions(c: Client): { label: string; value: string }[] {
-  const opts: { label: string; value: string }[] = [];
-  if (c.email_parent1)
-    opts.push({ label: `Parent 1 — ${c.email_parent1}`, value: c.email_parent1 });
-  if (c.email_parent2)
-    opts.push({ label: `Parent 2 — ${c.email_parent2}`, value: c.email_parent2 });
-  if (c.email_jeune) opts.push({ label: `Jeune — ${c.email_jeune}`, value: c.email_jeune });
-  if (c.email) opts.push({ label: `Principal — ${c.email}`, value: c.email });
-  return opts;
-}
-
-function getDefaultEmail(c: Client): string {
-  return c.email_parent1 || c.email_parent2 || c.email_jeune || c.email || '';
-}
+// Report de ce mois s'il était envoyé maintenant (figé → valeur enregistrée, sinon prévisionnel).
+const sent = (h: HeureRealisee) => (h.recap_email_sent_at ? 1 : 0);
+const lineFor = (heures: HeureRealisee[], mois: string) =>
+  computeReports(heures, mois).find(l => l.mois === mois)!;
 
 export function SendRecapModal({
   isOpen,
   onClose,
   client,
   heures,
+  initialMois,
   onSuccess,
 }: SendRecapModalProps) {
   const toast = useToast();
   const emailOptions = useMemo(() => getEmailOptions(client), [client]);
-  const unsent = useMemo(
+  // Mois non envoyés d'abord (du plus ancien), puis les envoyés (du plus récent) pour un renvoi.
+  const months = useMemo(
     () =>
       heures
-        .filter(h => !h.recap_email_sent_at)
-        .slice()
-        .sort((a, b) => (a.mois < b.mois ? -1 : a.mois > b.mois ? 1 : 0)),
+        .filter(h => !h.sans_declaration)
+        .sort(
+          (a, b) =>
+            sent(a) - sent(b) ||
+            (sent(a) ? b.mois.localeCompare(a.mois) : a.mois.localeCompare(b.mois))
+        ),
     [heures]
   );
 
@@ -100,35 +78,47 @@ export function SendRecapModal({
   const [isSending, setIsSending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; error?: string } | null>(null);
 
+  // Seulement à l'ouverture : le rafraîchissement après envoi ne doit pas effacer le résultat.
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedMois(unsent[0]?.mois ?? '');
+    setSelectedMois(initialMois ?? months[0]?.mois ?? '');
     setDestinataire(getDefaultEmail(client));
     setResult(null);
     setIsSending(false);
-  }, [isOpen, unsent, client]);
+  }, [isOpen]);
 
-  const selectedEntry = unsent.find(h => h.mois === selectedMois);
+  const selectedEntry = months.find(h => h.mois === selectedMois);
+  const isResend = !!selectedEntry?.recap_email_sent_at;
+  const lines = useMemo(
+    () => (selectedMois ? computeReports(heures, selectedMois) : []),
+    [heures, selectedMois]
+  );
+  const line = lines.find(l => l.mois === selectedMois);
+  // Mois antérieurs non envoyés qui retiennent du report : il ne sera pas facturé ici.
+  const reportRetenu = lines.filter(l => l.mois < selectedMois && l.auto && l.reportIn > 0);
 
   const totalsForSelected = useMemo(() => {
-    if (!selectedEntry) return null;
+    if (!selectedEntry || !line) return null;
     const montantHeures = selectedEntry.heures * selectedEntry.tarif_horaire;
+    const montantReport = line.reportIn * selectedEntry.tarif_horaire;
     const montantKm = selectedEntry.km * selectedEntry.bareme_km;
     const montantAnnulation =
       Number(selectedEntry.heures_annulation ?? 0) * selectedEntry.tarif_horaire;
     return {
       montantHeures,
+      montantReport,
       montantKm,
       montantAnnulation,
-      total: montantHeures + montantKm + montantAnnulation,
+      total: montantHeures + montantReport + montantKm + montantAnnulation,
     };
-  }, [selectedEntry]);
+  }, [selectedEntry, line]);
 
   const handleSend = async () => {
     if (!selectedEntry || !destinataire) return;
     setIsSending(true);
     setResult(null);
     try {
+      // Les montants et le report sont relus en base par la route.
       const res = await fetch('/api/heures-realisees/recap-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,11 +129,6 @@ export function SendRecapModal({
               clientName: getClientDisplayName(client),
               parentEmail: destinataire,
               mois: selectedEntry.mois,
-              heures: String(selectedEntry.heures),
-              tarifHoraire: String(selectedEntry.tarif_horaire),
-              km: String(selectedEntry.km),
-              baremeKm: String(selectedEntry.bareme_km),
-              heuresAnnulation: String(selectedEntry.heures_annulation ?? 0),
             },
           ],
         }),
@@ -157,7 +142,7 @@ export function SendRecapModal({
       });
       if (ok) {
         toast({
-          title: 'Récapitulatif envoyé',
+          title: isResend ? 'Récapitulatif renvoyé' : 'Récapitulatif envoyé',
           description: `Email envoyé à ${destinataire}`,
           status: 'success',
           duration: 4000,
@@ -170,6 +155,30 @@ export function SendRecapModal({
     } finally {
       setIsSending(false);
     }
+  };
+
+  // Fige le report prévu de ce mois, sans envoyer d'e-mail.
+  const handleFreeze = async () => {
+    if (!selectedEntry || !line) return;
+    setIsSending(true);
+    const { error } = await createClient()
+      .from('heures_realisees')
+      .update({ report_in: line.reportIn })
+      .eq('id', selectedEntry.id);
+    setIsSending(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, status: 'error', isClosable: true });
+      return;
+    }
+    toast({
+      title: 'Compteur mis à jour',
+      description: `Report de ${formatHeures(line.reportIn)} figé sur ${moisLabel(selectedEntry.mois)} (aucun e-mail envoyé).`,
+      status: 'success',
+      duration: 4000,
+      isClosable: true,
+    });
+    onSuccess();
+    onClose();
   };
 
   const handleClose = () => {
@@ -186,10 +195,10 @@ export function SendRecapModal({
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody overflowY="auto">
-          {unsent.length === 0 ? (
+          {months.length === 0 ? (
             <Box textAlign="center" py={6}>
               <Text color="gray.600" fontSize="sm">
-                Toutes les déclarations ont déjà été envoyées sur la période affichée.
+                Aucune déclaration à envoyer.
               </Text>
             </Box>
           ) : result ? (
@@ -225,9 +234,10 @@ export function SendRecapModal({
                 <FormLabel fontSize="sm">Mois à envoyer</FormLabel>
                 <RadioGroup value={selectedMois} onChange={setSelectedMois}>
                   <Stack spacing={2}>
-                    {unsent.map(h => {
+                    {months.map(h => {
+                      const report = lineFor(heures, h.mois).reportIn;
                       const total =
-                        h.heures * h.tarif_horaire +
+                        (h.heures + report) * h.tarif_horaire +
                         h.km * h.bareme_km +
                         Number(h.heures_annulation ?? 0) * h.tarif_horaire;
                       return (
@@ -240,21 +250,27 @@ export function SendRecapModal({
                           borderColor={selectedMois === h.mois ? 'brand.200' : 'gray.200'}
                         >
                           <Radio value={h.mois} colorScheme="brand">
-                            <HStack spacing={2} ml={2}>
+                            <HStack spacing={2} ml={2} flexWrap="wrap">
                               <Text fontWeight="medium" fontSize="sm" textTransform="capitalize">
                                 {moisLabel(h.mois)}
                               </Text>
                               <Badge colorScheme="gray" fontSize="xs">
                                 {h.heures} h
                               </Badge>
+                              {report > 0 && (
+                                <Badge colorScheme="orange" fontSize="xs">
+                                  +{report} h report
+                                </Badge>
+                              )}
                               <Text fontSize="xs" color="gray.500">
                                 · Total {total.toFixed(2)} €
                               </Text>
-                              {h.temps_a_reporter ? (
-                                <Badge colorScheme="orange" fontSize="xs">
-                                  +{h.temps_a_reporter}h à reporter
+                              {h.recap_email_sent_at && (
+                                <Badge colorScheme="green" fontSize="xs">
+                                  Envoyé le{' '}
+                                  {new Date(h.recap_email_sent_at).toLocaleDateString('fr-FR')}
                                 </Badge>
-                              ) : null}
+                              )}
                             </HStack>
                           </Radio>
                         </Box>
@@ -283,7 +299,7 @@ export function SendRecapModal({
                 )}
               </FormControl>
 
-              {selectedEntry && totalsForSelected && (
+              {selectedEntry && line && totalsForSelected && (
                 <Box p={3} bg="gray.50" borderRadius="md" border="1px solid" borderColor="gray.200">
                   <Text fontSize="xs" color="gray.500" mb={1}>
                     Aperçu — {moisLabel(selectedEntry.mois)}
@@ -293,6 +309,13 @@ export function SendRecapModal({
                       Heures : {selectedEntry.heures} h × {selectedEntry.tarif_horaire.toFixed(2)}{' '}
                       €/h = {totalsForSelected.montantHeures.toFixed(2)} €
                     </Text>
+                    {line.reportIn > 0 && (
+                      <Text>
+                        Heures reportées : {line.reportIn} h ×{' '}
+                        {selectedEntry.tarif_horaire.toFixed(2)} €/h ={' '}
+                        {totalsForSelected.montantReport.toFixed(2)} €{line.auto ? '' : ' (figé)'}
+                      </Text>
+                    )}
                     {selectedEntry.km > 0 && (
                       <Text>
                         Déplacement : {selectedEntry.km} km × {selectedEntry.bareme_km.toFixed(3)}{' '}
@@ -306,20 +329,39 @@ export function SendRecapModal({
                         {totalsForSelected.montantAnnulation.toFixed(2)} €
                       </Text>
                     )}
+                    {line.premiersRdv.map(p => (
+                      <Text key={p.date}>
+                        Mention : premier rendez-vous réalisé le{' '}
+                        {new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR')} (
+                        {formatHeures(p.heures)})
+                      </Text>
+                    ))}
                     <Text fontWeight="medium" color="brand.600" mt={1}>
                       Total brut : {totalsForSelected.total.toFixed(2)} €
                     </Text>
-                    <Text fontSize="2xs" color="orange.600" mt={1}>
-                      Si le cumul de temps à reporter atteint 1h ou plus, les heures correspondantes
-                      seront ajoutées automatiquement à la facturation.
+                    <Text color={line.soldeApres < 0 ? 'red.500' : 'gray.500'}>
+                      Compteur à reporter après ce mois : {formatHeures(line.soldeApres)}
                     </Text>
+                    {reportRetenu.map(l => (
+                      <Text key={l.mois} fontSize="2xs" color="orange.600">
+                        {moisLabel(l.mois)} (non envoyé) retient +{formatHeures(l.reportIn)} de
+                        report : envoyez-le (ou mettez à jour son compteur s&apos;il a été déclaré
+                        avec ce report), sinon Modifier ce mois et saisir 0 dans « Heures reportées
+                        facturées » pour libérer ce report.
+                      </Text>
+                    ))}
+                    {isResend && (
+                      <Text fontSize="2xs" color="orange.600" mt={1}>
+                        Déjà envoyé : le renvoi reprend le report figé de ce mois (pas de recalcul).
+                      </Text>
+                    )}
                   </Stack>
                 </Box>
               )}
             </Stack>
           )}
         </ModalBody>
-        <ModalFooter gap={3}>
+        <ModalFooter gap={3} flexWrap="wrap">
           {result ? (
             <Button colorScheme="brand" onClick={handleClose}>
               Terminer
@@ -329,13 +371,27 @@ export function SendRecapModal({
               <Button variant="ghost" onClick={handleClose}>
                 Annuler
               </Button>
+              {selectedEntry && selectedEntry.report_in == null && (
+                <Button
+                  variant="outline"
+                  colorScheme="brand"
+                  onClick={handleFreeze}
+                  isLoading={isSending}
+                  whiteSpace="normal"
+                  h="auto"
+                  py={2}
+                  title="Fige le report de ce mois dans le compteur, sans envoyer d'e-mail"
+                >
+                  Mettre à jour le compteur (sans e-mail)
+                </Button>
+              )}
               <Button
                 colorScheme="accent"
                 onClick={handleSend}
                 isLoading={isSending}
                 isDisabled={!selectedEntry || !destinataire || emailOptions.length === 0}
               >
-                Envoyer
+                {isResend ? 'Renvoyer' : 'Envoyer'}
               </Button>
             </>
           )}

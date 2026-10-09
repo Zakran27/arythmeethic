@@ -27,24 +27,27 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
-import { Client } from '@/types';
+import type { Client, HeureRealisee } from '@/types';
 import { createClient } from '@/lib/supabase-client';
+import {
+  computeReports,
+  getClientDisplayName,
+  getDefaultEmail,
+  getEmailOptions,
+  moisLabel,
+} from '@/lib/heures-report';
 
 interface DeclarerHeuresModalProps {
   isOpen: boolean;
   onClose: () => void;
   clients: Client[];
-  defaultBaremeKm?: string;
 }
 
 interface LoadedEntry {
   client: Client;
-  mois: string;
-  heures: string;
-  tarifHoraire: string;
-  km: string;
-  baremeKm: string;
-  tempsAReporter: string;
+  row: HeureRealisee;
+  history: HeureRealisee[]; // tout l'historique du client (le report en dépend)
+  reportIn: number; // report facturé si on envoie ce mois seul (figé ou prévisionnel)
 }
 
 interface SendResult {
@@ -54,41 +57,15 @@ interface SendResult {
   error?: string;
 }
 
-function getClientDisplayName(client: Client): string {
-  const first = client.first_name_jeune || client.first_name || '';
-  const last = client.last_name_jeune || client.last_name || '';
-  return `${first} ${last}`.trim();
+// Même calcul que la route d'envoi : heures + report + annulation + km.
+function calcTotal(row: HeureRealisee, reportIn: number) {
+  const montantH = (row.heures + reportIn) * row.tarif_horaire;
+  const montantKm = row.km * row.bareme_km;
+  const montantAnnul = Number(row.heures_annulation ?? 0) * row.tarif_horaire;
+  return { montantH, montantKm, total: montantH + montantKm + montantAnnul };
 }
 
-function getEmailOptions(client: Client): { label: string; value: string }[] {
-  const opts: { label: string; value: string }[] = [];
-  if (client.email_parent1) opts.push({ label: `Parent 1 - ${client.email_parent1}`, value: client.email_parent1 });
-  if (client.email_parent2) opts.push({ label: `Parent 2 - ${client.email_parent2}`, value: client.email_parent2 });
-  if (client.email_jeune) opts.push({ label: `Jeune - ${client.email_jeune}`, value: client.email_jeune });
-  if (client.email) opts.push({ label: `Principal - ${client.email}`, value: client.email });
-  return opts;
-}
-
-function getDefaultEmail(client: Client): string {
-  return client.email_parent1 || client.email_parent2 || client.email_jeune || client.email || '';
-}
-
-function moisLabel(mois: string): string {
-  return new Date(mois + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-}
-
-function calcTotal(entry: LoadedEntry) {
-  const montantH = parseFloat(entry.heures) * parseFloat(entry.tarifHoraire);
-  const montantKm = parseFloat(entry.km) * parseFloat(entry.baremeKm);
-  return { montantH, montantKm, total: montantH + montantKm };
-}
-
-export function DeclarerHeuresModal({
-  isOpen,
-  onClose,
-  clients,
-  defaultBaremeKm = '0.636',
-}: DeclarerHeuresModalProps) {
+export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeuresModalProps) {
   const toast = useToast();
 
   const now = new Date();
@@ -108,7 +85,7 @@ export function DeclarerHeuresModal({
   const [isSending, setIsSending] = useState(false);
   const [sendResults, setSendResults] = useState<SendResult[]>([]);
 
-  const entryKey = (e: LoadedEntry) => `${e.client.id}__${e.mois}`;
+  const entryKey = (e: LoadedEntry) => `${e.client.id}__${e.row.mois}`;
 
   const handleLoad = async () => {
     if (!dateFrom || !dateTo) {
@@ -121,29 +98,28 @@ export function DeclarerHeuresModal({
     setSelectedKeys(new Set());
     setEmails({});
     try {
+      // Historique complet (y compris après la période) : le report en dépend.
       const supabase = createClient();
       const { data, error } = await supabase
         .from('heures_realisees')
         .select('*')
-        .gte('mois', `${dateFrom}-01`)
-        .lte('mois', `${dateTo}-01`)
         .order('mois', { ascending: false });
 
       if (error) throw new Error(error.message);
 
+      const rows = (data ?? []) as HeureRealisee[];
       const loaded: LoadedEntry[] = [];
       const initEmails: Record<string, string> = {};
-      for (const row of data ?? []) {
+      for (const row of rows) {
         const client = clients.find(c => c.id === row.client_id);
-        if (!client) continue;
+        const inPeriod = row.mois >= `${dateFrom}-01` && row.mois <= `${dateTo}-01`;
+        if (!client || !inPeriod || row.sans_declaration) continue;
+        const history = rows.filter(r => r.client_id === row.client_id);
         const e: LoadedEntry = {
           client,
-          mois: row.mois,
-          heures: row.heures?.toString() ?? '0',
-          tarifHoraire: row.tarif_horaire?.toString() ?? '0',
-          km: row.km?.toString() ?? '0',
-          baremeKm: row.bareme_km?.toString() ?? defaultBaremeKm,
-          tempsAReporter: row.temps_a_reporter?.toString() ?? '0',
+          row,
+          history,
+          reportIn: computeReports(history, row.mois).find(l => l.mois === row.mois)!.reportIn,
         };
         loaded.push(e);
         initEmails[entryKey(e)] = getDefaultEmail(client);
@@ -175,6 +151,18 @@ export function DeclarerHeuresModal({
 
   const selectedEntries = entries.filter(e => selectedKeys.has(entryKey(e)));
 
+  // La route envoie dans l'ordre de la liste et fige chaque mois envoyé : on projette pareil,
+  // sinon deux mois d'un même client afficheraient la même heure de report (facturée une fois).
+  const sendReports: Record<string, number> = {};
+  const hist: Record<string, HeureRealisee[]> = {};
+  for (const e of selectedEntries) {
+    const h = hist[e.client.id] ?? e.history;
+    const reportIn = computeReports(h, e.row.mois).find(l => l.mois === e.row.mois)!.reportIn;
+    sendReports[entryKey(e)] = reportIn;
+    hist[e.client.id] = h.map(r => (r.mois === e.row.mois ? { ...r, report_in: reportIn } : r));
+  }
+  const reportOf = (e: LoadedEntry) => sendReports[entryKey(e)] ?? e.reportIn;
+
   const handleSend = async () => {
     setIsSending(true);
     try {
@@ -185,15 +173,12 @@ export function DeclarerHeuresModal({
           mois: dateTo,
           entries: selectedEntries.map(e => {
             const key = entryKey(e);
+            // Les montants et le report sont relus en base par la route.
             return {
               clientId: e.client.id,
               clientName: getClientDisplayName(e.client),
               parentEmail: emails[key] || getDefaultEmail(e.client),
-              heures: e.heures,
-              tarifHoraire: e.tarifHoraire,
-              km: e.km,
-              baremeKm: e.baremeKm,
-              mois: e.mois,
+              mois: e.row.mois,
             };
           }),
         }),
@@ -283,7 +268,8 @@ export function DeclarerHeuresModal({
                     {entries.map(entry => {
                       const key = entryKey(entry);
                       const isChecked = selectedKeys.has(key);
-                      const { montantH, montantKm, total } = calcTotal(entry);
+                      const reportIn = reportOf(entry);
+                      const { montantH, montantKm, total } = calcTotal(entry.row, reportIn);
 
                       return (
                         <HStack
@@ -304,14 +290,16 @@ export function DeclarerHeuresModal({
                               <HStack spacing={2}>
                                 <Text fontWeight="medium" fontSize="sm">{getClientDisplayName(entry.client)}</Text>
                                 {entry.client.sub_type && <Badge colorScheme="purple" fontSize="xs">{entry.client.sub_type}</Badge>}
-                                <Badge colorScheme="gray" fontSize="xs">{moisLabel(entry.mois)}</Badge>
+                                <Badge colorScheme="gray" fontSize="xs">{moisLabel(entry.row.mois)}</Badge>
+                                {entry.row.recap_email_sent_at && <Badge colorScheme="green" fontSize="xs">Déjà envoyé</Badge>}
                               </HStack>
                               <Text fontSize="sm" fontWeight="bold" color="brand.600">{total.toFixed(2)} €</Text>
                             </HStack>
                             <Text fontSize="xs" color="gray.500">
-                              {entry.heures} h × {entry.tarifHoraire} €/h = {montantH.toFixed(2)} €
-                              {parseFloat(entry.km) > 0 && ` · ${entry.km} km × ${entry.baremeKm} €/km = ${montantKm.toFixed(2)} €`}
-                              {parseFloat(entry.tempsAReporter) > 0 && ` · Reporter : ${entry.tempsAReporter} h`}
+                              {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h report`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
+                              {entry.row.km > 0 && ` · ${entry.row.km} km × ${entry.row.bareme_km} €/km = ${montantKm.toFixed(2)} €`}
+                              {Number(entry.row.heures_annulation) > 0 && ` · Annulation : ${entry.row.heures_annulation} h`}
+                              {Number(entry.row.temps_a_reporter) > 0 && ` · Reporter : ${entry.row.temps_a_reporter} h`}
                             </Text>
                           </Stack>
                         </HStack>
@@ -333,7 +321,8 @@ export function DeclarerHeuresModal({
               <Stack spacing={3}>
                 {selectedEntries.map(entry => {
                   const key = entryKey(entry);
-                  const { montantH, montantKm, total } = calcTotal(entry);
+                  const reportIn = reportOf(entry);
+                  const { montantH, montantKm, total } = calcTotal(entry.row, reportIn);
                   const emailOptions = getEmailOptions(entry.client);
 
                   return (
@@ -342,22 +331,27 @@ export function DeclarerHeuresModal({
                         <HStack spacing={2}>
                           <Text fontWeight="semibold" fontSize="sm">{getClientDisplayName(entry.client)}</Text>
                           {entry.client.sub_type && <Badge colorScheme="purple" fontSize="xs">{entry.client.sub_type}</Badge>}
-                          <Badge colorScheme="gray" fontSize="xs">{moisLabel(entry.mois)}</Badge>
+                          <Badge colorScheme="gray" fontSize="xs">{moisLabel(entry.row.mois)}</Badge>
                         </HStack>
                         <Text fontWeight="bold" color="brand.600">{total.toFixed(2)} €</Text>
                       </HStack>
 
                       <Stack spacing={0.5} mb={3}>
                         <Text fontSize="xs" color="gray.500">
-                          Heures : {entry.heures} h × {entry.tarifHoraire} €/h = {montantH.toFixed(2)} €
+                          Heures : {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h reportées`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
                         </Text>
-                        {parseFloat(entry.km) > 0 && (
+                        {entry.row.km > 0 && (
                           <Text fontSize="xs" color="gray.500">
-                            Déplacement : {entry.km} km × {entry.baremeKm} €/km = {montantKm.toFixed(2)} €
+                            Déplacement : {entry.row.km} km × {entry.row.bareme_km} €/km = {montantKm.toFixed(2)} €
                           </Text>
                         )}
-                        {parseFloat(entry.tempsAReporter) > 0 && (
-                          <Text fontSize="xs" color="orange.500">Temps à reporter : {entry.tempsAReporter} h</Text>
+                        {Number(entry.row.heures_annulation) > 0 && (
+                          <Text fontSize="xs" color="gray.500">
+                            Annulation : {entry.row.heures_annulation} h × {entry.row.tarif_horaire} €/h
+                          </Text>
+                        )}
+                        {Number(entry.row.temps_a_reporter) > 0 && (
+                          <Text fontSize="xs" color="orange.500">Temps à reporter : {entry.row.temps_a_reporter} h</Text>
                         )}
                       </Stack>
 

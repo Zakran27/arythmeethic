@@ -2,18 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell } from '@/lib/email-templates';
+import { renderEmailShell, substituteVars, DEFAULT_TEMPLATE_CONTENT } from '@/lib/email-templates';
+import { computeReports, formatHeures, moisLabel, normalizeMois } from '@/lib/heures-report';
+import type { HeureRealisee } from '@/types';
 
+// Les montants sont relus en base (jamais pris dans le payload).
 interface RecapEntryInput {
   clientId: string;
   clientName: string;
   parentEmail: string;
   mois: string; // 'YYYY-MM' or 'YYYY-MM-DD'
-  heures: string;
-  tarifHoraire: string;
-  km: string;
-  baremeKm: string;
-  heuresAnnulation?: string;
 }
 
 interface RecapData {
@@ -30,24 +28,20 @@ interface RecapData {
   heuresAnnulation: number;
   montantAnnulation: number;
   total: number;
+  premiersRdv: { date: string; heures: number }[]; // 1ers RDV facturés via le report de ce mois
 }
 
-function normalizeMois(mois: string): string {
-  // Accepts 'YYYY-MM' or 'YYYY-MM-DD', returns 'YYYY-MM-01'
-  const [y, m] = String(mois).split('-');
-  return `${y}-${m}-01`;
-}
-
-function moisLabelFr(moisIso: string): string {
-  return new Date(moisIso + 'T00:00:00').toLocaleDateString('fr-FR', {
-    month: 'long',
-    year: 'numeric',
-  });
+// « Premier rendez-vous réalisé le 03/09/2026 (1,5 h) : heures intégrées au report. »
+function premiersRdvLines(d: RecapData): string[] {
+  return d.premiersRdv.map(
+    p =>
+      `Premier rendez-vous réalisé le ${new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR')} (${formatHeures(p.heures)}) : heures intégrées au report.`
+  );
 }
 
 async function generateRecapPDF(d: RecapData): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 460]);
+  const page = pdfDoc.addPage([595, 460 + 16 * d.premiersRdv.length]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
@@ -104,7 +98,7 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
   ];
   if (d.reportIn > 0) {
     rows.push([
-      'Heures reportées (mois précédent)',
+      'Heures reportées (cumul)',
       `${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h`,
       `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`,
     ]);
@@ -168,6 +162,12 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
     y -= 24;
   }
 
+  for (const line of premiersRdvLines(d)) {
+    page.drawText(line, { x: margin, y, size: 9, font, color: rgb(0.45, 0.45, 0.45) });
+    y -= 16;
+  }
+  if (d.premiersRdv.length) y -= 8;
+
   page.drawText('Cordialement,', { x: margin, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
   y -= 16;
   page.drawText('Florence Louazel - A Rythme Ethic', {
@@ -193,7 +193,7 @@ function buildMontantsTable(d: RecapData): string {
   );
   if (d.reportIn > 0) {
     rows += row(
-      `Heures reportées du mois précédent (${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
+      `Heures reportées, cumul (${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
       `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`
     );
   }
@@ -207,104 +207,10 @@ function buildMontantsTable(d: RecapData): string {
     `Frais de déplacement (${d.km} km × ${d.baremeKm.toFixed(3)} €/km)`,
     `${d.montantKm.toFixed(2)} €`
   );
-  return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:15px;margin:8px 0;"><tbody>${rows}<tr style="background-color:#f9f3ee;"><td style="padding:14px 16px;color:#6e3a25;font-weight:700;">Total</td><td style="padding:14px 16px;text-align:right;color:#6e3a25;font-weight:700;">${d.total.toFixed(2)} €</td></tr></tbody></table>`;
-}
-
-function buildEmailHtml(d: RecapData): string {
-  const reportRow =
-    d.reportIn > 0
-      ? `<tr>
-                <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
-                  + Heures reportées du mois précédent (${d.reportIn} h × ${d.tarifHoraire.toFixed(2)} €/h)
-                </td>
-                <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
-                  ${(d.reportIn * d.tarifHoraire).toFixed(2)} €
-                </td>
-              </tr>`
-      : '';
-
-  const annulationRow =
-    d.heuresAnnulation > 0
-      ? `<tr>
-                <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
-                  Heures d'annulation facturées (${d.heuresAnnulation} h × ${d.tarifHoraire.toFixed(2)} €/h)
-                </td>
-                <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">
-                  ${(d.heuresAnnulation * d.tarifHoraire).toFixed(2)} €
-                </td>
-              </tr>`
-      : '';
-
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light only">
-  <meta name="supported-color-schemes" content="light only">
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', 'Arial', sans-serif; background-color: #fafafa;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fafafa; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <tr>
-            <td style="padding: 40px 40px 20px 40px; text-align: center; background: linear-gradient(to bottom, #f9f3ee, #efe3d7); border-radius: 16px 16px 0 0;">
-              <h1 style="margin: 0; color: #6e3a25; font-family: 'Georgia', serif; font-size: 28px; font-weight: 600;">A Rythme Ethic</h1>
-              <p style="margin: 10px 0 0 0; color: #c3826e; font-size: 16px;">Accompagnement humain et bienveillant</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 40px;">
-              <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">Bonjour,</p>
-              <p style="margin: 0 0 24px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Veuillez trouver ci-joint le récapitulatif des heures pour <strong>${d.clientName}</strong> - <strong>${d.moisLabel}</strong>.
-              </p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 15px;">
-                <thead>
-                  <tr style="background: linear-gradient(to bottom, #f9f3ee, #efe3d7);">
-                    <th style="padding: 12px 16px; text-align: left; color: #6e3a25; font-weight: 600; border-bottom: 2px solid #e2cbb8;">Poste</th>
-                    <th style="padding: 12px 16px; text-align: right; color: #6e3a25; font-weight: 600; border-bottom: 2px solid #e2cbb8;">Montant</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">Heures réalisées (${d.heuresMois} h × ${d.tarifHoraire.toFixed(2)} €/h)</td>
-                    <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${(d.heuresMois * d.tarifHoraire).toFixed(2)} €</td>
-                  </tr>
-                  ${reportRow}
-                  ${annulationRow}
-                  <tr>
-                    <td style="padding: 12px 16px; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">Frais de déplacement (${d.km} km × ${d.baremeKm.toFixed(3)} €/km)</td>
-                    <td style="padding: 12px 16px; text-align: right; color: #7b4a31; border-bottom: 1px solid #f0e4d8;">${d.montantKm.toFixed(2)} €</td>
-                  </tr>
-                  <tr style="background-color: #f9f3ee;">
-                    <td style="padding: 14px 16px; color: #6e3a25; font-weight: 700;">Total</td>
-                    <td style="padding: 14px 16px; text-align: right; color: #6e3a25; font-weight: 700;">${d.total.toFixed(2)} €</td>
-                  </tr>
-                </tbody>
-              </table>
-              <p style="margin: 28px 0 0 0; color: #a97761; font-size: 14px; line-height: 1.6;">
-                Le récapitulatif complet est également disponible en pièce jointe (PDF).
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px 40px; background-color: #f9f3ee; border-radius: 0 0 16px 16px; text-align: center;">
-              <a href="https://arythmeethic.fr" style="text-decoration:none;color:inherit;display:block;">
-                <p style="margin: 0; color: #6e3a25; font-size: 14px; font-weight: 600;">Florence Louazel</p>
-                <p style="margin: 5px 0 0 0; color: #a97761; font-size: 13px;">A Rythme Ethic</p>
-              </a>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `.trim();
+  const rdv = premiersRdvLines(d)
+    .map(l => `<p style="margin-top:16px;color:#a97761;font-size:14px;line-height:1.6;">${l}</p>`)
+    .join('');
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:15px;margin:8px 0;"><tbody>${rows}<tr style="background-color:#f9f3ee;"><td style="padding:14px 16px;color:#6e3a25;font-weight:700;">Total</td><td style="padding:14px 16px;text-align:right;color:#6e3a25;font-weight:700;">${d.total.toFixed(2)} €</td></tr></tbody></table>${rdv}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -340,45 +246,37 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Fetch this client's full history up to and including the target month, to compute the
-      // running carry-over balance.
+      // Tout l'historique du client : le report dépend aussi des mois postérieurs déjà envoyés.
       const { data: history, error: histErr } = await supabase
         .from('heures_realisees')
-        .select('mois, temps_a_reporter, report_in')
-        .eq('client_id', entry.clientId)
-        .lte('mois', moisIso);
+        .select('*')
+        .eq('client_id', entry.clientId);
+      const rows = (history ?? []) as HeureRealisee[];
+      const row = rows.find(r => r.mois === moisIso);
 
-      if (histErr) {
-        console.error('Error fetching heures history:', histErr);
+      if (histErr || !row || row.sans_declaration) {
+        if (histErr) console.error('Error fetching heures history:', histErr);
         results.push({
           clientId: entry.clientId,
           mois: moisIso,
           ok: false,
-          error: 'Erreur lecture historique',
+          error: histErr
+            ? 'Erreur lecture historique'
+            : !row
+              ? 'Aucune heure déclarée pour ce mois'
+              : 'Mois marqué « pas de déclaration »',
         });
         continue;
       }
 
-      // balance = sum(temps_a_reporter for mois <= N) - sum(report_in for mois < N)
-      // The current month's report_in is what we're about to compute.
-      let sumReporter = 0;
-      let sumPriorReportIn = 0;
-      for (const row of history ?? []) {
-        const reporter = Number(row.temps_a_reporter ?? 0);
-        const reportInPrev = Number(row.report_in ?? 0);
-        sumReporter += reporter;
-        if (String(row.mois) !== moisIso) {
-          sumPriorReportIn += reportInPrev;
-        }
-      }
-      const balance = sumReporter - sumPriorReportIn;
-      const reportIn = balance >= 1 ? Math.floor(balance) : 0;
-
-      const heuresMois = parseFloat(entry.heures) || 0;
-      const tarifHoraire = parseFloat(entry.tarifHoraire) || 0;
-      const km = parseFloat(entry.km) || 0;
-      const baremeKm = parseFloat(entry.baremeKm) || 0;
-      const heuresAnnulation = parseFloat(entry.heuresAnnulation ?? '0') || 0;
+      // Report figé (renvoi, compteur validé) réutilisé tel quel ; sinon calculé pour ce mois.
+      const line = computeReports(rows, moisIso).find(l => l.mois === moisIso)!;
+      const reportIn = line.reportIn;
+      const heuresMois = Number(row.heures) || 0;
+      const tarifHoraire = Number(row.tarif_horaire) || 0;
+      const km = Number(row.km) || 0;
+      const baremeKm = Number(row.bareme_km) || 0;
+      const heuresAnnulation = Number(row.heures_annulation) || 0;
       const montantHeures = (heuresMois + reportIn) * tarifHoraire;
       const montantKm = km * baremeKm;
       const montantAnnulation = heuresAnnulation * tarifHoraire;
@@ -386,7 +284,7 @@ export async function POST(request: NextRequest) {
 
       const recap: RecapData = {
         clientName: entry.clientName,
-        moisLabel: moisLabelFr(moisIso),
+        moisLabel: moisLabel(moisIso),
         moisIso,
         heuresMois,
         tarifHoraire,
@@ -398,6 +296,7 @@ export async function POST(request: NextRequest) {
         heuresAnnulation,
         montantAnnulation,
         total,
+        premiersRdv: line.premiersRdv,
       };
 
       let pdfBase64: string;
@@ -415,17 +314,17 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      const defaultHtml = buildEmailHtml(recap);
-      const override = await getEmailTemplateOverride('recap-heures', {
-        clientName: entry.clientName,
-        moisLabel: recap.moisLabel,
-      });
-      // Corps édité (override) entouré de l'habillage de marque + blocs calculés
-      // (tableau des montants + note PJ) injectés automatiquement. Sinon HTML d'origine.
+      const vars = { clientName: entry.clientName, moisLabel: recap.moisLabel };
+      const def = DEFAULT_TEMPLATE_CONTENT['recap-heures'];
+      const template = (await getEmailTemplateOverride('recap-heures', vars)) ?? {
+        subject: substituteVars(def.subject, vars),
+        html: substituteVars(def.html, vars),
+      };
+      // Corps (personnalisé ou par défaut) entouré de l'habillage de marque + blocs calculés
+      // (tableau des montants, 1er RDV, note PJ) injectés automatiquement.
       const dynamicBlock = `${buildMontantsTable(recap)}<p style="margin-top:28px;color:#a97761;font-size:14px;line-height:1.6;">Le récapitulatif complet est également disponible en pièce jointe (PDF).</p>`;
-      const htmlContent = override ? renderEmailShell(override.html, dynamicBlock) : defaultHtml;
-      const emailSubject =
-        override?.subject ?? `Récapitulatif heures - ${entry.clientName} - ${recap.moisLabel}`;
+      const htmlContent = renderEmailShell(template.html, dynamicBlock);
+      const emailSubject = template.subject;
 
       const moisShort = moisIso.slice(0, 7);
       const emailPayload = {
@@ -474,10 +373,9 @@ export async function POST(request: NextRequest) {
         .update({
           recap_email_sent_at: new Date().toISOString(),
           recap_email_to: entry.parentEmail,
-          report_in: reportIn,
+          report_in: reportIn, // figé : un renvoi réutilisera cette valeur
         })
-        .eq('client_id', entry.clientId)
-        .eq('mois', moisIso);
+        .eq('id', row.id);
 
       if (updateErr) {
         console.error('Error updating heures_realisees recap status:', updateErr);

@@ -24,7 +24,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: 'recap-heures',
     name: 'Récapitulatif des heures (mensuel)',
     description:
-      "Envoyé au client/parent avec le PDF récapitulatif. Vous éditez le texte d'introduction ; le tableau des montants et la note « pièce jointe » sont ajoutés automatiquement.",
+      "Envoyé au client/parent avec le PDF récapitulatif. Vous éditez le texte d'introduction ; le tableau des montants, la mention « Premier rendez-vous réalisé le … » (si besoin) et la note « pièce jointe » sont ajoutés automatiquement.",
     variables: ['clientName', 'moisLabel'],
     wired: true,
   },
@@ -172,7 +172,8 @@ export function emailButton(href: string, label: string): string {
 
 // Modèle par défaut proposé dans l'éditeur (bouton « charger le modèle par
 // défaut ») pour les templates câblés. Sert de point de départ éditable ; tant
-// qu'il n'est pas enregistré, la route garde son HTML d'origine.
+// qu'il n'est pas enregistré, la route garde son HTML d'origine (recap-heures :
+// la route utilise ce contenu par défaut dans l'habillage de marque).
 // Corps par défaut (texte éditable uniquement — l'habillage de marque et les
 // blocs calculés sont ajoutés automatiquement par la route via renderEmailShell).
 export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {

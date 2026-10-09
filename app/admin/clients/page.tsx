@@ -306,12 +306,7 @@ export default function ClientsPage() {
       </Tabs>
 
       <NewClientModal isOpen={isOpen} onClose={onClose} onSuccess={handleClientCreated} />
-      <DeclarerHeuresModal
-        isOpen={isDeclarerOpen}
-        onClose={onDeclarerClose}
-        clients={clients}
-        defaultBaremeKm={baremeKm}
-      />
+      <DeclarerHeuresModal isOpen={isDeclarerOpen} onClose={onDeclarerClose} clients={clients} />
     </Stack>
   );
 }
