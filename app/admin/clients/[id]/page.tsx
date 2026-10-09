@@ -66,13 +66,23 @@ import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
 import type { HeureRealisee } from '@/types';
 import { computeReports, formatHeures } from '@/lib/heures-report';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
-import { formatPhone, formatDateLongFr, formatHeureFr, anneeScolaire } from '@/lib/format';
+import {
+  formatPhone,
+  formatDateLongFr,
+  formatHeureFr,
+  formatCreneau,
+  anneeScolaire,
+} from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 import { SendRecapModal } from './SendRecapModal';
 import { AddDocumentModal } from './AddDocumentModal';
 import { ContactLogBox } from './ContactLogBox';
-import { ConfirmationAccompagnementModal, DebutAccompagnementModal } from './AccompagnementModals';
+import {
+  ConfirmationAccompagnementModal,
+  DebutAccompagnementModal,
+  PreparationAccompagnementModal,
+} from './AccompagnementModals';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -107,6 +117,7 @@ export default function ClientDetailPage() {
   const { isOpen: isRdv1Open, onOpen: onRdv1Open, onClose: onRdv1Close } = useDisclosure();
   const confirmationModal = useDisclosure();
   const debutModal = useDisclosure();
+  const preparationModal = useDisclosure();
   const {
     isOpen: isRenouvellementOpen,
     onOpen: onRenouvellementOpen,
@@ -605,14 +616,20 @@ export default function ClientDetailPage() {
       // RGPD : effacer aussi les fichiers et les lignes documents liées aux procédures
       // (procedure_id passe à NULL à la suppression du client). Fait APRÈS la suppression :
       // un échec laisse des orphelins (comme avant) sans jamais perdre les fichiers d'un client.
-      // + pièces du recueil jamais rattachées (formulaire abandonné après l'upload d'un bilan)
-      const { data: recueilFiles } = await supabase.storage
-        .from('client-files')
-        .list(`recueil/${clientId}`, { limit: 1000 });
+      // + pièces des formulaires publics jamais rattachées (formulaire abandonné ou fichier
+      // remplacé après l'upload : bilans du recueil, emplois du temps)
+      const orphans = await Promise.all(
+        ['recueil', 'preparation-accompagnement'].map(async dir => {
+          const { data } = await supabase.storage
+            .from('client-files')
+            .list(`${dir}/${clientId}`, { limit: 1000 });
+          return (data || []).map(f => `${dir}/${clientId}/${f.name}`);
+        })
+      );
       const paths = [
         ...new Set([
           ...documents.flatMap(d => (d.storage_path ? [d.storage_path] : [])),
-          ...(recueilFiles || []).map(f => `recueil/${clientId}/${f.name}`),
+          ...orphans.flat(),
         ]),
       ];
       if (paths.length > 0) {
@@ -1222,6 +1239,13 @@ export default function ClientDetailPage() {
               : '',
           }
         : null;
+  // Créneaux (Préparation accompagnement) puis jours du recueil sans horaire
+  const disponibilitesLabel = [
+    ...(client.disponibilites || []).map(formatCreneau),
+    ...(client.jours_disponibles || []).filter(
+      j => !client.disponibilites?.some(d => d.jour === j)
+    ),
+  ].join(', ');
   // Adresse des parents (repli de l'adresse des cours quand elle n'est pas renseignée)
   const adresseParents = [
     client.address_line1,
@@ -1602,14 +1626,18 @@ export default function ClientDetailPage() {
                   </Text>
                   <Text fontWeight="medium">{client.demarche_volontaire ? 'Oui' : 'Non'}</Text>
                 </GridItem>
-                <GridItem colSpan={{ base: 1, md: 4 }}>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
                   <Text fontSize="sm" color="gray.500">
-                    Jours disponibles
+                    Disponibilités
                   </Text>
-                  <Text fontWeight="medium">
-                    {client.jours_disponibles && client.jours_disponibles.length > 0
-                      ? client.jours_disponibles.join(', ')
-                      : '-'}
+                  <Text fontWeight="medium">{disponibilitesLabel || '-'}</Text>
+                </GridItem>
+                <GridItem colSpan={{ base: 1, md: 2 }}>
+                  <Text fontSize="sm" color="gray.500">
+                    Contraintes extrascolaires
+                  </Text>
+                  <Text fontWeight="medium" whiteSpace="pre-wrap">
+                    {client.contraintes_extrascolaires || '-'}
                   </Text>
                 </GridItem>
               </Grid>
@@ -2616,6 +2644,9 @@ export default function ClientDetailPage() {
                   >
                     Contractualisation
                   </Button>
+                  <Button colorScheme="accent" size="sm" onClick={preparationModal.onOpen}>
+                    Préparation accompagnement
+                  </Button>
                   <Button colorScheme="accent" size="sm" onClick={debutModal.onOpen}>
                     Début accompagnement
                   </Button>
@@ -3114,6 +3145,12 @@ export default function ClientDetailPage() {
       <DebutAccompagnementModal
         isOpen={debutModal.isOpen}
         onClose={debutModal.onClose}
+        client={client}
+        onSuccess={refetch}
+      />
+      <PreparationAccompagnementModal
+        isOpen={preparationModal.isOpen}
+        onClose={preparationModal.onClose}
         client={client}
         onSuccess={refetch}
       />

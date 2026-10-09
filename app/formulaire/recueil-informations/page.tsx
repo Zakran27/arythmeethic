@@ -29,10 +29,10 @@ import {
   Divider,
   Icon,
 } from '@chakra-ui/react';
-import { FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { createClient } from '@/lib/supabase-client';
+import { Section, FileDrop } from '@/components/FormulairePublic';
 import { RESPONSABLES_LEGAUX, TROUBLES_APPRENTISSAGE, splitSituation } from '@/types';
 import {
   RECUEIL_CONTACT_KEYS,
@@ -71,135 +71,6 @@ const CONTACT_INPUTS = [
 ];
 
 const ouiNon = (b?: boolean | null) => (b == null ? '' : b ? 'oui' : 'non');
-
-function Section({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
-  return (
-    <Card bg="white" shadow="sm">
-      <CardBody>
-        <Stack spacing={4}>
-          <HStack spacing={3}>
-            <Flex
-              boxSize={7}
-              flexShrink={0}
-              borderRadius="full"
-              bg="accent.500"
-              color="white"
-              fontSize="sm"
-              fontWeight="bold"
-              align="center"
-              justify="center"
-            >
-              {n}
-            </Flex>
-            <Heading size="sm" color="brand.500" fontFamily="heading">
-              {title}
-            </Heading>
-          </HStack>
-          {children}
-        </Stack>
-      </CardBody>
-    </Card>
-  );
-}
-
-// Zone de dépôt : PDF ou image, 15 Mo max par fichier, `max` fichiers
-function FileDrop({
-  id,
-  files,
-  max,
-  onChange,
-}: {
-  id: string;
-  files: File[];
-  max: number;
-  onChange: (files: File[]) => void;
-}) {
-  const [error, setError] = useState<string | null>(null);
-
-  const add = (list: FileList | null) => {
-    const picked = Array.from(list || []);
-    const ok = picked.filter(f => uploadExtension(f.name) && f.size <= RECUEIL_UPLOAD_MAX_BYTES);
-    setError(
-      ok.length < picked.length
-        ? 'Fichier refusé : PDF ou image (JPG, PNG…) uniquement, 15 Mo maximum par fichier.'
-        : null
-    );
-    onChange([...files, ...ok].slice(0, max));
-  };
-
-  return (
-    <Stack spacing={2}>
-      {files.map((file, i) => (
-        <Flex
-          key={`${file.name}-${i}`}
-          align="center"
-          justify="space-between"
-          p={3}
-          bg="green.50"
-          border="1px solid"
-          borderColor="green.200"
-          borderRadius="lg"
-        >
-          <HStack spacing={2} minW={0}>
-            <Icon as={FiFile} color="green.500" />
-            <Text fontSize="sm" color="green.700" noOfLines={1}>
-              {file.name}
-            </Text>
-          </HStack>
-          <Button
-            size="sm"
-            variant="ghost"
-            colorScheme="red"
-            onClick={() => onChange(files.filter((_, j) => j !== i))}
-            leftIcon={<Icon as={FiX} />}
-          >
-            Supprimer
-          </Button>
-        </Flex>
-      ))}
-      {files.length < max && (
-        <Box
-          as="label"
-          htmlFor={id}
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          p={6}
-          border="2px dashed"
-          borderColor="gray.300"
-          borderRadius="lg"
-          cursor="pointer"
-          _hover={{ borderColor: 'accent.500', bg: 'gray.50' }}
-          transition="all 0.2s"
-        >
-          <Icon as={FiUpload} boxSize={8} color="gray.400" mb={2} />
-          <Text color="gray.500" fontSize="sm">
-            {max > 1
-              ? 'Cliquez pour sélectionner un ou plusieurs fichiers'
-              : 'Cliquez pour sélectionner un fichier'}
-          </Text>
-          <Input
-            id={id}
-            type="file"
-            accept=".pdf,image/*"
-            multiple={max > 1}
-            onChange={e => {
-              add(e.target.files);
-              e.target.value = '';
-            }}
-            display="none"
-          />
-        </Box>
-      )}
-      {error && (
-        <Text fontSize="sm" color="red.500">
-          {error}
-        </Text>
-      )}
-    </Stack>
-  );
-}
 
 function RecueilFormContent() {
   const searchParams = useSearchParams();

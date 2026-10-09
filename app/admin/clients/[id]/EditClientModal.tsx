@@ -413,7 +413,19 @@ export function EditClientModal({
 
         onSuccess(inserted.id);
       } else {
-        const { error } = await supabase.from('clients').update(payload).eq('id', client.id);
+        // Créneaux horaires (Préparation accompagnement) : un jour décoché perd aussi son créneau
+        const disponibilites = client.disponibilites?.filter(d =>
+          formData.jours_disponibles.includes(d.jour)
+        );
+        const { error } = await supabase
+          .from('clients')
+          .update({
+            ...payload,
+            ...(disponibilites && {
+              disponibilites: disponibilites.length ? disponibilites : null,
+            }),
+          })
+          .eq('id', client.id);
 
         if (error) throw error;
 

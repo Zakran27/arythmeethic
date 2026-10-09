@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   try {
     const { token, uploads, consentement_sante, gestionnaire, ...f } = await request.json();
     const supabase = createServiceRoleClient();
-    const found = await findRecueilClient(token, 'address_line1, sub_type');
+    const found = await findRecueilClient(token, 'address_line1, sub_type, disponibilites');
     if (!found.client) return fail(found.error, found.status);
     const client = found.client;
 
@@ -139,6 +139,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const jours: string[] | null = Array.isArray(f.jours_disponibles)
+      ? f.jours_disponibles.filter((j: unknown) => typeof j === 'string')
+      : null;
+    // Créneaux (Préparation accompagnement) : un jour qui n'est plus proposé perd son créneau
+    const creneaux = client.disponibilites?.filter(d => jours?.includes(d.jour)) ?? [];
     const updateData: Record<string, unknown> = {
       ...Object.fromEntries(RECUEIL_CONTACT_KEYS.map(key => [key, c[key] || null])),
       situation_familiale: joinSituation(situation, precisions),
@@ -148,9 +153,8 @@ export async function POST(request: NextRequest) {
       etablissement_scolaire: str(f.etablissement_scolaire) || null,
       moyenne_maths: str(f.moyenne_maths) || null,
       moyenne_generale: str(f.moyenne_generale) || null,
-      jours_disponibles: Array.isArray(f.jours_disponibles)
-        ? f.jours_disponibles.filter((j: unknown) => typeof j === 'string')
-        : null,
+      jours_disponibles: jours,
+      disponibilites: creneaux.length ? creneaux : null,
       troubles_apprentissage: troubles.length > 0 ? troubles : null,
       troubles_autre: troublesAutre,
       suivi_psy: suiviPsy,

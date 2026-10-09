@@ -152,6 +152,9 @@ export interface Client {
   suivi_psy?: boolean | null;
   aise_avec_diagnostics?: boolean | null;
   date_dernier_diagnostic?: string | null; // 'YYYY-MM-DD'
+  // Procédure « Préparation accompagnement » : créneaux souhaités (un par jour) + contraintes
+  disponibilites?: Disponibilite[] | null;
+  contraintes_extrascolaires?: string | null;
   // Responsable notes
   ecole_notes_saisies_par?: 'A Rythme Ethic' | 'Personne tierce';
   ecole_resp_notes_nom?: string;
@@ -174,7 +177,9 @@ export interface Procedure {
   procedure_type_id: string;
   status: ProcStatus;
   docuseal_submission_id?: string;
-  deadline_at?: string; // date ; RDV 1 / début accompagnement : date du RDV / du 1er cours
+  // date ; RDV 1 / début accompagnement : date du RDV / du 1er cours ;
+  // préparation accompagnement : relance prévue (null une fois relancée par le cron)
+  deadline_at?: string | null;
   signed_at?: string;
   annee_scolaire?: string | null; // contractualisation : « 2026-2027 » (versions V{n} par année)
   download_token_expires_at?: string | null;
@@ -309,6 +314,13 @@ export const TROUBLES_APPRENTISSAGE = [
   'HPI',
   'HPE',
 ];
+
+// Créneau souhaité pour les cours (clients.disponibilites) : heures 'HH:MM', fin > début
+export interface Disponibilite {
+  jour: string; // valeur de JOURS_DISPO (lib/validators)
+  debut: string;
+  fin: string;
+}
 
 // Délai de paiement (écoles) : libellés affichés pour les valeurs stockées en base
 export const PERIODE_FACTURATION_LABELS: Record<

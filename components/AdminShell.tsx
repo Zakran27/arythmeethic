@@ -27,6 +27,7 @@ const navItems = [
   { label: "Liste d'attente", href: '/admin/liste-attente' },
   { label: 'Suivi prise de contact', href: '/admin/suivi-contacts' },
   { label: 'Suivi CESU', href: '/admin/suivi-cesu' },
+  { label: 'Synthèse des disponibilités', href: '/admin/disponibilites' },
   { label: 'Avis Google', href: '/admin/avis' },
   { label: 'Formations', href: '/admin/formations' },
   { label: 'Bandeaux / popups', href: '/admin/bandeaux' },

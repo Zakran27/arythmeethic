@@ -75,6 +75,28 @@ export function anneeScolaire(d = new Date()): string {
   return `${start}-${start + 1}`;
 }
 
+// Début de la campagne « Préparation accompagnement » de l'année scolaire en cours (1er juin)
+export function debutCampagne(d = new Date()): string {
+  return `${anneeScolaire(d).slice(0, 4)}-06-01`;
+}
+
+// Relance « Préparation accompagnement » d'une demande envoyée le `launch` ('YYYY-MM-DD') :
+// 2e vendredi de septembre de l'année scolaire du lancement, ou J+7 si c'est plus tard
+// (jamais de relance 2 jours après l'envoi).
+export function preparationRelanceDate(launch: string): string {
+  const [y, m] = launch.split('-').map(Number);
+  const year = m >= 6 ? y : y - 1;
+  const secondFriday = 8 + ((5 - weekday(`${year}-09-01`) + 7) % 7);
+  const vendredi = `${year}-09-${String(secondFriday).padStart(2, '0')}`;
+  const plus7 = new Date(Date.parse(launch) + 7 * 86_400_000).toISOString().slice(0, 10);
+  return vendredi > plus7 ? vendredi : plus7;
+}
+
+// { jour: 'Lundi', debut: '17:00', fin: '18:30' } → « Lundi 17h–18h30 »
+export function formatCreneau(d: { jour: string; debut: string; fin: string }): string {
+  return `${d.jour} ${formatHeureFr(d.debut)}–${formatHeureFr(d.fin)}`;
+}
+
 // Date murale à Paris 'YYYY-MM-DD' (les crons Vercel tournent en UTC)
 export function parisDate(d: Date): string {
   return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
