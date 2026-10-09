@@ -17,7 +17,7 @@ interface ClientsTableProps {
 }
 
 // Helper function to get the display name based on client type
-function getDisplayName(client: Client): string {
+export function getDisplayName(client: Client): string {
   if (client.type_client === 'École') {
     // For École, show organisation name first, then contact name
     if (client.organisation) {

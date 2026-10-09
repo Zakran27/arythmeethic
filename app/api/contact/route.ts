@@ -153,6 +153,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Liste d'attente : demande particulier reçue pendant que le bandeau « complet » est actif
+    // Valeur brute du formulaire : le mapping retombe sur Particulier pour un clientType inconnu.
+    if (clientType === 'parent' || clientType === 'student') {
+      const { data: banner } = await supabase
+        .from('site_messages')
+        .select('enabled')
+        .eq('key', 'banner')
+        .maybeSingle();
+      if (banner?.enabled) clientRecord.liste_attente_depuis = new Date().toISOString();
+    }
+
     const { data: newClient, error: insertError } = await supabase
       .from('clients')
       .insert([clientRecord])

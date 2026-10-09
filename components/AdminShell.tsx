@@ -24,6 +24,9 @@ const SIDEBAR_W = '220px';
 
 const navItems = [
   { label: 'Contacts', href: '/admin/clients' },
+  { label: "Liste d'attente", href: '/admin/liste-attente' },
+  { label: 'Suivi prise de contact', href: '/admin/suivi-contacts' },
+  { label: 'Suivi CESU', href: '/admin/suivi-cesu' },
   { label: 'Avis Google', href: '/admin/avis' },
   { label: 'Formations', href: '/admin/formations' },
   { label: 'Bandeaux / popups', href: '/admin/bandeaux' },

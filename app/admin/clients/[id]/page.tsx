@@ -71,6 +71,7 @@ import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 import { SendRecapModal } from './SendRecapModal';
 import { AddDocumentModal } from './AddDocumentModal';
+import { ContactLogBox } from './ContactLogBox';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -180,6 +181,38 @@ export default function ClientDetailPage() {
   useEffect(() => {
     if (clientId) fetchHeures();
   }, [fetchHeures]);
+
+  // Liste d'attente : rang = nombre de prospects particuliers inscrits avant (ou en même temps)
+  const [rangAttente, setRangAttente] = useState<number | null>(null);
+  const [isTogglingAttente, setIsTogglingAttente] = useState(false);
+  const attenteDepuis =
+    client?.type_client === 'Particulier' && client.client_status === 'Prospect'
+      ? client.liste_attente_depuis
+      : null;
+  useEffect(() => {
+    if (!attenteDepuis) return setRangAttente(null);
+    createClient()
+      .from('clients')
+      .select('id', { count: 'exact', head: true })
+      .eq('type_client', 'Particulier')
+      .eq('client_status', 'Prospect')
+      .lte('liste_attente_depuis', attenteDepuis)
+      .then(({ count }) => setRangAttente(count ?? null));
+  }, [attenteDepuis]);
+
+  const handleMettreEnAttente = async () => {
+    setIsTogglingAttente(true);
+    const { error } = await createClient()
+      .from('clients')
+      .update({ liste_attente_depuis: new Date().toISOString() })
+      .eq('id', clientId);
+    setIsTogglingAttente(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, status: 'error', isClosable: true });
+      return;
+    }
+    refetch();
+  };
 
   const [defaultBaremeKm, setDefaultBaremeKm] = useState('0.636');
   useEffect(() => {
@@ -1256,6 +1289,34 @@ export default function ClientDetailPage() {
                   <Text fontWeight="medium">{client.demande_type || '-'}</Text>
                 </GridItem>
               )}
+              {isParticulier && client.client_status === 'Prospect' && (
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    Liste d&apos;attente
+                  </Text>
+                  {attenteDepuis ? (
+                    <>
+                      <Badge colorScheme="purple" mt={1}>
+                        Liste d&apos;attente{rangAttente ? ` #${rangAttente}` : ''}
+                      </Badge>
+                      <Text fontSize="xs" color="gray.500">
+                        depuis le {new Date(attenteDepuis).toLocaleDateString('fr-FR')}
+                      </Text>
+                    </>
+                  ) : (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      colorScheme="brand"
+                      mt={1}
+                      onClick={handleMettreEnAttente}
+                      isLoading={isTogglingAttente}
+                    >
+                      Mettre en liste d&apos;attente
+                    </Button>
+                  )}
+                </GridItem>
+              )}
             </Grid>
           </Stack>
         </CardBody>
@@ -1365,7 +1426,7 @@ export default function ClientDetailPage() {
         </Grid>
       )}
 
-      {/* Lot 4 : emplacement réservé à la box « Suivi des prises de contact » (entre les contacts et Lieu des cours) */}
+      {isParticulier && <ContactLogBox clientId={client.id} />}
 
       {/* Lieu des cours - Particulier uniquement */}
       {isParticulier && (
@@ -1595,6 +1656,8 @@ export default function ClientDetailPage() {
           </CardBody>
         </Card>
       )}
+
+      {isEcole && <ContactLogBox clientId={client.id} />}
 
       {/* ========== ÉTABLISSEMENT - Responsables ========== */}
       {isEcole && (
@@ -2241,6 +2304,14 @@ export default function ClientDetailPage() {
                                   {h.recap_email_to && (
                                     <Text fontSize="2xs" color="gray.500">
                                       à {h.recap_email_to}
+                                    </Text>
+                                  )}
+                                  {h.salaire_recu_le && (
+                                    <Text fontSize="2xs" color="green.600">
+                                      Salaire reçu le{' '}
+                                      {new Date(h.salaire_recu_le + 'T00:00:00').toLocaleDateString(
+                                        'fr-FR'
+                                      )}
                                     </Text>
                                   )}
                                   <Button

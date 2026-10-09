@@ -134,7 +134,8 @@ export function HeuresRealiséesModal({
     temps_a_reporter: parseFloat(tempsAReporter) || 0,
     premier_rdv_heures: premierRdv ? parseFloat(premierRdvHeures) || 0 : 0,
     premier_rdv_date: premierRdv ? premierRdvDate || null : null,
-    sans_declaration: existing?.sans_declaration,
+    // Saisir des heures annule « Pas de déclaration » (posé depuis Suivi CESU).
+    sans_declaration: existing?.sans_declaration && !(parseFloat(heures) > 0),
   };
   const others = heuresRows.filter(h => h.mois !== moisIso);
   const lineFor = (report_in: number | null) =>
@@ -209,6 +210,7 @@ export function HeuresRealiséesModal({
         premier_rdv_heures: formRow.premier_rdv_heures,
         premier_rdv_date: formRow.premier_rdv_date,
       };
+      if (existing?.sans_declaration && !formRow.sans_declaration) payload.sans_declaration = false;
       // report_in seulement en édition : en création, un upsert sur un mois existant ne doit
       // pas remettre à « prévisionnel » un report déjà figé.
       if (isEditing) payload.report_in = reportInValue;
