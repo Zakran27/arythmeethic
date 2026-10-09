@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
         id,
         download_token_expires_at,
         recipient_email,
+        procedure_types!inner(code),
         client:clients (
           organisation,
           first_name,
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq('download_token', token)
+      .eq('procedure_types.code', 'ENVOI_CV_CASIER') // token d'une autre procédure → lien invalide
       .single();
 
     if (procError || !procedure) {

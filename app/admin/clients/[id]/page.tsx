@@ -66,12 +66,13 @@ import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
 import type { HeureRealisee } from '@/types';
 import { computeReports, formatHeures } from '@/lib/heures-report';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
-import { formatPhone } from '@/lib/format';
+import { formatPhone, formatDateLongFr, formatHeureFr } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 import { SendRecapModal } from './SendRecapModal';
 import { AddDocumentModal } from './AddDocumentModal';
 import { ContactLogBox } from './ContactLogBox';
+import { ConfirmationAccompagnementModal, DebutAccompagnementModal } from './AccompagnementModals';
 
 export default function ClientDetailPage() {
   const params = useParams();
@@ -104,6 +105,8 @@ export default function ClientDetailPage() {
   const { isOpen: isAddDocOpen, onOpen: onAddDocOpen, onClose: onAddDocClose } = useDisclosure();
   const { isOpen: isRecueilOpen, onOpen: onRecueilOpen, onClose: onRecueilClose } = useDisclosure();
   const { isOpen: isRdv1Open, onOpen: onRdv1Open, onClose: onRdv1Close } = useDisclosure();
+  const confirmationModal = useDisclosure();
+  const debutModal = useDisclosure();
   const {
     isOpen: isRenouvellementOpen,
     onOpen: onRenouvellementOpen,
@@ -234,6 +237,8 @@ export default function ClientDetailPage() {
     setSelectedContractualisationParticulierSigner,
   ] = useState('');
   const [selectedRdv1Email, setSelectedRdv1Email] = useState('');
+  const [rdv1Date, setRdv1Date] = useState('');
+  const [rdv1Heure, setRdv1Heure] = useState('');
   const [selectedRenouvellementEmail, setSelectedRenouvellementEmail] = useState('');
   const [contractDateDebut, setContractDateDebut] = useState('');
   const [contractDateFin, setContractDateFin] = useState('');
@@ -672,19 +677,22 @@ export default function ClientDetailPage() {
   const handleLaunchRdv1Procedure = async () => {
     setIsLaunchingProcedure(true);
     try {
-      const [rdv1Email, rdv1First, rdv1Last] = selectedRdv1Email.split('|');
+      const [rdv1Email, rdv1First] = selectedRdv1Email.split('|');
       const response = await fetch('/api/procedures/preparation-rdv1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientId,
           recipientEmail: rdv1Email || undefined,
-          recipientName: rdv1First ? `${rdv1First}${rdv1Last ? ' ' + rdv1Last : ''}` : undefined,
+          recipientName: rdv1First || undefined, // prénom seul dans la salutation
+          rdvDate: rdv1Date,
+          rdvHeure: rdv1Heure,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors du lancement de la procédure');
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erreur lors du lancement de la procédure');
       }
 
       toast({
@@ -701,7 +709,7 @@ export default function ClientDetailPage() {
     } catch (err) {
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue lors du lancement de la procédure.',
+        description: err instanceof Error ? err.message : 'Une erreur est survenue.',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -1161,6 +1169,31 @@ export default function ClientDetailPage() {
 
   const isParticulier = client.type_client === 'Particulier';
   const isEcole = client.type_client === 'École';
+  // Souhait d'accompagnement : dernière procédure envoyée (procedures triées par date décroissante)
+  const confirmationProc = procedures.find(
+    p => p.procedure_type?.code === 'CONFIRMATION_ACCOMPAGNEMENT'
+  );
+  const souhaitAccompagnement =
+    confirmationProc?.status === 'DRAFT'
+      ? {
+          color: 'orange',
+          label: 'En attente de réponse',
+          detail: `mail envoyé le ${new Date(confirmationProc.created_at).toLocaleDateString('fr-FR')}${
+            confirmationProc.download_token_expires_at &&
+            new Date(confirmationProc.download_token_expires_at) < new Date()
+              ? ' (lien expiré)'
+              : ''
+          }`,
+        }
+      : client.accompagnement_confirme != null
+        ? {
+            color: client.accompagnement_confirme ? 'green' : 'red',
+            label: client.accompagnement_confirme ? 'Confirmé' : 'Refusé',
+            detail: client.accompagnement_confirme_at
+              ? `le ${new Date(client.accompagnement_confirme_at).toLocaleDateString('fr-FR')}`
+              : '',
+          }
+        : null;
   // Adresse des parents (repli de l'adresse des cours quand elle n'est pas renseignée)
   const adresseParents = [
     client.address_line1,
@@ -1237,6 +1270,28 @@ export default function ClientDetailPage() {
         </HStack>
       </Stack>
 
+      {/* Souhait d'accompagnement (tout en haut) : rien tant que la procédure n'a jamais été lancée */}
+      {isParticulier && souhaitAccompagnement && (
+        <Card
+          bg="white"
+          shadow="sm"
+          borderLeft="4px solid"
+          borderColor={`${souhaitAccompagnement.color}.400`}
+        >
+          <CardBody py={4}>
+            <HStack spacing={3} flexWrap="wrap">
+              <Heading size="sm" color="brand.500" fontFamily="heading">
+                Souhait d&apos;accompagnement
+              </Heading>
+              <Badge colorScheme={souhaitAccompagnement.color}>{souhaitAccompagnement.label}</Badge>
+              <Text fontSize="sm" color="gray.500">
+                {souhaitAccompagnement.detail}
+              </Text>
+            </HStack>
+          </CardBody>
+        </Card>
+      )}
+
       {/* Informations générales */}
       <Card bg="white" shadow="sm">
         <CardBody>
@@ -1287,6 +1342,18 @@ export default function ClientDetailPage() {
                     Type de demande
                   </Text>
                   <Text fontWeight="medium">{client.demande_type || '-'}</Text>
+                </GridItem>
+              )}
+              {isParticulier && (
+                <GridItem>
+                  <Text fontSize="sm" color="gray.500">
+                    1er RDV
+                  </Text>
+                  <Text fontWeight="medium">
+                    {client.rdv1_date
+                      ? `${formatDateLongFr(client.rdv1_date)}${client.rdv1_heure ? ` à ${formatHeureFr(client.rdv1_heure)}` : ''}`
+                      : '-'}
+                  </Text>
                 </GridItem>
               )}
               {isParticulier && client.client_status === 'Prospect' && (
@@ -2407,8 +2474,19 @@ export default function ClientDetailPage() {
                   <Button colorScheme="accent" size="sm" onClick={onRecueilOpen}>
                     Recueil des informations
                   </Button>
-                  <Button colorScheme="accent" size="sm" onClick={onRdv1Open}>
+                  <Button
+                    colorScheme="accent"
+                    size="sm"
+                    onClick={() => {
+                      setRdv1Date(client.rdv1_date || '');
+                      setRdv1Heure(client.rdv1_heure || '');
+                      onRdv1Open();
+                    }}
+                  >
                     Préparation RDV 1
+                  </Button>
+                  <Button colorScheme="accent" size="sm" onClick={confirmationModal.onOpen}>
+                    Confirmation accompagnement
                   </Button>
                   <Button
                     colorScheme="accent"
@@ -2421,6 +2499,9 @@ export default function ClientDetailPage() {
                     }}
                   >
                     Contractualisation
+                  </Button>
+                  <Button colorScheme="accent" size="sm" onClick={debutModal.onOpen}>
+                    Début accompagnement
                   </Button>
                   <Button colorScheme="accent" size="sm" onClick={onRenouvellementOpen}>
                     Souhait de renouvellement
@@ -2893,10 +2974,23 @@ export default function ClientDetailPage() {
         </ModalContent>
       </Modal>
 
+      <ConfirmationAccompagnementModal
+        isOpen={confirmationModal.isOpen}
+        onClose={confirmationModal.onClose}
+        client={client}
+        onSuccess={refetch}
+      />
+      <DebutAccompagnementModal
+        isOpen={debutModal.isOpen}
+        onClose={debutModal.onClose}
+        client={client}
+        onSuccess={refetch}
+      />
+
       {/* Modal de confirmation - Préparation RDV 1 */}
-      <Modal isOpen={isRdv1Open} onClose={onRdv1Close} isCentered>
+      <Modal isOpen={isRdv1Open} onClose={onRdv1Close} isCentered scrollBehavior="inside">
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent maxH="90vh">
           <ModalHeader color="brand.500" fontFamily="heading">
             Préparation du RDV 1
           </ModalHeader>
@@ -2908,9 +3002,23 @@ export default function ClientDetailPage() {
                 <strong>Préparation du premier rendez-vous</strong>.
               </Text>
               <Text fontSize="sm" color="brand.600">
-                Un email sera envoyé pour demander de préparer les 3 derniers bulletins de notes,
-                les 2 dernières évaluations de maths et le(s) cahier(s) de maths.
+                Un email sera envoyé avec la date du rendez-vous et la liste des documents à
+                préparer (bulletins, évaluations, cahiers de maths).
               </Text>
+              <HStack align="flex-start">
+                <FormControl isRequired>
+                  <FormLabel color="brand.600">Date du RDV</FormLabel>
+                  <Input type="date" value={rdv1Date} onChange={e => setRdv1Date(e.target.value)} />
+                </FormControl>
+                <FormControl isRequired>
+                  <FormLabel color="brand.600">Heure</FormLabel>
+                  <Input
+                    type="time"
+                    value={rdv1Heure}
+                    onChange={e => setRdv1Heure(e.target.value)}
+                  />
+                </FormControl>
+              </HStack>
               <FormControl isRequired>
                 <FormLabel color="brand.600">Destinataire</FormLabel>
                 <Select
@@ -2962,7 +3070,7 @@ export default function ClientDetailPage() {
               onClick={handleLaunchRdv1Procedure}
               isLoading={isLaunchingProcedure}
               loadingText="Envoi en cours..."
-              isDisabled={!selectedRdv1Email}
+              isDisabled={!selectedRdv1Email || !rdv1Date || !rdv1Heure}
             >
               Confirmer et envoyer
             </Button>

@@ -39,8 +39,9 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceRoleClient();
     const { data: procedure } = await supabase
       .from('procedures')
-      .select('id, client_id, download_token_expires_at, status')
+      .select('id, client_id, download_token_expires_at, status, procedure_types!inner(code)')
       .eq('download_token', token)
+      .eq('procedure_types.code', 'FIN_DE_CONTRAT') // token d'une autre procédure → lien invalide
       .single();
     if (!procedure) {
       return NextResponse.json({ success: false, error: 'Lien invalide' }, { status: 404 });
@@ -105,8 +106,9 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceRoleClient();
     const { data: procedure } = await supabase
       .from('procedures')
-      .select('id, client_id, download_token_expires_at, status')
+      .select('id, client_id, download_token_expires_at, status, procedure_types!inner(code)')
       .eq('download_token', token)
+      .eq('procedure_types.code', 'FIN_DE_CONTRAT') // token d'une autre procédure → lien invalide
       .single();
     if (!procedure) {
       return NextResponse.json({ success: false, error: 'Lien invalide' }, { status: 404 });
