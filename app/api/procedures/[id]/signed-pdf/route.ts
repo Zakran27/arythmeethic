@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
-
-const DOCUSEAL_API_URL = 'https://api.docuseal.com';
+import { pendingSubmitters } from '@/lib/docuseal';
+import { syncContractSignature } from '@/lib/signatures';
+import { anneeScolaire } from '@/lib/format';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const apiKey = process.env.DOCUSEAL_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ success: false, error: 'DOCUSEAL_API_KEY non configurée' }, { status: 500 });
+    if (!process.env.DOCUSEAL_API_KEY) {
+      return NextResponse.json(
+        { success: false, error: 'DOCUSEAL_API_KEY non configurée' },
+        { status: 500 }
+      );
     }
 
     const supabase = createServiceRoleClient();
     const { data: procedure, error } = await supabase
       .from('procedures')
-      .select('id, docuseal_submission_id, client_id, created_at, client:clients(organisation, type_client, first_name, last_name, first_name_jeune, last_name_jeune)')
+      .select(
+        'id, status, docuseal_submission_id, annee_scolaire, created_at, client:clients(organisation, type_client, first_name, last_name, first_name_jeune, last_name_jeune)'
+      )
       .eq('id', id)
       .single();
 
@@ -29,10 +34,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       first_name_jeune: string | null;
       last_name_jeune: string | null;
     } | null;
-    const created = new Date(procedure.created_at);
-    const y = created.getFullYear();
-    const m = created.getMonth() + 1;
-    const schoolYear = m >= 9 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+    const schoolYear = procedure.annee_scolaire ?? anneeScolaire(new Date(procedure.created_at));
     const isEcole = c?.type_client === 'École';
     const label = isEcole
       ? c?.organisation || `${c?.first_name ?? ''} ${c?.last_name ?? ''}`.trim()
@@ -40,34 +42,31 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         `${c?.first_name ?? ''} ${c?.last_name ?? ''}`.trim();
     const safeLabel = (label || 'contrat').replace(/[\\/:*?"<>|]/g, '').trim();
     const downloadName = `Contrat - ${safeLabel} - ${schoolYear}.pdf`;
-    const submissionId = procedure.docuseal_submission_id;
-    if (!submissionId) {
+    if (!procedure.docuseal_submission_id) {
       return NextResponse.json(
         { success: false, error: 'Aucune signature associée à cette procédure' },
         { status: 404 }
       );
     }
 
-    const res = await fetch(`${DOCUSEAL_API_URL}/submissions/${submissionId}`, {
-      headers: { 'X-Auth-Token': apiKey },
+    // Lecture DocuSeal + auto-réparation du statut en base (signé / refusé / archivé)
+    const { submission, status } = await syncContractSignature(procedure).catch(err => {
+      console.error('[DocuSeal] fetch submission failed', err);
+      return { submission: null, status: null };
     });
-    if (!res.ok) {
-      const txt = await res.text();
-      console.error('[DocuSeal] fetch submission failed', res.status, txt);
-      return NextResponse.json(
-        { success: false, error: 'Erreur DocuSeal' },
-        { status: 502 }
-      );
+    if (!submission) {
+      return NextResponse.json({ success: false, error: 'Erreur DocuSeal' }, { status: 502 });
     }
-    const submission = await res.json();
 
-    // DocuSeal: completed when all submitters have signed. Status field == "completed".
-    if (submission.status !== 'completed') {
+    const pending = pendingSubmitters(submission);
+    if (pending.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Le contrat n\'est pas encore signé par toutes les parties.',
-          status: submission.status,
+          error: "Le contrat n'est pas encore signé par toutes les parties.",
+          status,
+          // Rôles DocuSeal : 'Client' (établissement / parent) et 'Florence'
+          pending: pending.map(s => ({ role: s.role, declined: !!s.declined_at })),
         },
         { status: 409 }
       );

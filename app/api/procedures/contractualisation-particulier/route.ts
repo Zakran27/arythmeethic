@@ -1,40 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, signatureLinkBlock } from '@/lib/email-templates';
+import { sendEmail } from '@/lib/brevo';
+import { createSubmission, toDocusealCoords } from '@/lib/docuseal';
+import { supersedePreviousContracts } from '@/lib/signatures';
 import { generateContractParticulierPDF } from '@/lib/pdf-contract-particulier-generator';
-
-const DOCUSEAL_API_URL = 'https://api.docuseal.com';
-
-// PDF page dimensions (must match lib/pdf-contract-particulier-generator.ts)
-const PAGE_W = 595;
-const PAGE_H = 842;
-const FIELD_W = 0.25; // ~150px
-const FIELD_H = 0.09; // ~75px
-
-// Convert pdf-lib absolute coords (bottom-left origin) to DocuSeal normalized ratios (top-left origin)
-function toDocusealCoords(x: number, y: number) {
-  return {
-    x: x / PAGE_W,
-    y: 1 - y / PAGE_H - FIELD_H,
-    w: FIELD_W,
-    h: FIELD_H,
-  };
-}
-
-interface DocusealSigner {
-  role: string;
-  email: string;
-  name: string;
-  fields: { page: number; x: number; y: number; w: number; h: number };
-}
-
-interface DocusealSubmitterResult {
-  role: string;
-  email: string;
-  name: string;
-  embedSrc: string;
-}
 
 async function sendSignatureEmail({
   to,
@@ -49,12 +20,6 @@ async function sendSignatureEmail({
   clientName: string;
   signingLink: string;
 }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    console.warn('[Brevo] BREVO_API_KEY non configurée, email signature non envoyé');
-    return;
-  }
-
   const intro =
     role === 'Florence'
       ? `<strong>${clientName}</strong> a été invité(e) à signer le contrat de contractualisation. Voici votre lien pour contresigner.`
@@ -118,109 +83,11 @@ async function sendSignatureEmail({
     });
     if (ov) {
       finalSubject = ov.subject;
-      finalHtml = renderEmailShell(
-        ov.html,
-        emailButton(signingLink, 'Signer le document') +
-          `<p style="margin:20px 0 0 0;color:#a97761;font-size:14px;line-height:1.6;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br/><a href="${signingLink}" style="color:#2ba1bd;word-break:break-all;">${signingLink}</a></p>`
-      );
+      finalHtml = renderEmailShell(ov.html, signatureLinkBlock(signingLink));
     }
   }
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
-      to: [{ email: to, name: toName }],
-      subject: finalSubject,
-      htmlContent: finalHtml,
-    }),
-  });
-  console.log(`[Brevo] Email signature envoyé à ${to} - status: ${res.status}`);
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[Brevo] Erreur:', err);
-  }
-}
-
-async function createDocusealSubmission(params: {
-  pdfBuffer: Buffer;
-  filename: string;
-  signers: DocusealSigner[];
-}): Promise<{ submissionId: string; signers: DocusealSubmitterResult[] }> {
-  const apiKey = process.env.DOCUSEAL_API_KEY;
-  if (!apiKey) throw new Error('DOCUSEAL_API_KEY non configurée');
-
-  const body = {
-    send_email: true,
-    order: 'random',
-    submitters: params.signers.map(s => ({
-      role: s.role,
-      email: s.email,
-      name: s.name,
-    })),
-    documents: [
-      {
-        name: params.filename,
-        file: params.pdfBuffer.toString('base64'),
-        fields: params.signers.map(s => ({
-          name: `signature_${s.role.toLowerCase()}`,
-          role: s.role,
-          type: 'signature',
-          required: true,
-          areas: [
-            {
-              page: s.fields.page,
-              x: s.fields.x,
-              y: s.fields.y,
-              w: s.fields.w,
-              h: s.fields.h,
-            },
-          ],
-        })),
-      },
-    ],
-  };
-
-  console.log('[DocuSeal] POST', `${DOCUSEAL_API_URL}/submissions/pdf`);
-  console.log('[DocuSeal] API key présente:', !!apiKey, '| longueur:', apiKey.length);
-  console.log('[DocuSeal] Signataires:', params.signers.map(s => ({ role: s.role, email: s.email })));
-  console.log('[DocuSeal] Champs:', JSON.stringify(body.documents[0].fields, null, 2));
-
-  const res = await fetch(`${DOCUSEAL_API_URL}/submissions/pdf`, {
-    method: 'POST',
-    headers: {
-      'X-Auth-Token': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  console.log('[DocuSeal] Status HTTP:', res.status, res.statusText);
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('[DocuSeal] Erreur réponse:', err);
-    throw new Error(`DocuSeal error: ${err}`);
-  }
-
-  const data = await res.json();
-  console.log('[DocuSeal] Réponse:', JSON.stringify(data, null, 2));
-
-  const submissionId = Array.isArray(data)
-    ? (data[0]?.submission_id ?? data[0]?.id)
-    : (data.submission_id ?? data.id);
-
-  const submitters: DocusealSubmitterResult[] = (data.submitters ?? []).map((s: {
-    role: string; email: string; name: string; embed_src: string;
-  }) => ({
-    role: s.role,
-    email: s.email,
-    name: s.name,
-    embedSrc: s.embed_src,
-  }));
-
-  return { submissionId: String(submissionId), signers: submitters };
+  await sendEmail({ to: [{ email: to, name: toName }], subject: finalSubject, html: finalHtml });
 }
 
 export async function POST(request: NextRequest) {
@@ -249,7 +116,7 @@ export async function POST(request: NextRequest) {
       !signerEmail ||
       !signerFirstName ||
       !signerLastName ||
-      !anneeScolaire ||
+      !/^\d{4}-\d{4}$/.test(anneeScolaire ?? '') ||
       !dateDebut ||
       !dateFin ||
       !salaireHoraireNet
@@ -333,6 +200,7 @@ export async function POST(request: NextRequest) {
         procedure_type_id: procedureType.id,
         status: 'DRAFT',
         recipient_email: signerEmail,
+        annee_scolaire: anneeScolaire,
       })
       .select('id')
       .single();
@@ -354,7 +222,7 @@ export async function POST(request: NextRequest) {
         `${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim() ||
         `${client.first_name} ${client.last_name}`.trim();
       const contractName = `Contrat - ${eleveName} - ${anneeScolaire}`;
-      const { submissionId, signers: submitters } = await createDocusealSubmission({
+      const { submissionId, signers: submitters } = await createSubmission({
         pdfBuffer,
         filename: `${contractName}.pdf`,
         signers: [
@@ -403,6 +271,17 @@ export async function POST(request: NextRequest) {
         procedure_id: newProcedure.id,
         status: 'SIGNATURE_DEMANDEE',
       });
+
+      // Nouvelle version pour la même année scolaire : les précédentes sont annulées (lien DocuSeal
+      // archivé) ou retirées de « Contrats signés » si elles étaient signées.
+      if (!updateError) {
+        await supersedePreviousContracts({
+          clientId,
+          procedureTypeId: procedureType.id,
+          anneeScolaire,
+          keepId: newProcedure.id,
+        });
+      }
 
       await supabase.from('audit_log').insert({
         source: 'admin',

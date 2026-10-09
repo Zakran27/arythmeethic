@@ -61,12 +61,12 @@ import {
   FiRotateCcw,
 } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase-client';
-import { useClientDetail } from '@/lib/hooks/useClientDetail';
+import { useClientDetail, contractVersions } from '@/lib/hooks/useClientDetail';
 import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
 import type { HeureRealisee } from '@/types';
 import { computeReports, formatHeures } from '@/lib/heures-report';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
-import { formatPhone, formatDateLongFr, formatHeureFr } from '@/lib/format';
+import { formatPhone, formatDateLongFr, formatHeureFr, anneeScolaire } from '@/lib/format';
 import { EditClientModal } from './EditClientModal';
 import { HeuresRealiséesModal } from './HeuresRealiséesModal';
 import { SendRecapModal } from './SendRecapModal';
@@ -250,37 +250,28 @@ export default function ClientDetailPage() {
   const ITEMS_PER_PAGE = 25;
   const toast = useToast();
 
-  // Calculate school year options (current and next)
+  // Année scolaire en cours + suivante (seuil unique de juin, cf. anneeScolaire)
   const getSchoolYearOptions = () => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1; // 1-12
-
-    // School year starts in September (month 9)
-    // If we're before September, current school year is (year-1)-(year)
-    // If we're after September, current school year is (year)-(year+1)
-    let currentSchoolYearStart: number;
-    if (currentMonth >= 9) {
-      currentSchoolYearStart = currentYear;
-    } else {
-      currentSchoolYearStart = currentYear - 1;
-    }
-
-    const currentSchoolYear = `${currentSchoolYearStart}-${currentSchoolYearStart + 1}`;
-    const nextSchoolYear = `${currentSchoolYearStart + 1}-${currentSchoolYearStart + 2}`;
-
-    return [currentSchoolYear, nextSchoolYear];
+    const cur = anneeScolaire();
+    const s = Number(cur.slice(0, 4));
+    return [cur, `${s + 1}-${s + 2}`];
   };
 
   const schoolYearOptions = getSchoolYearOptions();
 
+  // « Contrats signés » : la version en vigueur de chaque année (les versions remplacées sont CLOSED),
+  // signée ou en attente de signature (statut synchronisé depuis DocuSeal par le cron quotidien).
   const contractProcedures = useMemo(
     () =>
       procedures.filter(
-        p => p.procedure_type?.code === 'CONTRACTUALISATION' && p.docuseal_submission_id
+        p =>
+          p.procedure_type?.code === 'CONTRACTUALISATION' &&
+          p.docuseal_submission_id &&
+          (p.status === 'SIGNED' || p.status === 'SIGN_REQUESTED')
       ),
     [procedures]
   );
+  const contractVersion = useMemo(() => contractVersions(procedures), [procedures]);
 
   const [previewLoading, setPreviewLoading] = useState(false);
   const [ecolePreviewUrl, setEcolePreviewUrl] = useState<string | null>(null);
@@ -473,21 +464,47 @@ export default function ClientDetailPage() {
 
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
   const handleDownloadSignedPdf = useCallback(
-    async (procedureId: string) => {
+    async (procedureId: string, dbStatus: string) => {
       setDownloadingPdf(procedureId);
       try {
         const res = await fetch(`/api/procedures/${procedureId}/signed-pdf`);
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          toast({
-            title: 'Téléchargement impossible',
-            description:
-              res.status === 409
-                ? "Le contrat n'est pas encore signé par toutes les parties."
-                : data.error || 'Erreur',
-            status: res.status === 409 ? 'info' : 'error',
-            duration: 4000,
-          });
+          if (res.status === 409 && data.status === 'CLOSED') {
+            toast({
+              title: 'Contrat annulé',
+              description: 'Lien de signature annulé (contrat archivé ou remplacé dans DocuSeal)',
+              status: 'warning',
+              duration: 6000,
+            });
+            refetch();
+          } else if (res.status === 409) {
+            // Rôles DocuSeal : 'Client' = l'établissement (École) / le parent (Particulier)
+            const who = (role: string) =>
+              role === 'Florence'
+                ? 'Florence'
+                : client?.type_client === 'École'
+                  ? "l'établissement"
+                  : 'le parent';
+            const pending: { role: string; declined: boolean }[] = data.pending ?? [];
+            const refused = pending.filter(p => p.declined).map(p => who(p.role));
+            toast({
+              title: 'Contrat pas encore signé',
+              description: refused.length
+                ? `Signature refusée par : ${refused.join(' et ')}`
+                : `Pas encore signé par : ${pending.map(p => who(p.role)).join(' et ')}`,
+              status: refused.length ? 'warning' : 'info',
+              duration: 6000,
+            });
+            if (data.status && data.status !== dbStatus) refetch(); // statut réparé côté serveur
+          } else {
+            toast({
+              title: 'Téléchargement impossible',
+              description: data.error || 'Erreur',
+              status: 'error',
+              duration: 4000,
+            });
+          }
           return;
         }
         const blob = await res.blob();
@@ -511,13 +528,14 @@ export default function ClientDetailPage() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        if (dbStatus !== 'SIGNED') refetch(); // signé depuis le dernier passage du cron
       } catch (e) {
         toast({ title: 'Erreur', description: String(e), status: 'error', duration: 4000 });
       } finally {
         setDownloadingPdf(null);
       }
     },
-    [toast]
+    [toast, client?.type_client, refetch]
   );
 
   // Pagination for procedure history
@@ -2534,11 +2552,16 @@ export default function ClientDetailPage() {
                         </Text>
                         <Badge
                           colorScheme={
-                            entry.status === 'FORMULAIRE_REMPLI'
+                            entry.status === 'FORMULAIRE_REMPLI' ||
+                            entry.status === 'SIGNATURE_EFFECTUEE'
                               ? 'green'
-                              : entry.status.includes('RELANCE')
-                                ? 'orange'
-                                : 'blue'
+                              : entry.status === 'SIGNATURE_REFUSEE'
+                                ? 'red'
+                                : entry.status === 'SIGNATURE_ANNULEE'
+                                  ? 'gray'
+                                  : entry.status.includes('RELANCE')
+                                    ? 'orange'
+                                    : 'blue'
                           }
                           fontSize="xs"
                         >
@@ -2600,7 +2623,7 @@ export default function ClientDetailPage() {
           <CardBody>
             <Stack spacing={4}>
               <Heading size="md" color="brand.500" fontFamily="heading" fontWeight="600">
-                Contrats signés ({contractProcedures.length})
+                Contrats signés ({contractProcedures.filter(p => p.status === 'SIGNED').length})
               </Heading>
               <Stack spacing={2}>
                 {contractProcedures.map(p => (
@@ -2618,35 +2641,48 @@ export default function ClientDetailPage() {
                     <Stack spacing={0} flex={1} minW={0}>
                       <Text fontWeight="medium" fontSize="sm">
                         {(() => {
-                          const d = new Date(p.created_at);
-                          const y = d.getFullYear();
-                          const m = d.getMonth() + 1;
-                          const schoolYear = m >= 9 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+                          const schoolYear =
+                            p.annee_scolaire ?? anneeScolaire(new Date(p.created_at));
                           const isEcole = client?.type_client === 'École';
                           const label = isEcole
                             ? client?.organisation ||
                               `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim()
                             : `${client?.first_name_jeune || ''} ${client?.last_name_jeune || ''}`.trim() ||
                               `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim();
-                          return `Contrat - ${label} - ${schoolYear}`;
+                          const v = contractVersion[p.id];
+                          return `Contrat - ${label} - ${schoolYear}${v ? ` (V${v})` : ''}`;
                         })()}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
-                        {new Date(p.created_at).toLocaleString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </Text>
+                      <HStack spacing={2} flexWrap="wrap">
+                        {p.status === 'SIGNED' ? (
+                          <Badge colorScheme="green" fontSize="xs">
+                            Signé
+                            {p.signed_at &&
+                              ` le ${new Date(p.signed_at).toLocaleDateString('fr-FR')}`}
+                          </Badge>
+                        ) : (
+                          <Badge colorScheme="orange" fontSize="xs">
+                            En attente de signature
+                          </Badge>
+                        )}
+                        <Text fontSize="xs" color="gray.500">
+                          Envoyé le{' '}
+                          {new Date(p.created_at).toLocaleString('fr-FR', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </HStack>
                     </Stack>
                     <Button
                       size="sm"
                       colorScheme="accent"
                       variant="outline"
                       isLoading={downloadingPdf === p.id}
-                      onClick={() => handleDownloadSignedPdf(p.id)}
+                      onClick={() => handleDownloadSignedPdf(p.id, p.status)}
                     >
                       Télécharger le contrat signé
                     </Button>
@@ -2654,8 +2690,9 @@ export default function ClientDetailPage() {
                 ))}
               </Stack>
               <Text fontSize="xs" color="gray.500">
-                Le PDF est récupéré directement depuis DocuSeal. Si toutes les parties n&apos;ont
-                pas encore signé, le téléchargement sera indisponible.
+                Statut mis à jour chaque matin depuis DocuSeal (et à chaque téléchargement). Seule
+                la dernière version de chaque année scolaire est listée. Si une partie n&apos;a pas
+                encore signé, le téléchargement indique laquelle.
               </Text>
             </Stack>
           </CardBody>
@@ -3546,7 +3583,8 @@ export default function ClientDetailPage() {
 
             <Text mt={4} fontSize="sm" color="gray.600">
               Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
-              document.
+              document. Sans signature, une relance automatique lui est envoyée tous les 3 jours
+              (jours ouvrés). Un nouvel envoi pour la même année scolaire annule le lien précédent.
             </Text>
 
             {/* Modification des articles avant prévisualisation / envoi */}
@@ -3881,7 +3919,9 @@ export default function ClientDetailPage() {
 
               <Text fontSize="sm" color="gray.600">
                 Le signataire recevra un email de DocuSeal avec un lien sécurisé pour signer le
-                contrat de travail CDD.
+                contrat de travail CDD. Sans signature, une relance automatique lui est envoyée
+                chaque semaine. Un nouvel envoi pour la même année scolaire annule le lien
+                précédent.
               </Text>
 
               <Box>

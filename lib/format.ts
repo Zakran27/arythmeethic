@@ -74,3 +74,16 @@ export function anneeScolaire(d = new Date()): string {
   const start = d.getMonth() >= 5 ? d.getFullYear() : d.getFullYear() - 1;
   return `${start}-${start + 1}`;
 }
+
+// Date murale à Paris 'YYYY-MM-DD' (les crons Vercel tournent en UTC)
+export function parisDate(d: Date): string {
+  return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+}
+
+// Jours calendaires entre deux dates 'YYYY-MM-DD' ; jour de la semaine (0 = dimanche … 6 = samedi)
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000);
+}
+export function weekday(ymd: string): number {
+  return new Date(Date.parse(ymd)).getUTCDay();
+}
