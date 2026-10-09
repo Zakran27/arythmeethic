@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // If no code or error, redirect to login
+  // Lien de reset expiré/déjà utilisé : la page reset affiche « Lien non valide » + « Demander un nouveau lien »
+  if (safeNext === '/admin/reset-password') {
+    return NextResponse.redirect(`${origin}${safeNext}`);
+  }
   return NextResponse.redirect(`${origin}/admin/login`);
 }
