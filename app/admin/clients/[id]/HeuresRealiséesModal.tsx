@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { computeReports, formatHeures } from '@/lib/heures-report';
+import { computeReports, formatHeures, heuresFacturees } from '@/lib/heures-report';
 import type { HeureRealisee } from '@/types';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -153,10 +153,10 @@ export function HeuresRealiséesModal({
   const line = lineFor(isEditing ? reportInValue : (existing?.report_in ?? null));
   const prevu = `${formatHeures(autoLine.reportIn)} prévue${autoLine.reportIn >= 2 ? 's' : ''}`;
 
+  // Heures + report + 1er RDV (facturé ce mois)
+  const heuresBillees = heuresFacturees(formRow, line.reportIn);
   const montantHeures =
-    heures && tarifHoraire
-      ? ((parseFloat(heures) + line.reportIn) * parseFloat(tarifHoraire)).toFixed(2)
-      : '-';
+    heures && tarifHoraire ? (heuresBillees * parseFloat(tarifHoraire)).toFixed(2) : '-';
   const montantKm =
     kmCalcules && baremeKm ? (parseFloat(kmCalcules) * parseFloat(baremeKm)).toFixed(2) : '-';
   const montantAnnulation =
@@ -166,7 +166,7 @@ export function HeuresRealiséesModal({
   const total =
     heures && tarifHoraire && kmCalcules && baremeKm
       ? (
-          (parseFloat(heures) + line.reportIn) * parseFloat(tarifHoraire) +
+          heuresBillees * parseFloat(tarifHoraire) +
           parseFloat(kmCalcules) * parseFloat(baremeKm) +
           (casAnnulation && heuresAnnulation
             ? parseFloat(heuresAnnulation) * parseFloat(tarifHoraire)
@@ -408,7 +408,7 @@ export function HeuresRealiséesModal({
                 if (!e.target.checked) setPremierRdvHeures('');
               }}
             >
-              Premier rendez-vous ce mois-ci
+              Facturer un premier rendez-vous ce mois-ci
             </Checkbox>
             {premierRdv && (
               <FormControl>
@@ -434,10 +434,10 @@ export function HeuresRealiséesModal({
                   </GridItem>
                 </Grid>
                 <FormHelperText>
-                  Ne pas inclure cette durée dans « Heures réalisées » : non facturé ce mois-ci,
-                  ajouté au compteur de report, puis facturé (heures entières) avec le prochain mois
-                  qui facture du report, avec la mention « Premier rendez-vous réalisé le … » dans
-                  le récapitulatif.
+                  Facturé avec ce mois, en plus des « Heures réalisées » (ne pas l’y inclure), sur
+                  une ligne « Premier rendez-vous » du récapitulatif. Pour le facturer un autre
+                  mois, saisissez-le sur la déclaration de ce mois-là : la date du rendez-vous peut
+                  être antérieure.
                 </FormHelperText>
               </FormControl>
             )}

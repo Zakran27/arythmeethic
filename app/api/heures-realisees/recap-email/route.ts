@@ -3,7 +3,13 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, substituteVars, DEFAULT_TEMPLATE_CONTENT } from '@/lib/email-templates';
-import { computeReports, formatHeures, moisLabel, normalizeMois } from '@/lib/heures-report';
+import {
+  computeReports,
+  formatHeures,
+  heuresFacturees,
+  moisLabel,
+  normalizeMois,
+} from '@/lib/heures-report';
 import type { HeureRealisee } from '@/types';
 
 // Les montants sont relus en base (jamais pris dans le payload).
@@ -23,29 +29,41 @@ interface RecapData {
   km: number;
   baremeKm: number;
   reportIn: number; // heures de report intégrées dans ce mois
-  montantHeures: number; // (heures + report) × tarif
+  montantHeures: number; // (heures + report + 1er RDV) × tarif
   montantKm: number;
   heuresAnnulation: number;
   montantAnnulation: number;
   total: number;
-  premiersRdv: { date: string; heures: number }[]; // 1ers RDV facturés via le report de ce mois
+  premierRdv: { date: string; heures: number } | null; // 1er RDV facturé ce mois
 }
 
-// « Premier rendez-vous réalisé le 03/09/2026 (1,5 h) : heures intégrées au report. »
-function premiersRdvLines(d: RecapData): string[] {
-  return d.premiersRdv.map(
-    p =>
-      `Premier rendez-vous réalisé le ${new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR')} (${formatHeures(p.heures)}) : heures intégrées au report.`
-  );
+// « Premier rendez-vous (03/09/2026) » + « 1,5 h × 30.00 €/h » + montant
+function premierRdvRow(d: RecapData): [string, string, string] | null {
+  const p = d.premierRdv;
+  if (!p) return null;
+  return [
+    `Premier rendez-vous (${new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR')})`,
+    `${p.heures} h × ${d.tarifHoraire.toFixed(2)} €/h`,
+    `${(p.heures * d.tarifHoraire).toFixed(2)} €`,
+  ];
+}
+
+// « Total heures facturées ce mois : 6 h (4 h réalisées + 1 h reportée + 1 h premier rendez-vous) »
+function totalHeuresLine(d: RecapData): string | null {
+  const rdv = d.premierRdv?.heures ?? 0;
+  if (!d.reportIn && !rdv) return null;
+  const parts = [`${formatHeures(d.heuresMois)} réalisées`];
+  if (d.reportIn) parts.push(`${formatHeures(d.reportIn)} reportées`);
+  if (rdv) parts.push(`${formatHeures(rdv)} premier rendez-vous`);
+  return `Total heures facturées ce mois : ${formatHeures(heuresFacturees({ heures: d.heuresMois, premier_rdv_heures: rdv }, d.reportIn))} (${parts.join(' + ')})`;
 }
 
 async function generateRecapPDF(d: RecapData): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 460 + 16 * d.premiersRdv.length]);
+  const page = pdfDoc.addPage([595, d.premierRdv ? 482 : 460]);
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  const totalHeuresFacturees = d.heuresMois + d.reportIn;
   const { width, height } = page.getSize();
   const margin = 50;
   let y = height - margin;
@@ -103,6 +121,8 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
       `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`,
     ]);
   }
+  const rdvRow = premierRdvRow(d);
+  if (rdvRow) rows.push(rdvRow);
   if (d.heuresAnnulation > 0) {
     rows.push([
       "Heures d'annulation facturées",
@@ -154,19 +174,11 @@ async function generateRecapPDF(d: RecapData): Promise<Buffer> {
   });
   y -= 30;
 
-  if (d.reportIn > 0) {
-    page.drawText(
-      `Total heures facturées ce mois : ${totalHeuresFacturees} h (${d.heuresMois} h réalisées + ${d.reportIn} h reportées)`,
-      { x: margin, y, size: 9, font, color: rgb(0.45, 0.45, 0.45) }
-    );
+  const totalLine = totalHeuresLine(d);
+  if (totalLine) {
+    page.drawText(totalLine, { x: margin, y, size: 9, font, color: rgb(0.45, 0.45, 0.45) });
     y -= 24;
   }
-
-  for (const line of premiersRdvLines(d)) {
-    page.drawText(line, { x: margin, y, size: 9, font, color: rgb(0.45, 0.45, 0.45) });
-    y -= 16;
-  }
-  if (d.premiersRdv.length) y -= 8;
 
   page.drawText('Cordialement,', { x: margin, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
   y -= 16;
@@ -197,6 +209,8 @@ function buildMontantsTable(d: RecapData): string {
       `${(d.reportIn * d.tarifHoraire).toFixed(2)} €`
     );
   }
+  const rdvRow = premierRdvRow(d);
+  if (rdvRow) rows += row(`${rdvRow[0]} (${rdvRow[1]})`, rdvRow[2]);
   if (d.heuresAnnulation > 0) {
     rows += row(
       `Heures d'annulation facturées (${d.heuresAnnulation} h × ${d.tarifHoraire.toFixed(2)} €/h)`,
@@ -207,9 +221,11 @@ function buildMontantsTable(d: RecapData): string {
     `Frais de déplacement (${d.km} km × ${d.baremeKm.toFixed(3)} €/km)`,
     `${d.montantKm.toFixed(2)} €`
   );
-  const rdv = premiersRdvLines(d)
-    .map(l => `<p style="margin-top:16px;color:#a97761;font-size:14px;line-height:1.6;">${l}</p>`)
-    .join('');
+  // Email : la ligne de total n'accompagne que le 1er RDV (le report seul reste comme avant)
+  const totalLine = d.premierRdv ? totalHeuresLine(d) : null;
+  const rdv = totalLine
+    ? `<p style="margin-top:16px;color:#a97761;font-size:14px;line-height:1.6;">${totalLine}</p>`
+    : '';
   return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:15px;margin:8px 0;"><tbody>${rows}<tr style="background-color:#f9f3ee;"><td style="padding:14px 16px;color:#6e3a25;font-weight:700;">Total</td><td style="padding:14px 16px;text-align:right;color:#6e3a25;font-weight:700;">${d.total.toFixed(2)} €</td></tr></tbody></table>${rdv}`;
 }
 
@@ -277,7 +293,7 @@ export async function POST(request: NextRequest) {
       const km = Number(row.km) || 0;
       const baremeKm = Number(row.bareme_km) || 0;
       const heuresAnnulation = Number(row.heures_annulation) || 0;
-      const montantHeures = (heuresMois + reportIn) * tarifHoraire;
+      const montantHeures = heuresFacturees(row, reportIn) * tarifHoraire;
       const montantKm = km * baremeKm;
       const montantAnnulation = heuresAnnulation * tarifHoraire;
       const total = montantHeures + montantKm + montantAnnulation;
@@ -296,7 +312,7 @@ export async function POST(request: NextRequest) {
         heuresAnnulation,
         montantAnnulation,
         total,
-        premiersRdv: line.premiersRdv,
+        premierRdv: line.premierRdv,
       };
 
       let pdfBase64: string;

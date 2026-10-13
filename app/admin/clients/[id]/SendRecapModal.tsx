@@ -101,15 +101,17 @@ export function SendRecapModal({
     if (!selectedEntry || !line) return null;
     const montantHeures = selectedEntry.heures * selectedEntry.tarif_horaire;
     const montantReport = line.reportIn * selectedEntry.tarif_horaire;
+    const montantRdv = (line.premierRdv?.heures ?? 0) * selectedEntry.tarif_horaire;
     const montantKm = selectedEntry.km * selectedEntry.bareme_km;
     const montantAnnulation =
       Number(selectedEntry.heures_annulation ?? 0) * selectedEntry.tarif_horaire;
     return {
       montantHeures,
       montantReport,
+      montantRdv,
       montantKm,
       montantAnnulation,
-      total: montantHeures + montantReport + montantKm + montantAnnulation,
+      total: montantHeures + montantReport + montantRdv + montantKm + montantAnnulation,
     };
   }, [selectedEntry, line]);
 
@@ -329,13 +331,14 @@ export function SendRecapModal({
                         {totalsForSelected.montantAnnulation.toFixed(2)} €
                       </Text>
                     )}
-                    {line.premiersRdv.map(p => (
-                      <Text key={p.date}>
-                        Mention : premier rendez-vous réalisé le{' '}
-                        {new Date(p.date + 'T00:00:00').toLocaleDateString('fr-FR')} (
-                        {formatHeures(p.heures)})
+                    {line.premierRdv && (
+                      <Text>
+                        Premier rendez-vous du{' '}
+                        {new Date(line.premierRdv.date + 'T00:00:00').toLocaleDateString('fr-FR')} :{' '}
+                        {line.premierRdv.heures} h × {selectedEntry.tarif_horaire.toFixed(2)} €/h ={' '}
+                        {totalsForSelected.montantRdv.toFixed(2)} €
                       </Text>
-                    ))}
+                    )}
                     <Text fontWeight="medium" color="brand.600" mt={1}>
                       Total brut : {totalsForSelected.total.toFixed(2)} €
                     </Text>

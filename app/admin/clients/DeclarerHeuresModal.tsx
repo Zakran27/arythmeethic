@@ -31,6 +31,7 @@ import type { Client, HeureRealisee } from '@/types';
 import { createClient } from '@/lib/supabase-client';
 import {
   computeReports,
+  heuresFacturees,
   getClientDisplayName,
   getDefaultEmail,
   getEmailOptions,
@@ -57,9 +58,9 @@ interface SendResult {
   error?: string;
 }
 
-// Même calcul que la route d'envoi : heures + report + annulation + km.
+// Même calcul que la route d'envoi : heures + report + 1er RDV + annulation + km.
 function calcTotal(row: HeureRealisee, reportIn: number) {
-  const montantH = (row.heures + reportIn) * row.tarif_horaire;
+  const montantH = heuresFacturees(row, reportIn) * row.tarif_horaire;
   const montantKm = row.km * row.bareme_km;
   const montantAnnul = Number(row.heures_annulation ?? 0) * row.tarif_horaire;
   return { montantH, montantKm, total: montantH + montantKm + montantAnnul };
@@ -296,7 +297,7 @@ export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeures
                               <Text fontSize="sm" fontWeight="bold" color="brand.600">{total.toFixed(2)} €</Text>
                             </HStack>
                             <Text fontSize="xs" color="gray.500">
-                              {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h report`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
+                              {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h report`}{Number(entry.row.premier_rdv_heures) > 0 && ` + ${entry.row.premier_rdv_heures} h 1er RDV`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
                               {entry.row.km > 0 && ` · ${entry.row.km} km × ${entry.row.bareme_km} €/km = ${montantKm.toFixed(2)} €`}
                               {Number(entry.row.heures_annulation) > 0 && ` · Annulation : ${entry.row.heures_annulation} h`}
                               {Number(entry.row.temps_a_reporter) > 0 && ` · Reporter : ${entry.row.temps_a_reporter} h`}
@@ -338,7 +339,7 @@ export function DeclarerHeuresModal({ isOpen, onClose, clients }: DeclarerHeures
 
                       <Stack spacing={0.5} mb={3}>
                         <Text fontSize="xs" color="gray.500">
-                          Heures : {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h reportées`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
+                          Heures : {entry.row.heures} h{reportIn > 0 && ` + ${reportIn} h reportées`}{Number(entry.row.premier_rdv_heures) > 0 && ` + ${entry.row.premier_rdv_heures} h premier rendez-vous`} × {entry.row.tarif_horaire} €/h = {montantH.toFixed(2)} €
                         </Text>
                         {entry.row.km > 0 && (
                           <Text fontSize="xs" color="gray.500">

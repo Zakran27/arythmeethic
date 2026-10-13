@@ -5,9 +5,9 @@ import type { Client, HeureRealisee } from '@/types';
 //
 // Règle : chaque mois ajoute son « temps à reporter » au compteur ; dès que le
 // compteur atteint 1 h, les heures entières sont facturées sur un mois déclaré
-// (report_in) et le reste (< 1 h) est conservé. Le 1er RDV n'est pas facturé
-// son mois : il entre dans le compteur et part avec le prochain mois déclaré
-// qui facture du report (la mention « Premier rendez-vous » l'accompagne).
+// (report_in) et le reste (< 1 h) est conservé. Le 1er RDV ne passe pas par le
+// compteur : il est facturé avec le mois sur lequel il est saisi, en plus des
+// heures réalisées (Florence choisit ce mois ; la date réelle peut être antérieure).
 //
 // report_in NULL = prévisionnel (recalculé ici) ; un nombre = figé (récap envoyé,
 // « Mettre à jour le compteur » ou saisie manuelle) et n'est JAMAIS recalculé.
@@ -35,7 +35,7 @@ export interface ReportLine {
   reportIn: number; // heures de report facturées ce mois
   auto: boolean; // true = prévisionnel (pas encore figé)
   soldeApres: number; // compteur à reporter après ce mois (< 0 possible après une saisie manuelle)
-  premiersRdv: { date: string; heures: number }[]; // 1ers RDV des mois précédents, mentionnés dans ce récap
+  premierRdv: { date: string; heures: number } | null; // 1er RDV facturé ce mois
 }
 
 // Centièmes d'heure : évite la dérive des flottants (0.1 + 0.2 + 0.7 < 1).
@@ -48,18 +48,15 @@ export function computeReports(rows: ReportRow[], forceMois?: string): ReportLin
   const declared = r.map(
     x =>
       x.report_in != null ||
-      (!x.sans_declaration && (x.mois === forceMois || c(x.heures) + c(x.heures_annulation) > 0))
+      (!x.sans_declaration &&
+        (x.mois === forceMois ||
+          c(x.heures) + c(x.heures_annulation) + c(x.premier_rdv_heures) > 0))
   );
   const ri = r.map(x => (x.report_in == null ? null : c(x.report_in)));
-  // Solde après chaque mois ; le 1er RDV n'entre dans le compteur qu'APRÈS son mois.
+  // Solde du compteur après chaque mois
   const soldes = () => {
     let s = 0;
-    return r.map((x, i) => {
-      s += c(x.temps_a_reporter) - (ri[i] ?? 0);
-      const out = s;
-      s += c(x.premier_rdv_heures);
-      return out;
-    });
+    return r.map((x, i) => (s += c(x.temps_a_reporter) - (ri[i] ?? 0)));
   };
   // Plafond = plus petit solde des mois suivants (figés compris) : un mois envoyé
   // dans le désordre ne refacture jamais ce qu'un mois postérieur a déjà pris.
@@ -69,22 +66,24 @@ export function computeReports(rows: ReportRow[], forceMois?: string): ReportLin
     ri[i] = declared[i] ? Math.max(0, Math.floor(Math.min(...soldes().slice(i)) / 100) * 100) : 0;
   });
   const s = soldes();
-  let pending: { date: string; heures: number }[] = [];
-  return r.map((x, i) => {
-    // La mention part avec le mois qui facture réellement du report (pas un mois à +0 h).
-    const bills = declared[i] && (ri[i] ?? 0) > 0;
-    const premiersRdv = bills ? pending : [];
-    if (bills) pending = [];
-    if (c(x.premier_rdv_heures) > 0)
-      pending.push({ date: x.premier_rdv_date ?? x.mois, heures: Number(x.premier_rdv_heures) });
-    return {
-      mois: x.mois,
-      reportIn: (ri[i] ?? 0) / 100,
-      auto: x.report_in == null,
-      soldeApres: (s[i] + c(x.premier_rdv_heures)) / 100,
-      premiersRdv,
-    };
-  });
+  return r.map((x, i) => ({
+    mois: x.mois,
+    reportIn: (ri[i] ?? 0) / 100,
+    auto: x.report_in == null,
+    soldeApres: s[i] / 100,
+    premierRdv:
+      c(x.premier_rdv_heures) > 0
+        ? { date: x.premier_rdv_date ?? x.mois, heures: c(x.premier_rdv_heures) / 100 }
+        : null,
+  }));
+}
+
+// Heures facturées un mois : heures réalisées + report intégré + 1er RDV (hors annulation).
+export function heuresFacturees(
+  row: Partial<Pick<HeureRealisee, 'heures' | 'premier_rdv_heures'>>,
+  reportIn: number
+): number {
+  return (c(row.heures) + c(reportIn) + c(row.premier_rdv_heures)) / 100;
 }
 
 // ── Helpers partagés par les écrans de déclaration ──
