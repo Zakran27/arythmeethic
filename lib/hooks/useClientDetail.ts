@@ -39,6 +39,29 @@ export function contractVersions(procs: Procedure[]): Record<string, number> {
   return versions;
 }
 
+// Erreur Supabase annotée de l'étape en échec. Champs copiés un par un : `message` n'est pas
+// énumérable sur une `Error`, un spread le perdrait.
+type StepError = { step: string; message?: string; code?: string; details?: string; hint?: string };
+
+function withStep(
+  err: { message?: string; code?: string; details?: string; hint?: string },
+  step: string
+): StepError {
+  return { step, message: err.message, code: err.code, details: err.details, hint: err.hint };
+}
+
+// Message lisible au lieu d'un « Failed to fetch data » générique (les erreurs Supabase ne sont
+// pas des `Error`, l'ancien `instanceof Error` les masquait toutes).
+function fetchErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'step' in err) {
+    const { step, message, code, details, hint } = err as StepError;
+    return [`[${step}]`, message || 'Erreur inconnue', code && `(code ${code})`, details, hint]
+      .filter(Boolean)
+      .join(' ');
+  }
+  return err instanceof Error ? err.message : String(err);
+}
+
 export function useClientDetail(clientId: string) {
   const [client, setClient] = useState<Client | null>(null);
   const [procedures, setProcedures] = useState<Procedure[]>([]);
@@ -59,7 +82,7 @@ export function useClientDetail(clientId: string) {
         .eq('id', clientId)
         .single();
 
-      if (clientError) throw clientError;
+      if (clientError) throw withStep(clientError, 'client');
       setClient(clientData);
 
       // Fetch procedures
@@ -69,7 +92,7 @@ export function useClientDetail(clientId: string) {
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
 
-      if (proceduresError) throw proceduresError;
+      if (proceduresError) throw withStep(proceduresError, 'procédures');
       setProcedures(proceduresData || []);
 
       // Fetch procedure status history for all procedures of this client
@@ -82,7 +105,7 @@ export function useClientDetail(clientId: string) {
           .in('procedure_id', procedureIds)
           .order('created_at', { ascending: false });
 
-        if (historyError) throw historyError;
+        if (historyError) throw withStep(historyError, 'historique');
 
         // Combine history with procedure info
         const versions = contractVersions(proceduresData);
@@ -120,12 +143,13 @@ export function useClientDetail(clientId: string) {
         )
         .order('created_at', { ascending: false });
 
-      if (documentsError) throw documentsError;
+      if (documentsError) throw withStep(documentsError, 'documents');
       setDocuments(documentsData || []);
 
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      console.error('useClientDetail fetch error:', err);
+      setError(fetchErrorMessage(err));
     } finally {
       setLoading(false);
     }
