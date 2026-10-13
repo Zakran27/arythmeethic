@@ -123,3 +123,37 @@ export async function supersedePreviousContracts({
     }
   }
 }
+
+// « Annuler la signature » (fiche client) : lien DocuSeal désactivé, contrat CLOSED + historique
+// SIGNATURE_ANNULEE. Refusé si le contrat a été signé (ou refusé) entre-temps. Définitif : pour le
+// bon destinataire, Florence renvoie une nouvelle version.
+export async function cancelContractSignature(proc: {
+  id: string;
+  status: string;
+  docuseal_submission_id: string | null;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  if (proc.status !== 'SIGN_REQUESTED' || !proc.docuseal_submission_id) {
+    return { success: false, error: 'Aucune signature en attente pour ce contrat' };
+  }
+  const { status } = await syncContractSignature(proc);
+  if (status && status !== 'SIGN_REQUESTED') {
+    return {
+      success: false,
+      error: 'Le contrat n’est plus en attente de signature (statut mis à jour)',
+    };
+  }
+  await archiveSubmission(proc.docuseal_submission_id);
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from('procedures')
+    .update({ status: 'CLOSED', updated_at: new Date().toISOString() })
+    .eq('id', proc.id)
+    .eq('status', 'SIGN_REQUESTED')
+    .select('id');
+  if (data?.length) {
+    await supabase
+      .from('procedure_status_history')
+      .insert({ procedure_id: proc.id, status: 'SIGNATURE_ANNULEE' });
+  }
+  return { success: true };
+}

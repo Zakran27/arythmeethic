@@ -38,11 +38,12 @@ interface FdcProcedure {
   recipient_email: string | null;
   updated_at: string;
   created_at: string;
+  relances_stoppees: boolean | null;
   client: Client | null;
 }
 
 const PROC_COLUMNS =
-  'id, client_id, status, recipient_email, updated_at, created_at, client:clients(*)';
+  'id, client_id, status, recipient_email, updated_at, created_at, relances_stoppees, client:clients(*)';
 
 async function loadDocs(procedureId: string): Promise<(FdcDoc & { kind: FdcKind })[]> {
   const { data } = await createServiceRoleClient()
@@ -339,7 +340,8 @@ export async function processFinDeContratSignatures({
     try {
       let docs = await loadDocs(p.id);
       let retried = false; // la re-création envoie déjà sa demande au parent : pas d'autre email
-      if (docs.some(d => !d.docuseal_submission_id)) {
+      // Relances stoppées : PDF signés toujours rapatriés, mais aucun email de demande / relance
+      if (docs.some(d => !d.docuseal_submission_id) && !p.relances_stoppees) {
         // Création ratée au dépôt : nouvel essai (pas dans l'heure qui suit un dépôt / une réservation).
         // Les documents déjà en signature sont suivis normalement ci-dessous.
         if (Date.parse(p.updated_at) > now.getTime() - 3600_000)
@@ -414,6 +416,10 @@ export async function processFinDeContratSignatures({
 
       const { links } = parentLinks(pending);
       if (retried) continue;
+      if (p.relances_stoppees) {
+        log('relances stoppées depuis la fiche');
+        continue;
+      }
       if (links.length === 0) {
         log('en attente de la signature de Florence');
         continue;

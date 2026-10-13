@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const { data: procedures, error } = await supabase
       .from('procedures')
       .select(
-        'id, client_id, annee_scolaire, status, docuseal_submission_id, created_at, updated_at, client:clients(type_client, organisation, first_name, last_name, first_name_jeune, last_name_jeune)'
+        'id, client_id, annee_scolaire, status, docuseal_submission_id, relances_stoppees, created_at, updated_at, client:clients(type_client, organisation, first_name, last_name, first_name_jeune, last_name_jeune)'
       )
       .in(
         'procedure_type_id',
@@ -128,6 +128,11 @@ export async function GET(request: NextRequest) {
         }
         if (p.annee_scolaire && p.annee_scolaire < currentYear) {
           log(`année ${p.annee_scolaire} terminée (pas de relance)`);
+          continue;
+        }
+
+        if (p.relances_stoppees) {
+          log('relances stoppées depuis la fiche');
           continue;
         }
 

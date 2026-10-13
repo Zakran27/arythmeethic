@@ -63,8 +63,9 @@ import {
 import { createClient } from '@/lib/supabase-client';
 import { useClientDetail, contractVersions } from '@/lib/hooks/useClientDetail';
 import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
-import type { HeureRealisee } from '@/types';
+import type { HeureRealisee, Procedure } from '@/types';
 import { computeReports, formatHeures, heuresFacturees } from '@/lib/heures-report';
+import { hasAutoRelances, canCancelSignature } from '@/lib/relances';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
 import {
   formatPhone,
@@ -555,6 +556,48 @@ export default function ClientDetailPage() {
     return procedureHistory.slice(start, start + ITEMS_PER_PAGE);
   }, [procedureHistory, historyPage]);
   const totalHistoryPages = Math.ceil(procedureHistory.length / ITEMS_PER_PAGE);
+  // Boutons de relance sur la ligne la plus récente de chaque procédure (historique trié du plus récent)
+  const latestEntryIds = useMemo(() => {
+    const seen = new Set<string>();
+    const ids = new Set<string>();
+    for (const e of procedureHistory) {
+      if (seen.has(e.procedure_id)) continue;
+      seen.add(e.procedure_id);
+      ids.add(e.id);
+    }
+    return ids;
+  }, [procedureHistory]);
+  const [relanceBusy, setRelanceBusy] = useState<string | null>(null);
+  const [cancelSignatureProc, setCancelSignatureProc] = useState<Procedure | null>(null);
+  const cancelSignatureRef = useRef<HTMLButtonElement>(null);
+  const procedureAction = async (
+    procId: string,
+    action: 'stop' | 'resume' | 'cancel-signature',
+    done: string
+  ) => {
+    setRelanceBusy(procId);
+    try {
+      const res = await fetch(`/api/procedures/${procId}/relances`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+      toast({ title: done, status: 'success', duration: 4000, isClosable: true });
+      refetch();
+    } catch (e) {
+      toast({
+        title: 'Erreur',
+        description: e instanceof Error ? e.message : String(e),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setRelanceBusy(null);
+    }
+  };
 
   // Pagination for documents
   const paginatedDocs = useMemo(() => {
@@ -2697,15 +2740,62 @@ export default function ClientDetailPage() {
                           {statusLabels[entry.status]}
                         </Badge>
                       </HStack>
-                      <Text fontSize="xs" color="gray.500" flexShrink={0}>
-                        {new Date(entry.created_at).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </Text>
+                      <HStack spacing={2} flexShrink={0} flexWrap="wrap">
+                        {(() => {
+                          const proc = latestEntryIds.has(entry.id)
+                            ? procedures.find(p => p.id === entry.procedure_id)
+                            : undefined;
+                          if (!proc) return null;
+                          const relances = hasAutoRelances(proc);
+                          const busy = relanceBusy === proc.id;
+                          return (
+                            <>
+                              {relances && proc.relances_stoppees && (
+                                <Badge colorScheme="gray" fontSize="xs">
+                                  Relances stoppées
+                                </Badge>
+                              )}
+                              {relances && (
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  colorScheme={proc.relances_stoppees ? 'accent' : 'orange'}
+                                  isLoading={busy}
+                                  onClick={() =>
+                                    proc.relances_stoppees
+                                      ? procedureAction(proc.id, 'resume', 'Relances reprises')
+                                      : procedureAction(proc.id, 'stop', 'Relances stoppées')
+                                  }
+                                >
+                                  {proc.relances_stoppees
+                                    ? 'Reprendre les relances'
+                                    : 'Stopper les relances'}
+                                </Button>
+                              )}
+                              {canCancelSignature(proc) && (
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  colorScheme="red"
+                                  isDisabled={busy}
+                                  onClick={() => setCancelSignatureProc(proc)}
+                                >
+                                  Annuler la signature
+                                </Button>
+                              )}
+                            </>
+                          );
+                        })()}
+                        <Text fontSize="xs" color="gray.500">
+                          {new Date(entry.created_at).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </Text>
+                      </HStack>
                     </Stack>
                   ))}
                 </Stack>
@@ -4154,6 +4244,47 @@ export default function ClientDetailPage() {
       </Modal>
 
       {/* Modal de confirmation de suppression */}
+      <AlertDialog
+        isOpen={!!cancelSignatureProc}
+        leastDestructiveRef={cancelSignatureRef}
+        onClose={() => setCancelSignatureProc(null)}
+        isCentered
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="brand.500">
+              Annuler la signature
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Le lien de signature de ce contrat sera désactivé et plus aucune relance ne sera
+              envoyée. C’est définitif : pour l’envoyer à la bonne personne, relancez ensuite une
+              contractualisation (nouvelle version).
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelSignatureRef} onClick={() => setCancelSignatureProc(null)}>
+                Retour
+              </Button>
+              <Button
+                colorScheme="red"
+                ml={3}
+                isLoading={!!cancelSignatureProc && relanceBusy === cancelSignatureProc.id}
+                onClick={async () => {
+                  if (!cancelSignatureProc) return;
+                  await procedureAction(
+                    cancelSignatureProc.id,
+                    'cancel-signature',
+                    'Signature annulée : le lien est désactivé'
+                  );
+                  setCancelSignatureProc(null);
+                }}
+              >
+                Annuler la signature
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+
       <AlertDialog
         isOpen={isDeleteOpen}
         leastDestructiveRef={cancelRef}

@@ -117,6 +117,7 @@ export async function GET(request: NextRequest) {
       )
       .eq('procedure_type_id', type.id)
       .eq('status', 'DRAFT')
+      .eq('relances_stoppees', false) // stoppées depuis la fiche client
       .lte('deadline_at', today)
       .gt('download_token_expires_at', now.toISOString())
       .not('download_token', 'is', null);

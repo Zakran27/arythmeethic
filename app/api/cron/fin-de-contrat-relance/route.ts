@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
       )
       .eq('procedure_type_id', procType.id)
       .eq('status', 'DRAFT')
+      .eq('relances_stoppees', false) // stoppées depuis la fiche client
       .lte('updated_at', threeDaysAgo.toISOString());
 
     let sent = 0;

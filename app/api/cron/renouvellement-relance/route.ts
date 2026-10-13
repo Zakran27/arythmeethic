@@ -197,10 +197,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'No clients to remind', count: 0 });
     }
 
+    // Relances stoppées depuis la fiche client (procédure de renouvellement en attente)
+    const { data: stopped } = procedureType
+      ? await supabase
+          .from('procedures')
+          .select('client_id')
+          .eq('procedure_type_id', procedureType.id)
+          .eq('status', 'DRAFT')
+          .eq('relances_stoppees', true)
+      : { data: [] };
+    const stoppedClients = new Set((stopped ?? []).map(p => p.client_id));
+
     let successCount = 0;
     let errorCount = 0;
 
     for (const client of clients) {
+      if (stoppedClients.has(client.id)) continue;
       try {
         // Build form URL with existing token
         const formUrl = `${baseUrl}/formulaire/renouvellement?token=${client.renouvellement_token}`;
@@ -223,7 +235,8 @@ export async function GET(request: NextRequest) {
         const result = await sendBrevoEmail({
           to: recipientEmail,
           toName: recipientName,
-          subject: ovRelance?.subject ?? 'A Rythme Ethic - Rappel : Votre avis sur le renouvellement',
+          subject:
+            ovRelance?.subject ?? 'A Rythme Ethic - Rappel : Votre avis sur le renouvellement',
           htmlContent: ovRelance ? renderEmailShell(ovRelance.html, relanceCta) : emailHtml,
         });
 
