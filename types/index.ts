@@ -184,6 +184,7 @@ export interface Procedure {
   annee_scolaire?: string | null; // contractualisation : « 2026-2027 » (versions V{n} par année)
   download_token_expires_at?: string | null;
   recipient_email?: string | null;
+  relances_stoppees?: boolean; // relances automatiques suspendues depuis la fiche (le lien reste valable)
   created_at: string;
   updated_at: string;
   client?: Client;
