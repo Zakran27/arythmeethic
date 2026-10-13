@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { FDC_KINDS as REQUIRED_KINDS, FDC_LABELS as KIND_LABELS } from '@/lib/fin-de-contrat';
 
 /**
  * CRON Job: Relance fin-de-contrat tous les 3 jours à 18h
@@ -13,20 +14,22 @@ import { renderEmailShell, emailButton } from '@/lib/email-templates';
  * Sécurisé par CRON_SECRET.
  */
 
-const REQUIRED_KINDS = [
-  'FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE',
-  'FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR',
-  'FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL',
-];
-
-async function sendBrevoEmail(p: { to: string; toName: string; subject: string; htmlContent: string }) {
+async function sendBrevoEmail(p: {
+  to: string;
+  toName: string;
+  subject: string;
+  htmlContent: string;
+}) {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) return { success: false };
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'A Rythme Ethic', email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr' },
+      sender: {
+        name: 'A Rythme Ethic',
+        email: process.env.BREVO_SENDER_EMAIL || 'florence.louazel@arythmeethic.fr',
+      },
       to: [{ email: p.to, name: p.toName }],
       subject: p.subject,
       htmlContent: p.htmlContent,
@@ -76,12 +79,6 @@ function buildRelanceHtml(recipientName: string, uploadUrl: string, missing: str
 </body></html>`;
 }
 
-const KIND_LABELS: Record<string, string> = {
-  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Reçu pour solde de tout compte',
-  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation employeur',
-  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat de travail',
-};
-
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -107,7 +104,9 @@ export async function GET(request: NextRequest) {
 
     const { data: procedures } = await supabase
       .from('procedures')
-      .select('id, client_id, download_token, recipient_email, download_token_expires_at, updated_at')
+      .select(
+        'id, client_id, download_token, recipient_email, download_token_expires_at, updated_at'
+      )
       .eq('procedure_type_id', procType.id)
       .eq('status', 'DRAFT')
       .lte('updated_at', threeDaysAgo.toISOString());
@@ -132,7 +131,7 @@ export async function GET(request: NextRequest) {
       const haveTitles = new Set((docs ?? []).map(d => d.title));
       const missing = REQUIRED_KINDS.filter(k => !haveTitles.has(KIND_LABELS[k]));
       if (missing.length === 0) {
-        // shouldn't happen (procedure would be SIGNED) - skip
+        // shouldn't happen (procedure would be SIGN_REQUESTED) - skip
         skipped++;
         continue;
       }

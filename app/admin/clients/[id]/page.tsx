@@ -2868,9 +2868,26 @@ export default function ClientDetailPage() {
                         spacing={2}
                       >
                         <Stack spacing={0} flex={1} minW={0}>
-                          <Text fontWeight="medium" fontSize="sm">
-                            {doc.title}
-                          </Text>
+                          <HStack spacing={2} flexWrap="wrap">
+                            <Text fontWeight="medium" fontSize="sm">
+                              {doc.title}
+                            </Text>
+                            {doc.signed_at ? (
+                              <Badge colorScheme="green" fontSize="0.65rem">
+                                Signé
+                              </Badge>
+                            ) : doc.docuseal_submission_id ? (
+                              <Badge colorScheme="orange" fontSize="0.65rem">
+                                Signature en cours
+                              </Badge>
+                            ) : docProcedure?.procedure_type?.code === 'FIN_DE_CONTRAT' &&
+                              docProcedure.status === 'SIGN_REQUESTED' ? (
+                              // Création DocuSeal ratée : re-tentée chaque matin par le cron des signatures
+                              <Badge colorScheme="red" fontSize="0.65rem">
+                                Signature non lancée
+                              </Badge>
+                            ) : null}
+                          </HStack>
                           <Text fontSize="xs" color="gray.500">
                             De :{' '}
                             {doc.procedure_id

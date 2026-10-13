@@ -31,7 +31,8 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'contact-notif',
     name: 'Notification de contact (à Florence)',
-    description: "Email reçu par Florence quand le formulaire « Prendre contact » est rempli. Vous éditez seulement le texte d'introduction ; le récapitulatif du formulaire est ajouté automatiquement.",
+    description:
+      "Email reçu par Florence quand le formulaire « Prendre contact » est rempli. Vous éditez seulement le texte d'introduction ; le récapitulatif du formulaire est ajouté automatiquement.",
     variables: [],
     wired: true,
   },
@@ -78,21 +79,24 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'recueil-informations',
     name: 'Recueil d’informations (envoi du formulaire)',
-    description: 'Email avec le lien vers le formulaire de recueil d’informations (bouton « Compléter le formulaire » ajouté automatiquement).',
+    description:
+      'Email avec le lien vers le formulaire de recueil d’informations (bouton « Compléter le formulaire » ajouté automatiquement).',
     variables: ['recipientName'],
     wired: true,
   },
   {
     key: 'contractualisation-particulier',
     name: 'Contractualisation — particulier',
-    description: 'Email envoyé au client pour signer le contrat (particulier). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
+    description:
+      'Email envoyé au client pour signer le contrat (particulier). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
     variables: ['recipientName'],
     wired: true,
   },
   {
     key: 'contractualisation-ecole',
     name: 'Contractualisation — établissement',
-    description: 'Email envoyé au client pour signer le contrat de prestation (établissement). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
+    description:
+      'Email envoyé au client pour signer le contrat de prestation (établissement). Bouton « Signer le document » ajouté automatiquement. La copie de contresignature de Florence n’est pas affectée.',
     variables: ['recipientName'],
     wired: true,
   },
@@ -115,50 +119,81 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   {
     key: 'envoi-cv-casier',
     name: 'Envoi CV / casier judiciaire',
-    description: 'Email d’envoi des documents (CV, casier) — bouton « Télécharger les documents » ajouté automatiquement.',
+    description:
+      'Email d’envoi des documents (CV, casier) — bouton « Télécharger les documents » ajouté automatiquement.',
     variables: ['recipientName'],
     wired: true,
   },
   {
     key: 'souhait-renouvellement',
     name: 'Souhait de renouvellement (lancement)',
-    description: 'Email demandant si le client souhaite renouveler (bouton « Donner ma réponse » ajouté automatiquement).',
+    description:
+      'Email demandant si le client souhaite renouveler (bouton « Donner ma réponse » ajouté automatiquement).',
     variables: ['recipientName', 'jeuneName'],
     wired: true,
   },
   {
     key: 'renouvellement-accuse',
     name: 'Renouvellement — accusé / avis Google',
-    description: 'Email de remerciement + demande d’avis Google après réponse au renouvellement (bouton « Laisser un avis Google » ajouté automatiquement).',
+    description:
+      'Email de remerciement + demande d’avis Google après réponse au renouvellement (bouton « Laisser un avis Google » ajouté automatiquement).',
     variables: ['recipientName'],
     wired: true,
   },
   {
     key: 'cron-renouvellement-envoi',
     name: 'Renouvellement — envoi automatique (cron)',
-    description: 'Email automatique de lancement du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
+    description:
+      'Email automatique de lancement du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
     variables: ['recipientName', 'jeuneName'],
     wired: true,
   },
   {
     key: 'cron-renouvellement-relance',
     name: 'Renouvellement — relance (cron)',
-    description: 'Email automatique de relance du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
+    description:
+      'Email automatique de relance du renouvellement (bouton « Donner ma réponse » ajouté automatiquement).',
     variables: ['recipientName', 'jeuneName'],
     wired: true,
   },
   {
     key: 'cron-fin-de-contrat-relance',
     name: 'Fin de contrat — relance (cron)',
-    description: 'Email automatique de relance des documents de fin de contrat (liste des documents manquants + bouton ajoutés automatiquement).',
+    description:
+      'Email automatique de relance des documents de fin de contrat (liste des documents manquants + bouton ajoutés automatiquement).',
     variables: ['recipientName'],
     wired: true,
   },
   {
     key: 'fin-de-contrat',
     name: 'Fin de contrat (lancement)',
-    description: 'Email de lancement de la procédure de fin de contrat (bouton « Déposer les documents » + message de clôture ajoutés automatiquement).',
+    description:
+      'Email de lancement de la procédure de fin de contrat (bouton « Déposer les documents » + message de clôture ajoutés automatiquement).',
     variables: ['recipientName'],
+    wired: true,
+  },
+  {
+    key: 'fin-de-contrat-signature',
+    name: 'Fin de contrat — signature des documents',
+    description:
+      'Envoyé au parent une fois les 3 documents déposés, puis à nouveau quand Florence a signé le reçu pour solde de tout compte. Un bouton « Signer le document » par document à signer est ajouté automatiquement (avec la mention du solde en attente de Florence si besoin).',
+    variables: ['recipientName'],
+    wired: true,
+  },
+  {
+    key: 'fin-de-contrat-signature-relance',
+    name: 'Fin de contrat — relance signature (cron)',
+    description:
+      'Relance automatique hebdomadaire tant que le parent n’a pas signé tous les documents de fin de contrat (boutons « Signer le document » ajoutés automatiquement).',
+    variables: ['recipientName'],
+    wired: true,
+  },
+  {
+    key: 'fin-de-contrat-document-signe',
+    name: 'Fin de contrat — document signé',
+    description:
+      'Envoyé au parent dès qu’un document de fin de contrat est signé par tous, avec le PDF signé en pièce jointe.',
+    variables: ['recipientName', 'documentLabel'],
     wired: true,
   },
 ];
@@ -301,7 +336,19 @@ export const DEFAULT_TEMPLATE_CONTENT: Record<string, RenderedTemplate> = {
   },
   'fin-de-contrat': {
     subject: 'A Rythme Ethic - Fin de contrat - documents à transmettre',
-    html: `<p>Bonjour {{recipientName}},</p><p>L'accompagnement de votre enfant touche à sa fin.</p><p>Pourriez-vous effectuer les démarches sur le site du CESU pour mettre fin à mon contrat qui me lie à vous ? Il est possible de réaliser la déclaration du mois en cours en même temps.</p><p><a href="https://www.cesu.urssaf.fr/info/accueil/question-du-moment/comment-gerer-la-fin-de-contrat.html">Procédure CESU - comment gérer la fin de contrat</a></p><p>Une fois que vous aurez ces trois documents, merci de me les transmettre via le formulaire ci-dessous :</p><ul><li>Reçu pour solde de tout compte</li><li>Attestation employeur</li><li>Certificat de travail</li></ul><p>Je vous retournerai les documents signés.</p>`,
+    html: `<p>Bonjour {{recipientName}},</p><p>L'accompagnement de votre enfant touche à sa fin.</p><p>Pourriez-vous effectuer les démarches sur le site du CESU pour mettre fin à mon contrat qui me lie à vous ? Il est possible de réaliser la déclaration du mois en cours en même temps.</p><p><a href="https://www.cesu.urssaf.fr/info/accueil/question-du-moment/comment-gerer-la-fin-de-contrat.html">Procédure CESU - comment gérer la fin de contrat</a></p><p>Une fois que vous aurez ces trois documents, merci de me les transmettre via le formulaire ci-dessous :</p><ul><li>Reçu pour solde de tout compte</li><li>Attestation employeur</li><li>Certificat de travail</li></ul><p><strong>Inutile de les signer :</strong> une fois les 3 documents déposés, vous recevrez par email un lien pour les signer électroniquement.</p>`,
+  },
+  'fin-de-contrat-signature': {
+    subject: 'A Rythme Ethic - Fin de contrat : documents à signer',
+    html: `<p>Bonjour {{recipientName}},</p><p>Merci pour l'envoi des documents de fin de contrat. Il ne reste plus qu'à les signer électroniquement, en quelques clics, grâce aux boutons ci-dessous.</p>`,
+  },
+  'fin-de-contrat-signature-relance': {
+    subject: 'A Rythme Ethic - Rappel : documents de fin de contrat à signer',
+    html: `<p>Bonjour {{recipientName}},</p><p>Je me permets de revenir vers vous : certains documents de fin de contrat ne sont pas encore signés.</p><p>Vous pouvez les signer en quelques clics grâce aux boutons ci-dessous.</p>`,
+  },
+  'fin-de-contrat-document-signe': {
+    subject: 'A Rythme Ethic - {{documentLabel}} signé',
+    html: `<p>Bonjour {{recipientName}},</p><p>Vous trouverez ci-joint le document <strong>{{documentLabel}}</strong> signé. Il remplace la version que vous m'aviez transmise.</p><p>Belle journée,</p>`,
   },
   'cron-fin-de-contrat-relance': {
     subject: 'A Rythme Ethic - Rappel : documents de fin de contrat',

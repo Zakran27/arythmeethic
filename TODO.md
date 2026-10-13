@@ -2,25 +2,7 @@
 
 > ⚠️ **DB : utiliser le MCP Supabase, PAS `database/schema.sql`** (`mcp__supabase__list_tables` / `apply_migration` / `get_advisors`).
 
-Lots 1 à 8 du meeting Flo d'oct. 2026 livrés. Restent les chantiers ci-dessous.
-
----
-
-## 🔴 Lot 9 — Signatures DocuSeal des documents de fin de contrat
-
-**Bloqué** : attendre les 3 PDF modèles de Florence (solde de tout compte, attestation employeur, certificat de travail) pour placer les champs de signature.
-
-**Déjà en place** : colonnes `documents.docuseal_submission_id` + `documents.signed_at` (migration-meeting-oct26.sql, Lot 9). Aucun code.
-
-**À faire** (réutiliser `lib/docuseal.ts`, `lib/signatures.ts`, `app/api/cron/signatures`) :
-1. **Solde de tout compte** : signature Florence PUIS parent (champ Florence sous « signature du salarié »).
-2. **Attestation employeur** + **Certificat de travail** : signature du parent seul.
-3. Une fois signé : le PDF signé remplace le document existant de la procédure, et est envoyé par email au parent.
-4. Templates d'email éditables (demande initiale + relance), relance **hebdomadaire** tant que ce n'est pas signé.
-5. Formulaire fin de contrat : mention « pas besoin de signer ces documents, vous recevrez un lien de signature ».
-6. Formulaire fin de contrat : documents **obligatoires** et **PDF uniquement** (accepte encore jpg/png/doc aujourd'hui — `app/formulaire/fin-de-contrat/[token]`, `app/api/formulaire/fin-de-contrat/route.ts`).
-
-**Mot-clé reprise** : « on attaque le Lot 9 ».
+Lots 1 à 9 du meeting Flo d'oct. 2026 livrés (Lot 9 : signatures DocuSeal des documents de fin de contrat, `lib/fin-de-contrat-signatures.ts`). Reste le chantier ci-dessous.
 
 ---
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { getSubmission, pendingSubmitters, signingLink } from '@/lib/docuseal';
 import { syncContractSignature } from '@/lib/signatures';
+import { processFinDeContratSignatures } from '@/lib/fin-de-contrat-signatures';
 import { getEmailTemplate } from '@/lib/email-templates-server';
 import { renderTemplate, signatureLinkBlock } from '@/lib/email-templates';
 import { sendEmail } from '@/lib/brevo';
@@ -17,6 +18,8 @@ export const maxDuration = 60;
  *  - si le client n'a toujours pas signé : relance (particulier tous les 7 jours, établissement
  *    tous les 3 jours en jour ouvré ≈ 2/semaine), comptés depuis la dernière demande / relance ;
  *  - s'il ne manque que Florence : rien au client (simple ligne dans le résumé).
+ * Puis les signatures des documents de fin de contrat (lib/fin-de-contrat-signatures.ts) : PDF
+ * signés rapatriés et envoyés au parent, demande du solde après Florence, relance hebdomadaire.
  *
  * Route publique (CRON_SECRET absent sur Vercel, décision Thomas) ⇒ idempotente : l'échéance vient
  * de l'historique (SIGNATURE_DEMANDEE / RELANCE_ENVOYEE), et chaque envoi « réserve » la procédure
@@ -196,6 +199,15 @@ export async function GET(request: NextRequest) {
         log('erreur (voir logs)');
       }
     }
+
+    // Fin de contrat : indépendant des contrats (une erreur ici n'annule pas le résumé ci-dessus)
+    const finDeContrat = await processFinDeContratSignatures({ dry, withNames: !!user }).catch(
+      e => {
+        console.error('[cron signatures] fin de contrat', e);
+        return [{ procedureId: '-', action: 'fin de contrat : erreur (voir logs)' }];
+      }
+    );
+    results.push(...finDeContrat);
 
     return NextResponse.json({
       success: true,

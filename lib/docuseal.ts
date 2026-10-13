@@ -23,6 +23,8 @@ export interface DocusealSigner {
   email: string;
   name: string;
   fields: { page: number; x: number; y: number; w: number; h: number };
+  // false : pas d'email DocuSeal pour ce signataire (on lui envoie un email Brevo à la place)
+  sendEmail?: boolean;
 }
 
 function headers() {
@@ -52,22 +54,29 @@ export function pendingSubmitters(sub: DocusealSubmission): DocusealSubmitter[] 
   return sub.submitters.filter(s => !s.completed_at);
 }
 
-// Crée la soumission (contrat + annexes éventuelles). DocuSeal envoie aussi son propre email (send_email).
+// Crée la soumission (contrat + annexes éventuelles). DocuSeal envoie aussi son propre email (send_email),
+// sauf aux signataires `sendEmail: false`. `order: 'preserved'` : chacun signe après le précédent.
 export async function createSubmission(params: {
   pdfBuffer: Buffer;
   filename: string;
   annexes?: { buffer: Buffer; name: string }[];
   signers: DocusealSigner[];
+  order?: 'random' | 'preserved';
 }): Promise<{
   submissionId: string;
   signers: { role: string; email: string; name: string; embedSrc: string }[];
 }> {
   const body = {
     send_email: true,
-    order: 'random',
+    order: params.order ?? 'random',
     // Annexes fusionnées dans un seul PDF (contrat École) ; absent = comportement par défaut
     merge_documents: params.annexes ? true : undefined,
-    submitters: params.signers.map(s => ({ role: s.role, email: s.email, name: s.name })),
+    submitters: params.signers.map(s => ({
+      role: s.role,
+      email: s.email,
+      name: s.name,
+      ...(s.sendEmail === false && { send_email: false }),
+    })),
     documents: [
       {
         name: params.filename,

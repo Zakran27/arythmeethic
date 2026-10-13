@@ -5,6 +5,26 @@ import { renderEmailShell, emailButton } from '@/lib/email-templates';
 
 const FIN_DE_CONTRAT_TYPE_CODE = 'FIN_DE_CONTRAT';
 
+// Les 3 documents déposés par la famille (documents.kind = SUPPORTING_DOC, type repéré par le titre).
+export const FDC_KINDS = [
+  'FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE',
+  'FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR',
+  'FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL',
+] as const;
+export type FdcKind = (typeof FDC_KINDS)[number];
+export const FDC_LABELS: Record<FdcKind, string> = {
+  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Reçu pour solde de tout compte',
+  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation employeur',
+  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat de travail',
+};
+export const FDC_FILENAMES: Record<FdcKind, string> = {
+  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Recu-solde-de-tout-compte',
+  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation-employeur',
+  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat-de-travail',
+};
+export const fdcKindOfTitle = (title: string): FdcKind | undefined =>
+  FDC_KINDS.find(k => FDC_LABELS[k] === title);
+
 export interface LaunchFinDeContratParams {
   clientId: string;
   recipientEmail: string;
@@ -91,7 +111,7 @@ function buildEmailHtml(recipientName: string, uploadUrl: string): string {
               <li>Attestation employeur</li>
               <li>Certificat de travail</li>
             </ul>
-            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Je vous retournerai les documents signés.</p>
+            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;"><strong>Inutile de les signer :</strong> une fois les 3 documents déposés, vous recevrez par email un lien pour les signer électroniquement.</p>
 
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
@@ -161,13 +181,15 @@ export async function launchFinDeContratProcedure(params: LaunchFinDeContratPara
     const startOfMonth = new Date();
     startOfMonth.setUTCDate(1);
     startOfMonth.setUTCHours(0, 0, 0, 0);
+    // Documents déposés, signatures en cours (SIGN_REQUESTED) : fin de contrat en cours, quel que soit le mois
     const { data: signedThisMonth } = await supabase
       .from('procedures')
       .select('id')
       .eq('client_id', params.clientId)
       .eq('procedure_type_id', procedureType.id)
-      .eq('status', 'SIGNED')
-      .gte('updated_at', startOfMonth.toISOString())
+      .or(
+        `status.eq.SIGN_REQUESTED,and(status.eq.SIGNED,updated_at.gte.${startOfMonth.toISOString()})`
+      )
       .limit(1);
     if (signedThisMonth && signedThisMonth.length > 0) {
       return { success: true, skipped: true };
