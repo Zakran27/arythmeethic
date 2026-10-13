@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDocumentProxy } from 'unpdf';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import {
+  FDC_KINDS as REQUIRED_KINDS,
+  FDC_LABELS as KIND_LABELS,
+  FDC_FILENAMES as KIND_FILENAMES,
+  type FdcKind as DocKind,
+} from '@/lib/fin-de-contrat';
+import { startFinDeContratSignatures } from '@/lib/fin-de-contrat-signatures';
 
-const REQUIRED_KINDS = [
-  'FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE',
-  'FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR',
-  'FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL',
-] as const;
-
-type DocKind = (typeof REQUIRED_KINDS)[number];
-
-const KIND_LABELS: Record<DocKind, string> = {
-  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Reçu pour solde de tout compte',
-  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation employeur',
-  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat de travail',
-};
-
-const KIND_FILENAMES: Record<DocKind, string> = {
-  FIN_DE_CONTRAT_SOLDE_TOUT_COMPTE: 'Recu-solde-de-tout-compte',
-  FIN_DE_CONTRAT_ATTESTATION_EMPLOYEUR: 'Attestation-employeur',
-  FIN_DE_CONTRAT_CERTIFICAT_TRAVAIL: 'Certificat-de-travail',
-};
+// Le 3e dépôt lance les 3 signatures DocuSeal (téléchargement + création des soumissions)
+export const maxDuration = 60;
 
 function slugify(input: string): string {
   return input
@@ -97,10 +88,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Paramètres manquants' }, { status: 400 });
     }
     if (!REQUIRED_KINDS.includes(kind)) {
-      return NextResponse.json({ success: false, error: 'Type de document inconnu' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Type de document inconnu' },
+        { status: 400 }
+      );
     }
     if (file.size > 20 * 1024 * 1024) {
-      return NextResponse.json({ success: false, error: 'Fichier trop volumineux (max 20 Mo)' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Fichier trop volumineux (max 20 Mo)' },
+        { status: 400 }
+      );
+    }
+    // PDF uniquement (signature électronique) : extension, signature %PDF- et fichier lisible
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const isPdf =
+      file.name.toLowerCase().endsWith('.pdf') &&
+      buffer.subarray(0, 1024).includes('%PDF-') &&
+      (await getDocumentProxy(new Uint8Array(buffer)).then(
+        () => true,
+        () => false
+      ));
+    if (!isPdf) {
+      return NextResponse.json(
+        { success: false, error: 'Format non accepté : merci d’envoyer un fichier PDF lisible.' },
+        { status: 400 }
+      );
     }
 
     const supabase = createServiceRoleClient();
@@ -119,6 +131,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Lien expiré' }, { status: 410 });
       }
     }
+    // Les 3 documents déjà reçus (signatures lancées) : plus de remplacement possible
+    if (procedure.status !== 'DRAFT') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Les documents ont déjà été transmis. Contactez Florence pour toute modification.',
+        },
+        { status: 409 }
+      );
+    }
 
     // Fetch jeune name to build a clean filename
     const { data: client } = await supabase
@@ -130,11 +152,8 @@ export async function POST(request: NextRequest) {
       ? slugify(`${client.first_name_jeune || ''} ${client.last_name_jeune || ''}`.trim())
       : '';
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
-    const cleanBase = jeuneSlug
-      ? `${KIND_FILENAMES[kind]}-${jeuneSlug}`
-      : KIND_FILENAMES[kind];
+    const ext = 'pdf';
+    const cleanBase = jeuneSlug ? `${KIND_FILENAMES[kind]}-${jeuneSlug}` : KIND_FILENAMES[kind];
     const cleanFilename = `${cleanBase}.${ext}`;
     const storagePath = `fin-de-contrat/${procedure.client_id}/${procedure.id}/${cleanBase}_${Date.now()}.${ext}`;
 
@@ -154,7 +173,7 @@ export async function POST(request: NextRequest) {
 
     const { error: uploadError } = await supabase.storage
       .from('client-files')
-      .upload(storagePath, buffer, { contentType: file.type || 'application/pdf', upsert: false });
+      .upload(storagePath, buffer, { contentType: 'application/pdf', upsert: false });
     if (uploadError) {
       console.error('Upload error:', uploadError);
       return NextResponse.json({ success: false, error: 'Erreur upload' }, { status: 500 });
@@ -184,7 +203,8 @@ export async function POST(request: NextRequest) {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', procedure.id);
 
-    // Check if all 3 docs are now uploaded → mark procedure as SIGNED (=completed)
+    // Les 3 documents reçus → signatures électroniques (SIGN_REQUESTED). Passage conditionnel depuis
+    // DRAFT : deux derniers dépôts simultanés ne lancent les signatures qu'une fois.
     const { data: allDocs } = await supabase
       .from('documents')
       .select('title')
@@ -193,15 +213,22 @@ export async function POST(request: NextRequest) {
       .in('title', Object.values(KIND_LABELS));
     const uploadedTitles = new Set((allDocs ?? []).map(d => d.title));
     const allDone = REQUIRED_KINDS.every(k => uploadedTitles.has(KIND_LABELS[k]));
-    if (allDone && procedure.status !== 'SIGNED') {
-      await supabase
+    if (allDone) {
+      const { data: moved } = await supabase
         .from('procedures')
-        .update({ status: 'SIGNED', updated_at: new Date().toISOString() })
-        .eq('id', procedure.id);
-      await supabase.from('procedure_status_history').insert({
-        procedure_id: procedure.id,
-        status: 'FORMULAIRE_REMPLI',
-      });
+        .update({ status: 'SIGN_REQUESTED', updated_at: new Date().toISOString() })
+        .eq('id', procedure.id)
+        .eq('status', 'DRAFT')
+        .select('id');
+      if (moved?.length) {
+        await supabase.from('procedure_status_history').insert({
+          procedure_id: procedure.id,
+          status: 'FORMULAIRE_REMPLI',
+        });
+        // Erreurs (DocuSeal, PDF illisible…) : re-tentées par le cron quotidien des signatures
+        const errors = await startFinDeContratSignatures(procedure.id).catch(e => [String(e)]);
+        if (errors.length) console.error('[fin-de-contrat] signatures :', procedure.id, errors);
+      }
     }
 
     return NextResponse.json({ success: true, allDone });

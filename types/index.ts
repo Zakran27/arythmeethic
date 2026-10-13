@@ -200,6 +200,9 @@ export interface Document {
   uploaded_by: UploadedBy;
   original_filename?: string;
   hash_sha256?: string;
+  // Documents de fin de contrat : signature électronique DocuSeal (lib/fin-de-contrat-signatures.ts)
+  docuseal_submission_id?: string | null;
+  signed_at?: string | null;
   created_at: string;
 }
 

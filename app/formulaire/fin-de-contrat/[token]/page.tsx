@@ -20,6 +20,7 @@ import {
   Input,
   Progress,
   Image,
+  Badge,
 } from '@chakra-ui/react';
 import { FiCheckCircle, FiUpload, FiFile } from 'react-icons/fi';
 import { use, useEffect, useState } from 'react';
@@ -39,6 +40,7 @@ interface RequiredDoc {
 interface Info {
   required: RequiredDoc[];
   uploaded: Uploaded;
+  status: string;
 }
 
 export default function FinDeContratFormPage({ params }: { params: Promise<{ token: string }> }) {
@@ -57,7 +59,7 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
         setError(data.error || 'Lien invalide');
         return;
       }
-      setInfo({ required: data.required, uploaded: data.uploaded });
+      setInfo({ required: data.required, uploaded: data.uploaded, status: data.status });
     } catch (e) {
       setError('Erreur de chargement');
     } finally {
@@ -74,6 +76,10 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
       toast({ title: 'Fichier trop volumineux (max 20 Mo)', status: 'error', duration: 3000 });
       return;
     }
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast({ title: 'Format non accepté : PDF uniquement', status: 'error', duration: 4000 });
+      return;
+    }
     setUploadingKind(kind);
     try {
       const formData = new FormData();
@@ -85,11 +91,16 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
         body: formData,
       });
       const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      if (!data.success) throw new Error(data.error || 'Erreur lors de l’envoi');
       toast({ title: 'Document envoyé', status: 'success', duration: 2000 });
       fetchInfo();
     } catch (e) {
-      toast({ title: 'Erreur', description: String(e), status: 'error', duration: 3000 });
+      toast({
+        title: 'Erreur',
+        description: e instanceof Error ? e.message : String(e),
+        status: 'error',
+        duration: 5000,
+      });
     } finally {
       setUploadingKind(null);
     }
@@ -98,6 +109,8 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
   const totalDone = info ? info.required.filter(r => info.uploaded[r.kind]).length : 0;
   const totalReq = info?.required.length || 3;
   const allDone = info && totalDone === totalReq;
+  // Les 3 documents transmis : signatures lancées, plus de remplacement possible
+  const locked = !!info && info.status !== 'DRAFT';
 
   if (loading) {
     return (
@@ -152,9 +165,19 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
               <Card bg="white" shadow="sm">
                 <CardBody>
                   <Stack spacing={3}>
+                    <Alert status="warning" borderRadius="lg" alignItems="flex-start">
+                      <AlertIcon />
+                      <Box>
+                        <AlertTitle>Ne signez pas ces documents</AlertTitle>
+                        <AlertDescription>
+                          Inutile de les signer avant de les envoyer : une fois les 3 documents
+                          déposés, vous recevrez par email un lien pour les signer électroniquement.
+                        </AlertDescription>
+                      </Box>
+                    </Alert>
                     <Text color="brand.600" lineHeight="1.7">
-                      Vous pouvez envoyer les documents un par un. Format accepté : PDF, JPG, PNG,
-                      DOCX (max 20 Mo par fichier).
+                      Les 3 documents sont obligatoires. Vous pouvez les envoyer un par un. Format
+                      accepté : PDF uniquement (max 20 Mo par fichier).
                     </Text>
                     <Box pt={2}>
                       <HStack justify="space-between" mb={1}>
@@ -190,9 +213,16 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
                     <CardBody>
                       <Stack spacing={3}>
                         <HStack justify="space-between" flexWrap="wrap">
-                          <Heading size="sm" color="brand.500" fontFamily="heading">
-                            {doc.label}
-                          </Heading>
+                          <HStack spacing={2}>
+                            <Heading size="sm" color="brand.500" fontFamily="heading">
+                              {doc.label}
+                            </Heading>
+                            {!up && (
+                              <Badge colorScheme="orange" fontSize="0.65rem">
+                                Obligatoire
+                              </Badge>
+                            )}
+                          </HStack>
                           {up && (
                             <Text fontSize="xs" color="gray.500">
                               Reçu le{' '}
@@ -240,7 +270,7 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
                             <Input
                               id={inputId}
                               type="file"
-                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              accept=".pdf,application/pdf"
                               display="none"
                               disabled={isUploading}
                               onChange={e => {
@@ -270,29 +300,31 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
                                 {up.filename}
                               </Text>
                             </Box>
-                            <Button
-                              as="label"
-                              htmlFor={inputId}
-                              size="sm"
-                              variant="ghost"
-                              colorScheme="cyan"
-                              cursor="pointer"
-                              isLoading={isUploading}
-                            >
-                              Remplacer
-                              <Input
-                                id={inputId}
-                                type="file"
-                                display="none"
-                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                onChange={e => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    handleUpload(doc.kind, e.target.files[0]);
-                                    e.target.value = '';
-                                  }
-                                }}
-                              />
-                            </Button>
+                            {!locked && (
+                              <Button
+                                as="label"
+                                htmlFor={inputId}
+                                size="sm"
+                                variant="ghost"
+                                colorScheme="cyan"
+                                cursor="pointer"
+                                isLoading={isUploading}
+                              >
+                                Remplacer
+                                <Input
+                                  id={inputId}
+                                  type="file"
+                                  display="none"
+                                  accept=".pdf,application/pdf"
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleUpload(doc.kind, e.target.files[0]);
+                                      e.target.value = '';
+                                    }
+                                  }}
+                                />
+                              </Button>
+                            )}
                           </Box>
                         )}
                       </Stack>
@@ -307,8 +339,10 @@ export default function FinDeContratFormPage({ params }: { params: Promise<{ tok
                   <Box>
                     <AlertTitle>Merci !</AlertTitle>
                     <AlertDescription>
-                      Florence a bien reçu vos 3 documents. Elle reviendra vers vous après les
-                      avoir signés.
+                      Florence a bien reçu vos 3 documents. Vous allez recevoir par email les liens
+                      pour les signer électroniquement : l’attestation employeur et le certificat de
+                      travail tout de suite, le reçu pour solde de tout compte dès que Florence
+                      l’aura signé.
                     </AlertDescription>
                   </Box>
                 </Alert>

@@ -4,10 +4,12 @@ export async function sendEmail({
   to,
   subject,
   html,
+  attachments,
 }: {
   to: { email: string; name?: string }[];
   subject: string;
   html: string;
+  attachments?: { name: string; content: Buffer }[];
 }): Promise<{ success: boolean; reason?: string }> {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
@@ -21,7 +23,11 @@ export async function sendEmail({
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
+      headers: {
+        accept: 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
       body: JSON.stringify({
         sender: {
           name: 'A Rythme Ethic',
@@ -31,6 +37,10 @@ export async function sendEmail({
         to: recipients.map(r => ({ email: r.email, name: r.name || undefined })),
         subject,
         htmlContent: html,
+        attachment: attachments?.map(a => ({
+          name: a.name,
+          content: a.content.toString('base64'),
+        })),
       }),
     });
     if (!res.ok) {
