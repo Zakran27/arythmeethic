@@ -24,7 +24,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: 'recap-heures',
     name: 'Récapitulatif des heures (mensuel)',
     description:
-      "Envoyé au client/parent avec le PDF récapitulatif. Vous éditez le texte d'introduction ; le tableau des montants, la mention « Premier rendez-vous réalisé le … » (si besoin) et la note « pièce jointe » sont ajoutés automatiquement.",
+      "Envoyé au client/parent avec le PDF récapitulatif. Vous éditez le texte d'introduction ; le tableau des montants (avec la ligne « Premier rendez-vous » si besoin) et la note « pièce jointe » sont ajoutés automatiquement.",
     variables: ['clientName', 'moisLabel'],
     wired: true,
   },

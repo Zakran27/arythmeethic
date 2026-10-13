@@ -64,7 +64,7 @@ import { createClient } from '@/lib/supabase-client';
 import { useClientDetail, contractVersions } from '@/lib/hooks/useClientDetail';
 import { statusLabels, PERIODE_FACTURATION_LABELS } from '@/types';
 import type { HeureRealisee } from '@/types';
-import { computeReports, formatHeures } from '@/lib/heures-report';
+import { computeReports, formatHeures, heuresFacturees } from '@/lib/heures-report';
 import type { ContractArticle } from '@/lib/contract-ecole-articles';
 import {
   formatPhone,
@@ -2428,7 +2428,7 @@ export default function ClientDetailPage() {
                         const line = reports.get(h.mois);
                         const reportIn = line?.reportIn ?? 0;
                         const rdvHeures = Number(h.premier_rdv_heures ?? 0);
-                        const heuresBillees = h.heures + reportIn;
+                        const heuresBillees = heuresFacturees(h, reportIn);
                         const montantHeures = heuresBillees * h.tarif_horaire;
                         const montantKm = h.km * h.bareme_km;
                         const montantAnnulation =
