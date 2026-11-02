@@ -46,7 +46,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://dummy.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 ## 2. Stack
 
-Next.js **15.0.5** (App Router) · React 18 · TypeScript · **Chakra UI v2** · zod · **Supabase** (Postgres + RLS + Auth + private Storage bucket `client-files`) ·
+Next.js **15.5.28** (App Router) · React 18 · TypeScript · **Chakra UI v2** · zod · **Supabase** (Postgres + RLS + Auth + private Storage bucket `client-files`) ·
 **Vercel** (hosting + crons in `vercel.json`) · **Brevo** (transactional email + one SMS) · **DocuSeal** (e-signature) ·
 **pdf-lib** + fontkit (PDF generation) · **unpdf** (reading uploaded PDFs) · **TipTap** (rich-text editor).
 
@@ -457,4 +457,4 @@ Add a case when you change one of these modules.
 
 **Next**: see `TODO.md`:
 - 29/10 meeting, blocks A–F: quick fixes, contract reviewer for schools, bulk actions in Suivi CESU, 1st RDV whole hours, normalised address, waiting-list switch, Partenaires and Ressources Lycée / Collège pages, CMS.
-- 19/10 security / perf audit. Priorities: `CRON_SECRET` on Vercel, close `/api/storage/upload`, `requireAdmin()`, idempotent renouvellement-envoi, Next.js upgrade.
+- 19/10 security / perf audit. Priorities: `CRON_SECRET` on Vercel, close `/api/storage/upload`, `requireAdmin()`, idempotent renouvellement-envoi (Next.js upgraded to 15.5.28 on 02/11).

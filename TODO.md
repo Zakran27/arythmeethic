@@ -108,7 +108,7 @@ Code, par priorité :
 1. Fermer `/api/storage/upload` (public, écrit en service role) → URL signée liée au token pour le recueil école.
 2. Vérifier le rôle admin (`requireAdmin()`) dans le middleware, pas seulement la session.
 3. `cron/renouvellement-envoi` : fenêtre de juin + anti-doublon + `maxDuration`.
-4. Mettre à jour Next.js (15.0.5 → 15.5.x+).
+4. ~~Mettre à jour Next.js~~ ✅ 15.5.28 (02/11), + TipTap 3.32.2 et `npm audit fix`. Restent : postcss (embarqué dans Next, build uniquement) et zod 3 (seulement `lib/env.ts`) → corrigés uniquement par Next 16 / zod 4.
 5. Échapper les variables des emails ; anti-spam sur `/api/contact`.
 6. Images de l'accueil (14 Mo au 1er affichage) → `next/image` + compression.
 7. Uploads fin de contrat > 4,5 Mo (limite Vercel) → URL signée.
