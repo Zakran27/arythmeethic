@@ -3,6 +3,7 @@ import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { FDC_KINDS as REQUIRED_KINDS, FDC_LABELS as KIND_LABELS } from '@/lib/fin-de-contrat';
+import { cronUnauthorized } from '@/lib/admin';
 
 /**
  * CRON Job: Relance fin-de-contrat tous les 3 jours à 18h
@@ -11,7 +12,7 @@ import { FDC_KINDS as REQUIRED_KINDS, FDC_LABELS as KIND_LABELS } from '@/lib/fi
  * Envoie une relance aux clients qui ont une procédure FIN_DE_CONTRAT en cours
  * et n'ont pas encore uploadé les 3 documents.
  *
- * Sécurisé par CRON_SECRET.
+ * Sécurisé par CRON_SECRET ou session admin (lib/admin.ts cronUnauthorized).
  */
 
 async function sendBrevoEmail(p: {
@@ -80,13 +81,8 @@ function buildRelanceHtml(recipientName: string, uploadUrl: string, missing: str
 }
 
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = request.headers.get('authorization');
-    if (auth !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  }
+  const denied = await cronUnauthorized(request);
+  if (denied) return denied;
 
   try {
     const supabase = createServiceRoleClient();

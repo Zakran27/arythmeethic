@@ -7,6 +7,7 @@ import { getEmailTemplate } from '@/lib/email-templates-server';
 import { renderTemplate, signatureLinkBlock } from '@/lib/email-templates';
 import { sendEmail } from '@/lib/brevo';
 import { parisDate, daysBetween, weekday, anneeScolaire } from '@/lib/format';
+import { cronUnauthorized } from '@/lib/admin';
 
 export const maxDuration = 60;
 
@@ -21,7 +22,7 @@ export const maxDuration = 60;
  * Puis les signatures des documents de fin de contrat (lib/fin-de-contrat-signatures.ts) : PDF
  * signés rapatriés et envoyés au parent, demande du solde après Florence, relance hebdomadaire.
  *
- * Route publique (CRON_SECRET absent sur Vercel, décision Thomas) ⇒ idempotente : l'échéance vient
+ * CRON_SECRET (lib/admin.ts cronUnauthorized) + idempotente : l'échéance vient
  * de l'historique (SIGNATURE_DEMANDEE / RELANCE_ENVOYEE), et chaque envoi « réserve » la procédure
  * par un update conditionnel updated_at → maintenant, accepté seulement si updated_at date de plus
  * de 20 h : deux appels qui se chevauchent (même avant l'écriture de l'historique) n'envoient
@@ -31,10 +32,8 @@ export const maxDuration = 60;
  * pour un admin connecté (le résumé public ne contient que des identifiants).
  */
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await cronUnauthorized(request);
+  if (denied) return denied;
   const dry = request.nextUrl.searchParams.get('dry') === '1';
 
   try {

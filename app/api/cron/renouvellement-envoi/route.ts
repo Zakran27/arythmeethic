@@ -3,12 +3,16 @@ import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, emailButton } from '@/lib/email-templates';
 import { randomBytes } from 'crypto';
+import { cronUnauthorized } from '@/lib/admin';
+import { parisDate } from '@/lib/format';
+
+export const maxDuration = 60;
 
 /**
  * CRON Job: Envoi automatique mi-juin pour tous les clients Particulier au statut 'Client'
  * À configurer dans Vercel: 0 9 15 6 * (15 juin à 9h)
  *
- * Sécurisé par CRON_SECRET
+ * Sécurisé par CRON_SECRET ou session admin (lib/admin.ts cronUnauthorized).
  */
 
 // Send email via Brevo API
@@ -146,12 +150,16 @@ function generateRenewalEmailHtml(
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret for security
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+    const denied = await cronUnauthorized(request);
+    if (denied) return denied;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Campagne de juin uniquement (cron « 0 9 15 6 * ») : un appel hors saison n'envoie rien
+    if (parisDate(new Date()).slice(5, 7) !== '06') {
+      return NextResponse.json({
+        success: true,
+        message: 'Hors campagne (juin uniquement)',
+        count: 0,
+      });
     }
 
     const supabase = createServiceRoleClient();
@@ -194,8 +202,10 @@ export async function GET(request: NextRequest) {
         const tokenExpiresAt = new Date();
         tokenExpiresAt.setDate(tokenExpiresAt.getDate() + 30);
 
-        // Update client
-        await supabase
+        // Réservation atomique : refusée si le client a déjà été sollicité il y a moins de 20 jours
+        // (double appel du cron, relance en cours) ⇒ jamais deux envois ni token écrasé
+        const claimBefore = new Date(Date.now() - 20 * 24 * 3600_000).toISOString();
+        const { data: claimed } = await supabase
           .from('clients')
           .update({
             renouvellement_token: renewalToken,
@@ -205,7 +215,12 @@ export async function GET(request: NextRequest) {
             renouvellement_commentaire: null,
             renouvellement_date_reponse: null,
           })
-          .eq('id', client.id);
+          .eq('id', client.id)
+          .or(
+            `renouvellement_dernier_email_at.is.null,renouvellement_dernier_email_at.lt.${claimBefore}`
+          )
+          .select('id');
+        if (!claimed?.length) continue;
 
         // Create procedure and add to status history
         if (procedureType) {
@@ -249,7 +264,8 @@ export async function GET(request: NextRequest) {
         const result = await sendBrevoEmail({
           to: recipientEmail,
           toName: recipientName,
-          subject: ovEnvoi?.subject ?? "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
+          subject:
+            ovEnvoi?.subject ?? "A Rythme Ethic - Souhaitez-vous poursuivre l'accompagnement ?",
           htmlContent: ovEnvoi ? renderEmailShell(ovEnvoi.html, envoiCta) : emailHtml,
         });
 

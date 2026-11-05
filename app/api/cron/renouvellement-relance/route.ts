@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
 import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { cronUnauthorized } from '@/lib/admin';
 
 /**
  * CRON Job: Relance automatique tous les vendredis à 16h
@@ -13,7 +14,7 @@ import { renderEmailShell, emailButton } from '@/lib/email-templates';
  * - Le dernier email date de plus de 7 jours
  * - Le token n'est pas expiré
  *
- * Sécurisé par CRON_SECRET
+ * Sécurisé par CRON_SECRET ou session admin (lib/admin.ts cronUnauthorized).
  */
 
 // Send email via Brevo API
@@ -151,13 +152,8 @@ function generateReminderEmailHtml(
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret for security
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const denied = await cronUnauthorized(request);
+    if (denied) return denied;
 
     const supabase = createServiceRoleClient();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://arythmeethic.fr';

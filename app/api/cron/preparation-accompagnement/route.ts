@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase-server';
 import { debutCampagne, parisDate } from '@/lib/format';
+import { cronUnauthorized } from '@/lib/admin';
 import {
   PREPARATION_CODE,
   launchPreparation,
@@ -20,7 +21,7 @@ export const maxDuration = 60;
  *     relance (deadline_at) est arrivée et pas encore relancée (une relance manuelle vide aussi
  *     deadline_at).
  *
- * Route publique (CRON_SECRET absent sur Vercel, décision Thomas) ⇒ idempotente, état en base :
+ * CRON_SECRET (lib/admin.ts cronUnauthorized) + idempotente, état en base :
  *  - campagne : une demande existe depuis le 1er juin → plus jamais d'envoi ; deux appels
  *    simultanés : `exclusiveSince` (lib/procedures) garantit au plus un email ;
  *  - relance : réservation atomique (deadline_at → null, accepté une seule fois) avant l'envoi,
@@ -29,10 +30,8 @@ export const maxDuration = 60;
  * un admin connecté (le résumé public ne contient que des identifiants, sans détail d'erreur).
  */
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await cronUnauthorized(request);
+  if (denied) return denied;
   const dry = request.nextUrl.searchParams.get('dry') === '1';
 
   try {
