@@ -475,7 +475,7 @@ The data is sensitive: minors, health fields (`troubles_*`, `suivi_psy`), CESU n
 - **Logs**: ids only. No names, emails, phones, messages or health fields in `console.log`.
 - **DB changes**: a new table ships with RLS on and `is_admin()` policies in the same migration. After a migration: `npx supabase db advisors --remote=yywqvlpxsfiavndeqhdu --type security`. Read-only live checks: `npx supabase db query --remote=yywqvlpxsfiavndeqhdu --read-only "<sql>"` (CLI login: `npx supabase login`).
 - **Dependencies**: `npm audit --omit=dev` before pushing a dependency change. Apply Next.js security releases within the week.
-- **Review**: a diff that touches `middleware.ts`, a public route, tokens, uploads, crons or emails gets `/security-review` before the push. A finding names the attacker, the input, the control bypassed and the impact; anything else is a hardening note.
+- **Review**: a diff that touches `middleware.ts`, a public route, tokens, uploads, crons or emails gets `/security-review` before the push; for a periodic full audit use the `security-audit` skill (Cloudflare, installed globally). A finding names the attacker, the input, the control bypassed and the impact; anything else is a hardening note.
 
 ## 13. Design principles (the UI is validated: change it as little as possible)
 
@@ -488,7 +488,7 @@ Florence approved the design (Chakra theme, `brand` / `accent`, email shell). Do
 - Dates and amounts through `lib/format.ts` (`fr-FR`); hours and euros in tables use `fontVariantNumeric="tabular-nums"`.
 - No new animation beyond Chakra defaults; anything added respects `prefers-reduced-motion`.
 - Check UI changes at 390px and 1440px before pushing.
-- Design tools (`npx impeccable detect`, `/impeccable audit`, jakubkrehel `interface-review`) only as read-only reports. No edit-time design hooks here, and ignore findings that contradict the validated design.
+- Design tools (`npx impeccable detect`, `/impeccable audit`, the `interface-review` and `better-accessibility` skills, installed globally) only as read-only reports. No edit-time design hooks here, and ignore findings that contradict the validated design.
 
 ## 14. Working method
 
