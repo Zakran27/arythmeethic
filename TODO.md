@@ -100,16 +100,23 @@ Taille : XS = quelques lignes · S = < ½ j · M = ~1 j · L = plusieurs jours.
 
 ---
 
-## 🔒 Audit sécurité / performance (19/10) — en attente de go
+## 🔒 Audit sécurité / performance (19/10)
 
-Sans code (Thomas) : définir `CRON_SECRET` dans Vercel ; vérifier dans Supabase inscriptions fermées, policies du bucket `client-files` et de `profiles`.
+Sécurité faite les 05-06/11 :
+- ✅ Données des familles pseudonymisées dans le repo et dans l'historique git (originaux hors git, dans `web/_prive-arythmeethic/`).
+- ✅ `CRON_SECRET` défini sur Vercel ; tous les crons exigent le secret ou une session admin ; renouvellement-envoi limité à juin + anti-doublon + `maxDuration`.
+- ✅ Vérifié en prod : inscriptions fermées, RLS sur toutes les tables, bucket privé (types de fichiers désormais limités).
+- ✅ `/api/storage/upload` fermé (admin seulement) : le recueil école passe par l'URL signée liée au token.
+- ✅ Middleware : rôle admin exigé + MFA TOTP (activable dans « Sécurité du compte »), aussi exigée par `is_admin()` dans les policies.
+- ✅ Variables des emails échappées ; `/api/contact` : champ piège anti-robots, plus de données personnelles dans les logs ; en-têtes de sécurité ; avis non publiés réservés à l'admin.
 
-Code, par priorité :
-1. Fermer `/api/storage/upload` (public, écrit en service role) → URL signée liée au token pour le recueil école.
-2. Vérifier le rôle admin (`requireAdmin()`) dans le middleware, pas seulement la session.
-3. `cron/renouvellement-envoi` : fenêtre de juin + anti-doublon + `maxDuration`.
-4. ~~Mettre à jour Next.js~~ ✅ 15.5.28 (02/11), + TipTap 3.32.2 et `npm audit fix`. Restent : postcss (embarqué dans Next, build uniquement) et zod 3 (seulement `lib/env.ts`) → corrigés uniquement par Next 16 / zod 4.
-5. Échapper les variables des emails ; anti-spam sur `/api/contact`.
+À faire par Thomas / Florence :
+- Activer la double authentification sur les 2 comptes (menu « Sécurité du compte »).
+- Supabase > Authentication > Attack protection : activer la protection contre les mots de passe compromis (offre Pro).
+- Florence : désactiver les liens de partage SharePoint qui figuraient dans le classeur des heures (« Envoi des docs »).
+
+Code restant, par priorité :
+- ~~Mettre à jour Next.js~~ ✅ 15.5.28 (02/11), + TipTap 3.32.2 et `npm audit fix`. Restent : postcss (embarqué dans Next, build uniquement) et zod 3 (seulement `lib/env.ts`) → corrigés uniquement par Next 16 / zod 4.
 6. Images de l'accueil (14 Mo au 1er affichage) → `next/image` + compression.
 7. Uploads fin de contrat > 4,5 Mo (limite Vercel) → URL signée.
 8. `heures_realisees` / `contact_logs` lus en entier (plafond 1 000 lignes) → filtrer côté serveur.

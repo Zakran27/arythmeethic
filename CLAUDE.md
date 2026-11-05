@@ -51,7 +51,7 @@ Next.js **15.5.28** (App Router) · React 18 · TypeScript · **Chakra UI v2** �
 **pdf-lib** + fontkit (PDF generation) · **unpdf** (reading uploaded PDFs) · **TipTap** (rich-text editor).
 
 Env vars (names only): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
-`BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `DOCUSEAL_API_KEY`, `CRON_SECRET` (optional, **not set** → crons are public),
+`BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `DOCUSEAL_API_KEY`, `CRON_SECRET` (set on Vercel production; crons accept it or an admin session, see `lib/admin.ts`),
 `NEXT_PUBLIC_BASE_URL` / `NEXT_PUBLIC_SITE_URL` (same thing, both default to `https://arythmeethic.fr`; fin de contrat uses `SITE_URL`, the rest `BASE_URL`),
 `GOOGLE_REVIEW_URL`, `FLORENCE_NOTIF_EMAIL`. Only the Supabase ones are zod-validated (`lib/env.ts`).
 
@@ -79,9 +79,9 @@ docs/       contrat-articles-editables.md, migration-yousign-docuseal.md, review
 Key files:
 - **Client page**: `app/admin/clients/[id]/page.tsx` (~4400 lines, client component) + `lib/hooks/useClientDetail.ts` (data loading, history labels, contract versions). Procedure launch buttons are in the "Historique des procédures" card; most modals are inline in `page.tsx`, the accompagnement ones in `AccompagnementModals.tsx`.
 - **Auth**: `middleware.ts` (matcher `/admin/*`, `/api/*`). No session → `/api` returns 401, `/admin` redirects to login, except:
-  - `PUBLIC_API`: `/api/contact`, `/api/formulaire/*`, `/api/download`, `/api/cron/*`, `/api/storage/upload`, `GET /api/google-reviews`;
+  - `PUBLIC_API`: `/api/contact`, `/api/formulaire/*`, `/api/download`, `/api/cron/*` (crons check `CRON_SECRET` themselves), `GET /api/google-reviews`;
   - `PUBLIC_ADMIN_PAGES` (`lib/auth.ts`): login, forgot-password, reset-password.
-  - ⚠️ It checks the **session, not the admin role** (open audit item).
+  - It requires `profiles.role = 'admin'`, and `is_admin()` (aal2) when the admin enabled TOTP MFA: otherwise `/admin/*` redirects to `/admin/mfa`, `/api/*` returns 401. MFA is enrolled per account in `/admin/securite`; `is_admin()` applies the same rule to every RLS policy.
 - **Supabase clients**: `lib/supabase-server.ts` (`createClient` = cookie session; `createServiceRoleClient` = bypasses RLS, server only, used by nearly every API route) and `lib/supabase-client.ts` (browser, RLS `is_admin()`).
 
 ---
@@ -129,7 +129,7 @@ Key files:
 | `recueil/{clientId}/…` | recueil uploads (timetable, assessments) |
 | `preparation-accompagnement/{clientId}/…pdf` | timetable from the préparation form |
 | `fin-de-contrat/{clientId}/{procId}/{Kind}-…pdf` (`-signe_…` once signed) | fin de contrat uploads |
-| `procedure/{procId}/…` | CV / criminal record (via `/api/storage/upload`) |
+| `procedure/{procId}/…` | CV / criminal record (via `/api/storage/upload`, admin session only) |
 
 Contract PDFs are **not stored**: they are generated, sent to DocuSeal, and the signed copy is streamed from DocuSeal on demand.
 Large uploads go through signed upload URLs (`signedUploadUrl` in `lib/procedures.ts`, direct browser → Storage, rough cap of 12 files / folder / 7 days) to avoid Vercel's 4.5 MB body limit.
@@ -314,7 +314,7 @@ Contact form (Prospect) → Recueil d'informations école → Contractualisation
 - unpdf reads uploaded PDFs: validation + text anchors for the signature boxes.
 
 ### Vercel crons (`vercel.json`, UTC)
-All are public (no `CRON_SECRET`) → written to be idempotent; `?dry=1` = simulation (only the signatures and préparation crons support it).
+Protected by `CRON_SECRET` (Vercel sends it) or an admin session (`cronUnauthorized` in `lib/admin.ts`, fail closed); still written to be idempotent. `?dry=1` = simulation (only the signatures and préparation crons support it).
 
 | Route | Schedule | Does |
 |---|---|---|
@@ -322,7 +322,7 @@ All are public (no `CRON_SECRET`) → written to be idempotent; `?dry=1` = simul
 | `/api/cron/preparation-accompagnement` | daily 16:00 | 20–31 Aug campaign + 2nd-Friday-of-Sept reminder |
 | `/api/cron/fin-de-contrat-relance` | 18:00 on days 1, 4, 7… (`*/3`) | reminder for missing fin de contrat uploads |
 | `/api/cron/renouvellement-relance` | Fridays 16:00 | renewal reminder |
-| `/api/cron/renouvellement-envoi` | 15 June 09:00 | renewal campaign (**not idempotent**: a second run creates new tokens / procedures) |
+| `/api/cron/renouvellement-envoi` | 15 June 09:00 | renewal campaign (June only; atomic claim on `renouvellement_dernier_email_at`, so a second run within 20 days sends nothing) |
 
 ### Others
 - **Google reviews**: no Google API. The `google_reviews` table is curated by hand in `/admin/avis` and shown in a carousel on the home page.
@@ -436,8 +436,8 @@ Add a case when you change one of these modules.
   - `is_admin()`.
 
   Check the live DB before assuming.
-- `/api/formulaire/recueil-informations-ecole` does not check `type_client` on the token.
-- `/api/storage/upload` is public and writes with the service role (audit item #1).
+- Recueil uploads (both forms) go through `api/formulaire/recueil-informations/upload-url` (signed URL, `findRecueilClient(token, …, 'any')`), checked again by `storedUploads` in the final POST. Schools may also send Word / PowerPoint (`ECOLE_UPLOAD_MIME`).
+- The `client-files` bucket only accepts PDF, images and office MIME types (`database/migration-security-mfa.sql`); a new file type needs a bucket update.
 - The fin-de-contrat-relance cron uses `*/3` on the day of month (restarts on the 1st).
 - `npm run seed` points to `scripts/seed.mjs`, which does not exist.
 
@@ -457,7 +457,7 @@ Add a case when you change one of these modules.
 
 **Next**: see `TODO.md`:
 - 29/10 meeting, blocks A–F: quick fixes, contract reviewer for schools, bulk actions in Suivi CESU, 1st RDV whole hours, normalised address, waiting-list switch, Partenaires and Ressources Lycée / Collège pages, CMS.
-- 19/10 security / perf audit. Priorities: `CRON_SECRET` on Vercel, close `/api/storage/upload`, `requireAdmin()`, idempotent renouvellement-envoi (Next.js upgraded to 15.5.28 on 02/11).
+- 19/10 security / perf audit: security items done on 05-06/11 (see TODO.md); perf items #6-#9 remain.
 
 ---
 
@@ -467,8 +467,8 @@ The data is sensitive: minors, health fields (`troubles_*`, `suivi_psy`), CESU n
 
 - **Public routes** (`PUBLIC_API` in `middleware.ts`): the token is the only control. Check its format, expiry and type server side before any read, write, upload or email. Never trust an id sent by the browser (`procedureId`, `clientId`): derive it from the token.
 - **Service role** bypasses RLS: every `createServiceRoleClient()` query is filtered by the token or the owner. No `.insert(body)` / `.update(body)` with the raw request body: pick the fields.
-- **Admin routes**: the middleware checks the session, not the role. Until `requireAdmin()` exists, a new admin route checks `is_admin` itself.
-- **Crons**: check `Authorization: Bearer ${CRON_SECRET}` and stay idempotent (claim or date guard, like `cron/signatures`). Anyone can call a cron URL.
+- **Admin routes**: the middleware requires the admin role (+ MFA when enabled). Routes outside its matcher, or public ones that need an admin, call `isAdminSession()` (`lib/admin.ts`), like `GET /api/google-reviews?all=1`.
+- **Crons**: start with `cronUnauthorized(request)` (`lib/admin.ts`) and stay idempotent (claim or date guard, like `cron/signatures`).
 - **Emails**: HTML-escape every value that comes from a form or the DB before it reaches a template or a subject. Links come from `NEXT_PUBLIC_BASE_URL`, never from the request `Host`.
 - **Uploads**: signed upload URL tied to the token (pattern: `api/formulaire/recueil-informations/upload-url`), `uploadExtension` allowlist, size cap, per-client prefix, random file name.
 - **Errors**: anonymous callers get a generic French message. `error.message`, PostgREST and DocuSeal errors go to `console.error` only.
