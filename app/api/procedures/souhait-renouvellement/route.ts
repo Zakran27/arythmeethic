@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, emailButton, escapeHtml } from '@/lib/email-templates';
 import { randomBytes } from 'crypto';
 
 // Send email via Brevo API
@@ -88,10 +88,10 @@ function generateRenewalEmailHtml(
           <tr>
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Bonjour ${recipientName},
+                Bonjour ${escapeHtml(recipientName)},
               </p>
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que vous m'avez accordée pour l'accompagnement de ${jeuneName}.
+                L'année scolaire touche à sa fin et je tenais à vous remercier pour la confiance que vous m'avez accordée pour l'accompagnement de ${escapeHtml(jeuneName)}.
               </p>
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
                 Afin de préparer sereinement la rentrée prochaine, j'aimerais savoir si vous envisagez de poursuivre l'accompagnement l'année suivante.

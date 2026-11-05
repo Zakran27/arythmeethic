@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, emailButton, escapeHtml } from '@/lib/email-templates';
 
 const FIN_DE_CONTRAT_TYPE_CODE = 'FIN_DE_CONTRAT';
 
@@ -92,7 +92,7 @@ function buildEmailHtml(recipientName: string, uploadUrl: string): string {
         </tr>
         <tr>
           <td style="padding:40px;">
-            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${recipientName},</p>
+            <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${escapeHtml(recipientName)},</p>
             <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">L'accompagnement de votre enfant touche à sa fin.</p>
             <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">
               Pourriez-vous effectuer les démarches sur le site du CESU pour mettre fin à mon contrat qui me lie à vous ?

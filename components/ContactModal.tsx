@@ -122,7 +122,12 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, email: trimmedEmail }),
+        body: JSON.stringify({
+          ...formData,
+          email: trimmedEmail,
+          // Champ piège invisible : rempli seulement par les robots (ignoré côté serveur)
+          website: new FormData(e.currentTarget as HTMLFormElement).get('website') ?? '',
+        }),
       });
 
       if (!response.ok) {
@@ -456,6 +461,14 @@ export function ContactModal({ isOpen, onClose, defaultClientType }: ContactModa
         <ModalCloseButton />
         <ModalBody pb={6} overflowY="auto">
           <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+            />
             <Stack spacing={4}>
               {/* Step 1 - Type d'accompagnement */}
               <FormControl isRequired>

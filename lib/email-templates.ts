@@ -202,18 +202,33 @@ export function getEmailTemplateMeta(key: string): EmailTemplateMeta | undefined
   return EMAIL_TEMPLATES.find(t => t.key === key);
 }
 
-// Substitution simple `{{var}}` -> valeur. Valeurs insérées telles quelles
-// (les templates sont rédigés par une admin de confiance, et certaines
-// variables comme {{montantsTable}} sont du HTML).
-// Section `{{#var}}…{{/var}}` : contenu conservé seulement si `var` est non vide.
-export function substituteVars(template: string, vars: Record<string, string>): string {
+// Texte (nom saisi dans un formulaire, valeur de la base…) inséré dans du HTML d'email
+export function escapeHtml(s: unknown): string {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Substitution simple `{{var}}` -> valeur. Les valeurs viennent des formulaires et de la base :
+// échappées pour le HTML ; `html = false` pour un objet d'email (texte brut, sans retour à la
+// ligne). Les blocs HTML calculés (montants, boutons) passent par `dynamicBlock`, jamais par une
+// variable. Section `{{#var}}…{{/var}}` : contenu conservé seulement si `var` est non vide.
+export function substituteVars(
+  template: string,
+  vars: Record<string, string>,
+  html = true
+): string {
+  const value = (v: unknown) => (html ? escapeHtml(v) : String(v ?? '').replace(/[\r\n]+/g, ' '));
   return template
     .replace(
       /\{\{#([a-zA-Z0-9_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/g,
       (_m, name: string, inner: string) => (vars[name] ? inner : '')
     )
     .replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, name: string) =>
-      Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name] ?? '') : ''
+      Object.prototype.hasOwnProperty.call(vars, name) ? value(vars[name]) : ''
     );
 }
 
@@ -261,7 +276,7 @@ export function renderTemplate(
   dynamicBlock = ''
 ): RenderedTemplate {
   return {
-    subject: substituteVars(t.subject, vars),
+    subject: substituteVars(t.subject, vars, false),
     html: renderEmailShell(substituteVars(t.html, vars), dynamicBlock),
   };
 }

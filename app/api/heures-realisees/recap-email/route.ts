@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
       const vars = { clientName: entry.clientName, moisLabel: recap.moisLabel };
       const def = DEFAULT_TEMPLATE_CONTENT['recap-heures'];
       const template = (await getEmailTemplateOverride('recap-heures', vars)) ?? {
-        subject: substituteVars(def.subject, vars),
+        subject: substituteVars(def.subject, vars, false),
         html: substituteVars(def.html, vars),
       };
       // Corps (personnalisé ou par défaut) entouré de l'habillage de marque + blocs calculés

@@ -32,7 +32,9 @@ export async function getEmailTemplateOverride(
   vars: Record<string, string>
 ): Promise<RenderedTemplate | null> {
   const t = await fetchOverride(key);
-  return t && { subject: substituteVars(t.subject, vars), html: substituteVars(t.html, vars) };
+  return (
+    t && { subject: substituteVars(t.subject, vars, false), html: substituteVars(t.html, vars) }
+  );
 }
 
 // Template brut à utiliser : version personnalisée de Florence, sinon le modèle par défaut.

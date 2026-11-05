@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell } from '@/lib/email-templates';
+import { renderEmailShell, escapeHtml } from '@/lib/email-templates';
 
 // Strict-ish email validation: requires local@domain.tld with TLD of 2+ chars.
 // Mirrors the client-side regex in ContactModal.tsx.
@@ -39,24 +39,29 @@ async function sendBrevoEmail(p: {
   return { ok: true };
 }
 
+// Texte libre du formulaire public : chaîne, espaces retirés, longueur plafonnée
+const text = (v: unknown, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      clientType,
-      firstName,
-      lastName,
-      organisationName,
-      email,
-      phone,
-      studentLevel,
-      requestType,
-      requestSubject,
-      howDidYouHear,
-      referrerName,
-      message,
-      demarcheVolontaire,
-    } = body;
+    // Champ piège invisible (ContactModal) : rempli = robot. Réponse « succès » sans rien faire.
+    if (text(body.website)) {
+      return NextResponse.json({ success: true, message: 'Message envoyé' });
+    }
+    const clientType = text(body.clientType, 20);
+    const firstName = text(body.firstName);
+    const lastName = text(body.lastName);
+    const organisationName = text(body.organisationName);
+    const email = text(body.email, 254);
+    const phone = text(body.phone, 40);
+    const studentLevel = text(body.studentLevel, 100);
+    const requestType = text(body.requestType, 100);
+    const requestSubject = text(body.requestSubject, 100);
+    const howDidYouHear = text(body.howDidYouHear, 100);
+    const referrerName = text(body.referrerName);
+    const message = text(body.message, 5000);
+    const demarcheVolontaire = body.demarcheVolontaire;
 
     if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
       return NextResponse.json(
@@ -167,7 +172,7 @@ export async function POST(request: NextRequest) {
     const { data: newClient, error: insertError } = await supabase
       .from('clients')
       .insert([clientRecord])
-      .select()
+      .select('id')
       .single();
 
     if (insertError) {
@@ -176,60 +181,6 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('Client created successfully:', newClient?.id);
     }
-
-    // Build email content based on client type
-    let emailContent = `
-Nouveau message depuis A Rythme Ethic
-
-Type de client: ${clientTypeLabels[clientType] || clientType}
-`;
-
-    if (clientType === 'school') {
-      emailContent += `Établissement: ${organisationName}
-`;
-    }
-
-    emailContent += `Nom: ${lastName}
-Prénom: ${firstName}
-Email: ${email}
-Téléphone: ${phone || 'Non renseigné'}
-`;
-
-    if (clientType === 'parent') {
-      emailContent += `Niveau de l'élève: ${studentLevel}
-Type de demande: ${requestTypeLabels[requestType] || requestType}
-`;
-    }
-
-    if (clientType === 'school') {
-      emailContent += `Objet de la demande: ${requestSubjectLabels[requestSubject] || requestSubject}
-Comment m'a connue: ${howDidYouHearLabels[howDidYouHear] || howDidYouHear}
-`;
-      if (howDidYouHear === 'recommandation' && referrerName) {
-        emailContent += `Recommandé par: ${referrerName}
-`;
-      }
-    }
-
-    emailContent += `
-Message:
-${message}
-    `.trim();
-
-    console.log('Contact form submission:', {
-      clientType,
-      firstName,
-      lastName,
-      organisationName,
-      email,
-      phone,
-      studentLevel,
-      requestType,
-      requestSubject,
-      howDidYouHear,
-      referrerName,
-      message,
-    });
 
     // Notification email to Florence
     const notifTo =
@@ -261,14 +212,6 @@ ${message}
         detailRows.push(['Recommandé par', referrerName]);
       }
     }
-
-    const escapeHtml = (s: string) =>
-      s
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 
     const detailRowsHtml = detailRows
       .map(
@@ -332,7 +275,6 @@ ${message}
     return NextResponse.json({
       success: true,
       message: 'Message envoyé avec succès',
-      clientId: newClient?.id,
     });
   } catch (error) {
     console.error('Error processing contact form:', error);

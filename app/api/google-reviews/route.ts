@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { isAdminSession } from '@/lib/admin';
 
+// GET public (carrousel du site) : avis publiés seulement ; `?all=1` (non publiés inclus) réservé
+// à l'admin (/admin/avis).
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
-    const showAll = request.nextUrl.searchParams.get('all') === '1';
+    const showAll = request.nextUrl.searchParams.get('all') === '1' && (await isAdminSession());
     const query = supabase
       .from('google_reviews')
       .select('*')

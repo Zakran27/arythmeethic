@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, signatureLinkBlock } from '@/lib/email-templates';
+import { renderEmailShell, signatureLinkBlock, escapeHtml } from '@/lib/email-templates';
 import { sendEmail } from '@/lib/brevo';
 import { createSubmission, toDocusealCoords } from '@/lib/docuseal';
 import { supersedePreviousContracts } from '@/lib/signatures';
@@ -23,7 +23,7 @@ async function sendSignatureEmail({
 }) {
   const intro =
     role === 'Florence'
-      ? `<strong>${clientName}</strong> a été invité(e) à signer le contrat de prestation. Voici votre lien pour contresigner.`
+      ? `<strong>${escapeHtml(clientName)}</strong> a été invité(e) à signer le contrat de prestation. Voici votre lien pour contresigner.`
       : `Florence Louazel vous invite à signer le contrat de prestation A Rythme Ethic.`;
 
   const htmlContent = `

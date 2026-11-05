@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, emailButton, escapeHtml } from '@/lib/email-templates';
 import { cronUnauthorized } from '@/lib/admin';
 
 /**
@@ -101,10 +101,10 @@ function generateReminderEmailHtml(
           <tr>
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Bonjour ${recipientName},
+                Bonjour ${escapeHtml(recipientName)},
               </p>
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Je me permets de vous relancer concernant le renouvellement de l'accompagnement de ${jeuneName} pour l'année prochaine.
+                Je me permets de vous relancer concernant le renouvellement de l'accompagnement de ${escapeHtml(jeuneName)} pour l'année prochaine.
               </p>
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
                 <strong>Votre réponse m'aiderait à organiser au mieux mon planning pour la rentrée.</strong>

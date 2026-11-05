@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, emailButton, escapeHtml } from '@/lib/email-templates';
 
 // Send email via Brevo API
 async function sendBrevoEmail({
@@ -87,7 +87,7 @@ function generateGoogleReviewEmailHtml(recipientName: string): string {
           <tr>
             <td style="padding: 40px;">
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
-                Bonjour ${recipientName},
+                Bonjour ${escapeHtml(recipientName)},
               </p>
               <p style="margin: 0 0 20px 0; color: #7b4a31; font-size: 16px; line-height: 1.6;">
                 Merci pour votre réponse concernant le renouvellement de l'accompagnement !

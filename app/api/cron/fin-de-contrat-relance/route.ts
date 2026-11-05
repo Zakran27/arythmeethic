@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { getEmailTemplateOverride } from '@/lib/email-templates-server';
-import { renderEmailShell, emailButton } from '@/lib/email-templates';
+import { renderEmailShell, emailButton, escapeHtml } from '@/lib/email-templates';
 import { FDC_KINDS as REQUIRED_KINDS, FDC_LABELS as KIND_LABELS } from '@/lib/fin-de-contrat';
 import { cronUnauthorized } from '@/lib/admin';
 
@@ -55,7 +55,7 @@ function buildRelanceHtml(recipientName: string, uploadUrl: string, missing: str
           <p style="margin:10px 0 0 0;color:#c3826e;font-size:16px;">Petit rappel amical</p>
         </td></tr>
         <tr><td style="padding:40px;">
-          <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${recipientName},</p>
+          <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">Bonjour ${escapeHtml(recipientName)},</p>
           <p style="margin:0 0 20px 0;color:#7b4a31;font-size:16px;line-height:1.6;">
             Je me permets de revenir vers vous concernant la fin de contrat. Il manque encore les document(s) suivant(s) :
           </p>
