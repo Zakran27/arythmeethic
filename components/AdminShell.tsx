@@ -32,6 +32,7 @@ const navItems = [
   { label: 'Formations', href: '/admin/formations' },
   { label: 'Bandeaux / popups', href: '/admin/bandeaux' },
   { label: 'Templates emails', href: '/admin/email-templates' },
+  { label: 'Sécurité du compte', href: '/admin/securite' },
 ];
 
 function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => void }) {
@@ -68,7 +69,13 @@ function SidebarLogo() {
       <Link href="/">
         <HStack spacing={3} cursor="pointer" _hover={{ opacity: 0.8 }} transition="opacity 0.2s">
           <Image src="/logo.jpg" alt="A Rythme Ethic" h="36px" borderRadius="md" />
-          <Text fontSize="sm" fontWeight="700" color="brand.500" fontFamily="heading" lineHeight="1.2">
+          <Text
+            fontSize="sm"
+            fontWeight="700"
+            color="brand.500"
+            fontFamily="heading"
+            lineHeight="1.2"
+          >
             A Rythme Ethic
           </Text>
         </HStack>
@@ -135,7 +142,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </HStack>
               <IconButton
                 aria-label="Fermer le menu"
-                icon={<Text fontSize="lg" lineHeight={1}>✕</Text>}
+                icon={
+                  <Text fontSize="lg" lineHeight={1}>
+                    ✕
+                  </Text>
+                }
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
@@ -151,7 +162,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 w="full"
                 size="sm"
                 variant="ghost"
-                onClick={() => { onClose(); handleLogout(); }}
+                onClick={() => {
+                  onClose();
+                  handleLogout();
+                }}
                 color="gray.500"
                 justifyContent="flex-start"
               >
@@ -163,7 +177,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </Drawer>
 
       {/* ── Main area ── */}
-      <Box ml={{ base: 0, md: SIDEBAR_W }} flex={1} minH="100vh" bg="#fafafa" minW={0} overflow="hidden">
+      <Box
+        ml={{ base: 0, md: SIDEBAR_W }}
+        flex={1}
+        minH="100vh"
+        bg="#fafafa"
+        minW={0}
+        overflow="hidden"
+      >
         {/* Top bar */}
         <Box
           bg="white"

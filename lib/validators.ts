@@ -111,10 +111,19 @@ export const UPLOAD_MIME: Record<string, string> = {
   heif: 'image/heif',
 };
 
-// Extension acceptée (en minuscules) ou null
-export function uploadExtension(filename: unknown): string | null {
+// Recueil école (syllabus, exemples de cours) : aussi Word et PowerPoint
+export const ECOLE_UPLOAD_MIME: Record<string, string> = {
+  ...UPLOAD_MIME,
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+};
+
+// Extension acceptée par la table `mime` (en minuscules) ou null
+export function uploadExtension(filename: unknown, mime = UPLOAD_MIME): string | null {
   const ext = (typeof filename === 'string' && /\.(\w+)$/.exec(filename)?.[1].toLowerCase()) || '';
-  return Object.hasOwn(UPLOAD_MIME, ext) ? ext : null;
+  return Object.hasOwn(mime, ext) ? ext : null;
 }
 
 // Disponibilités (Préparation accompagnement) : un créneau par jour coché, du lundi au samedi

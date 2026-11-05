@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
-import { findRecueilClient } from '@/lib/procedures';
-import {
-  RECUEIL_CONTACT_KEYS,
-  RECUEIL_UPLOAD_MAX_BYTES,
-  UPLOAD_MIME,
-  findRecueilContactErrors,
-  uploadExtension,
-} from '@/lib/validators';
+import { findRecueilClient, storedUploads, uploadDocument } from '@/lib/procedures';
+import { RECUEIL_CONTACT_KEYS, findRecueilContactErrors } from '@/lib/validators';
 import { RESPONSABLES_LEGAUX, TROUBLES_APPRENTISSAGE, joinSituation } from '@/types';
 
 // Route PUBLIQUE (liste blanche /api/formulaire/ de middleware.ts) : tout passe par le token.
@@ -112,32 +106,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Pièces jointes déjà envoyées au Storage (URL signées) : seulement sous le dossier de ce
-    //    client, réellement présentes, ≤ 15 Mo et du type MIME de leur extension (celui avec
-    //    lequel le Storage les servira). Les autres sont ignorées.
-    const prefix = `recueil/${client.id}/`;
-    const wanted = (Array.isArray(uploads) ? uploads : [])
-      .slice(0, 6)
-      .filter(
-        u =>
-          typeof u?.path === 'string' &&
-          new RegExp(`^${prefix}[a-f0-9]{32}\\.\\w+$`).test(u.path) &&
-          (u.kind === 'edt' || (u.kind === 'bilan' && hasTroubles))
-      )
-      .filter((u, i, all) => all.findIndex(x => x.path === u.path) === i);
-    let docs: typeof wanted = [];
-    if (wanted.length > 0) {
-      const { data: objects } = await supabase.storage
-        .from('client-files')
-        .list(`recueil/${client.id}`, { limit: 1000 });
-      const stored = new Map((objects || []).map(o => [o.name, o.metadata]));
-      // ponytail: un fichier refusé ici reste orphelin dans le dossier (effacé avec le client)
-      docs = wanted.filter(u => {
-        const meta = stored.get(u.path.slice(prefix.length));
-        const mime = UPLOAD_MIME[uploadExtension(u.path) ?? ''];
-        return !!mime && meta?.mimetype === mime && Number(meta?.size) <= RECUEIL_UPLOAD_MAX_BYTES;
-      });
-    }
+    // 4. Pièces jointes déjà envoyées au Storage (URL signées), vérifiées (lib/procedures.ts)
+    const docs = await storedUploads(
+      `recueil/${client.id}`,
+      uploads,
+      kind => kind === 'edt' || (kind === 'bilan' && hasTroubles)
+    );
 
     const jours: string[] | null = Array.isArray(f.jours_disponibles)
       ? f.jours_disponibles.filter((j: unknown) => typeof j === 'string')
@@ -216,22 +190,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (docs.length > 0) {
-      const { error: docsError } = await supabase.from('documents').insert(
-        docs.map(u => {
-          // Nom téléchargé par Florence : toujours terminé par l'extension réellement stockée
-          const ext = uploadExtension(u.path);
-          const name = str(u.original_filename, 200) || 'document';
-          return {
-            client_id: client.id,
-            procedure_id: procedure?.id ?? null,
-            kind: 'SUPPORTING_DOC',
-            title: u.kind === 'bilan' ? 'Bilan / diagnostic' : 'Emploi du temps',
-            storage_path: u.path,
-            uploaded_by: 'CLIENT',
-            original_filename: uploadExtension(name) === ext ? name : `${name}.${ext}`,
-          };
-        })
-      );
+      const { error: docsError } = await supabase
+        .from('documents')
+        .insert(
+          docs.map(u =>
+            uploadDocument(
+              u,
+              { client_id: client.id, procedure_id: procedure?.id ?? null },
+              u.kind === 'bilan' ? 'Bilan / diagnostic' : 'Emploi du temps'
+            )
+          )
+        );
       if (docsError) console.error('Error recording recueil documents:', docsError);
     }
 

@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { findRecueilClient, signedUploadUrl } from '@/lib/procedures';
-import { RECUEIL_UPLOAD_MAX_BYTES, uploadExtension } from '@/lib/validators';
+import { ECOLE_UPLOAD_MIME, RECUEIL_UPLOAD_MAX_BYTES, uploadExtension } from '@/lib/validators';
 
-// Route PUBLIQUE (/api/formulaire/) : URL d'upload signée pour une pièce du recueil (bilan, emploi
-// du temps). Le navigateur envoie le fichier directement au Storage (pas de limite Vercel de
-// 4,5 Mo). Le token est vérifié ici, AVANT d'être consommé par le POST final du formulaire.
+// Route PUBLIQUE (/api/formulaire/) : URL d'upload signée pour une pièce du recueil (particulier :
+// bilan, emploi du temps ; école : syllabus, exemple de cours, aussi en Word / PowerPoint). Le
+// navigateur envoie le fichier directement au Storage (pas de limite Vercel de 4,5 Mo). Le token est
+// vérifié ici, AVANT d'être consommé par le POST final du formulaire.
 export async function POST(request: NextRequest) {
   try {
     const { token, filename, size } = await request.json();
-    const found = await findRecueilClient(token, 'id');
+    const found = await findRecueilClient(token, 'id', 'any');
     if (!found.client) {
       return NextResponse.json({ success: false, error: found.error }, { status: found.status });
     }
-    const ext = uploadExtension(filename);
+    const ecole = found.client.type_client === 'École';
+    const ext = uploadExtension(filename, ecole ? ECOLE_UPLOAD_MIME : undefined);
     if (!ext || typeof size !== 'number' || size <= 0 || size > RECUEIL_UPLOAD_MAX_BYTES) {
+      const types = ecole ? 'PDF, image, Word ou PowerPoint' : 'PDF ou image uniquement';
       return NextResponse.json(
-        { success: false, error: 'Fichier refusé : PDF ou image uniquement, 15 Mo maximum.' },
+        { success: false, error: `Fichier refusé : ${types}, 15 Mo maximum.` },
         { status: 400 }
       );
     }

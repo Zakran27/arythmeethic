@@ -26,6 +26,8 @@ import { FiUpload, FiFile, FiX } from 'react-icons/fi';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { PERIODE_FACTURATION_LABELS } from '@/types';
+import { createClient } from '@/lib/supabase-client';
+import { ECOLE_UPLOAD_MIME, uploadExtension } from '@/lib/validators';
 
 const FORMATION_TYPES = [
   { value: 'initiale_en_alternance', label: 'Formation initiale / en alternance' },
@@ -253,62 +255,44 @@ function RecueilEcoleFormContent() {
           : null,
       };
 
+      // Ordre imposé : uploads par URL signée (token encore valide) → envoi du formulaire (consomme
+      // le token). Même mécanisme que le recueil particulier.
+      const uploads = [];
+      for (const [kind, file] of [
+        ['syllabus', syllabusFile],
+        ['cours_exemple', coursExempleFile],
+      ] as const) {
+        if (!file) continue;
+        const res = await fetch('/api/formulaire/recueil-informations/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, filename: file.name, size: file.size }),
+        });
+        const up = await res.json();
+        if (!res.ok || !up.success) throw new Error(up.error);
+        // Type MIME imposé par l'extension (l'API le revérifie)
+        const typed = new Blob([file], {
+          type: ECOLE_UPLOAD_MIME[uploadExtension(up.path, ECOLE_UPLOAD_MIME) ?? ''],
+        });
+        const { error: upError } = await createClient()
+          .storage.from('client-files')
+          .uploadToSignedUrl(up.path, up.uploadToken, typed);
+        if (upError) throw new Error(`L'envoi du fichier « ${file.name} » a échoué. Réessayez.`);
+        uploads.push({ kind, path: up.path, original_filename: file.name });
+      }
+
       const response = await fetch('/api/formulaire/recueil-informations-ecole', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, ...submitData }),
+        body: JSON.stringify({ token, ...submitData, uploads }),
       });
-
       const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error);
 
-      if (!response.ok || !data.success) {
-        setError(data.error || "Erreur lors de l'envoi du formulaire");
-        setSubmitting(false);
-        return;
-      }
-
-      // Upload syllabus file if provided
-      if (syllabusFile && data.procedureId) {
-        const fileFormData = new FormData();
-        fileFormData.append('file', syllabusFile);
-        fileFormData.append('procedureId', data.procedureId);
-        fileFormData.append('title', 'Syllabus / Contenu de la matière');
-        fileFormData.append('kind', 'SUPPORTING_DOC');
-        fileFormData.append('uploadedBy', 'CLIENT');
-
-        const uploadResponse = await fetch('/api/storage/upload', {
-          method: 'POST',
-          body: fileFormData,
-        });
-
-        if (!uploadResponse.ok) {
-          console.error('Failed to upload syllabus:', await uploadResponse.text());
-        }
-      }
-
-      // Upload cours exemple file if provided
-      if (coursExempleFile && data.procedureId) {
-        const fileFormData = new FormData();
-        fileFormData.append('file', coursExempleFile);
-        fileFormData.append('procedureId', data.procedureId);
-        fileFormData.append('title', 'Exemple de cours passés');
-        fileFormData.append('kind', 'SUPPORTING_DOC');
-        fileFormData.append('uploadedBy', 'CLIENT');
-
-        const uploadResponse = await fetch('/api/storage/upload', {
-          method: 'POST',
-          body: fileFormData,
-        });
-
-        if (!uploadResponse.ok) {
-          console.error('Failed to upload cours exemple:', await uploadResponse.text());
-        }
-      }
-
-      // Redirect to confirmation page
       router.push('/formulaire/recueil-informations-ecole/confirmation');
     } catch (err) {
-      setError("Erreur lors de l'envoi du formulaire");
+      // Nos messages (Error simple) sont affichés ; réseau / réponse illisible → message générique
+      setError((err instanceof Error && err.message) || "Erreur lors de l'envoi du formulaire");
       setSubmitting(false);
     }
   };

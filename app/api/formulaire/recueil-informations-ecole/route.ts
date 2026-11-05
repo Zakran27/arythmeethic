@@ -1,42 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase-server';
+import { findRecueilClient, storedUploads, uploadDocument } from '@/lib/procedures';
+import { ECOLE_UPLOAD_MIME } from '@/lib/validators';
+
+// Route PUBLIQUE (liste blanche /api/formulaire/ de middleware.ts) : tout passe par le token, qui
+// doit être celui d'un établissement (même colonne form_token que le recueil particulier).
 
 // GET - Fetch client data for pre-filling the form
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
+    const found = await findRecueilClient(request.nextUrl.searchParams.get('token'), '*', 'École');
+    if (!found.client) {
+      return NextResponse.json({ success: false, error: found.error }, { status: found.status });
     }
-
-    const supabase = createServiceRoleClient();
-
-    // Find client by token
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('form_token', token)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Lien invalide ou expiré' },
-        { status: 404 }
-      );
-    }
-
-    // Check if token is expired
-    if (client.form_token_expires_at) {
-      const expiresAt = new Date(client.form_token_expires_at);
-      if (expiresAt < new Date()) {
-        return NextResponse.json(
-          { success: false, error: 'Ce lien a expiré. Veuillez contacter A Rythme Ethic.' },
-          { status: 410 }
-        );
-      }
-    }
+    const client = found.client;
 
     // Return client data for École (pre-fill with existing data)
     return NextResponse.json({
@@ -101,42 +78,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Update client with form data
+// POST - Update client with form data (consomme le token : à appeler APRÈS les uploads)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { token, ...formData } = body;
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Token requis' }, { status: 400 });
-    }
-
+    const { token, uploads, ...formData } = await request.json();
     const supabase = createServiceRoleClient();
-
-    // Find client by token
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .select('id, form_token_expires_at')
-      .eq('form_token', token)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json(
-        { success: false, error: 'Lien invalide ou expiré' },
-        { status: 404 }
-      );
+    const found = await findRecueilClient(token, 'id', 'École');
+    if (!found.client) {
+      return NextResponse.json({ success: false, error: found.error }, { status: found.status });
     }
+    const client = found.client;
 
-    // Check if token is expired
-    if (client.form_token_expires_at) {
-      const expiresAt = new Date(client.form_token_expires_at);
-      if (expiresAt < new Date()) {
-        return NextResponse.json(
-          { success: false, error: 'Ce lien a expiré. Veuillez contacter A Rythme Ethic.' },
-          { status: 410 }
-        );
-      }
-    }
+    // Pièces jointes déjà envoyées au Storage (URL signées), vérifiées (lib/procedures.ts)
+    const docs = await storedUploads(
+      `recueil/${client.id}`,
+      uploads,
+      kind => kind === 'syllabus' || kind === 'cours_exemple',
+      ECOLE_UPLOAD_MIME
+    );
 
     // Build update data for École
     const updateData: Record<string, unknown> = {
@@ -188,8 +147,7 @@ export async function POST(request: NextRequest) {
       ecole_enseignant_prenom: formData.ecole_enseignant_prenom || null,
       ecole_enseignant_email: formData.ecole_enseignant_email || null,
       // Modalités de facturation
-      ecole_facturation_date_max_paiement:
-        formData.ecole_facturation_date_max_paiement || null,
+      ecole_facturation_date_max_paiement: formData.ecole_facturation_date_max_paiement || null,
       ecole_periode_facturation: formData.ecole_periode_facturation || null,
       // Saisie des notes élèves
       ecole_notes_saisies_par: formData.ecole_notes_saisies_par || null,
@@ -247,18 +205,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (docs.length > 0) {
+      const { error: docsError } = await supabase
+        .from('documents')
+        .insert(
+          docs.map(u =>
+            uploadDocument(
+              u,
+              { client_id: client.id, procedure_id: procedure?.id ?? null },
+              u.kind === 'syllabus'
+                ? 'Syllabus / Contenu de la matière'
+                : 'Exemple de cours passés',
+              ECOLE_UPLOAD_MIME
+            )
+          )
+        );
+      if (docsError) console.error('Error recording recueil école documents:', docsError);
+    }
+
     // Log to audit
     await supabase.from('audit_log').insert({
       source: 'FORM',
       event: 'RECUEIL_ECOLE_COMPLETED',
-      payload: { client_id: client.id },
+      payload: { client_id: client.id, documents: docs.length },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Informations enregistrées avec succès',
-      procedureId: procedure?.id || null,
-    });
+    return NextResponse.json({ success: true, message: 'Informations enregistrées' });
   } catch (error) {
     console.error('Error updating client from form:', error);
     return NextResponse.json(

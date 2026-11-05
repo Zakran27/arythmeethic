@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Salesforce local tooling
 .sfdx/
+
+# Supabase CLI (cache local)
+supabase/.temp/

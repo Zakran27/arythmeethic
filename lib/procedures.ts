@@ -2,6 +2,7 @@
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase-server';
 import { sendEmail } from '@/lib/brevo';
+import { RECUEIL_UPLOAD_MAX_BYTES, UPLOAD_MIME, uploadExtension } from '@/lib/validators';
 import type { Client } from '@/types';
 
 export type FamilyMember = 'parent1' | 'parent2' | 'jeune';
@@ -96,22 +97,25 @@ export async function launchProcedure({
   return { success: true, procedureId: procedure.id };
 }
 
-// Recueil des informations (particulier) : client du token `form_token`, s'il est encore valide.
-// `columns` = colonnes à relire en plus. Utilisé par le formulaire public et sa route d'upload.
+// Recueil des informations : client du token `form_token`, s'il est encore valide et du bon type
+// (`any` = les deux, pour la route d'upload commune). `columns` = colonnes à relire en plus.
 export async function findRecueilClient(
   token: unknown,
-  columns: string
+  columns: string,
+  type: 'Particulier' | 'École' | 'any' = 'Particulier'
 ): Promise<{ client: Client } | { client: null; error: string; status: number }> {
   if (typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token)) {
     return { client: null, error: 'Lien invalide ou expiré', status: 404 };
   }
   const { data: client } = await createServiceRoleClient()
     .from('clients')
-    .select<string, Client>(`id, type_client, form_token_expires_at, ${columns}`)
+    .select<string, Client>(
+      columns === '*' ? '*' : `id, type_client, form_token_expires_at, ${columns}`
+    )
     .eq('form_token', token)
     .maybeSingle();
-  // Le token École (même colonne) ouvre l'autre formulaire, pas celui-ci
-  if (!client || client.type_client === 'École') {
+  // Même colonne pour les deux types : le token École n'ouvre pas le formulaire particulier (et l'inverse)
+  if (!client || (type !== 'any' && (client.type_client === 'École') !== (type === 'École'))) {
     return { client: null, error: 'Lien invalide ou expiré', status: 404 };
   }
   if (client.form_token_expires_at && new Date(client.form_token_expires_at) < new Date()) {
@@ -189,4 +193,58 @@ export async function signedUploadUrl(
   const { data, error } = await storage.createSignedUploadUrl(path);
   if (error || !data) throw error;
   return { path, uploadToken: data.token };
+}
+
+// Pièces jointes déjà envoyées par URL signée : seulement sous `folder/`, de nom aléatoire, réellement
+// présentes, ≤ 15 Mo et du type MIME de leur extension (celui avec lequel le Storage les servira).
+// Les autres sont ignorées. ponytail: un fichier refusé reste orphelin dans le dossier.
+type Upload = { path: string; kind: string; original_filename?: unknown };
+export async function storedUploads(
+  folder: string,
+  uploads: unknown,
+  keepKind: (kind: unknown) => boolean,
+  mime = UPLOAD_MIME
+): Promise<Upload[]> {
+  const prefix = `${folder}/`;
+  const wanted = (Array.isArray(uploads) ? uploads : [])
+    .slice(0, 6)
+    .filter(
+      (u): u is Upload =>
+        typeof u?.path === 'string' &&
+        new RegExp(`^${prefix}[a-f0-9]{32}\\.\\w+$`).test(u.path) &&
+        keepKind(u.kind)
+    )
+    .filter((u, i, all) => all.findIndex(x => x.path === u.path) === i);
+  if (wanted.length === 0) return [];
+  const { data: objects } = await createServiceRoleClient()
+    .storage.from('client-files')
+    .list(folder, { limit: 1000 });
+  const stored = new Map((objects || []).map(o => [o.name, o.metadata]));
+  return wanted.filter(u => {
+    const meta = stored.get(u.path.slice(prefix.length));
+    const type = mime[uploadExtension(u.path, mime) ?? ''];
+    return !!type && meta?.mimetype === type && Number(meta?.size) <= RECUEIL_UPLOAD_MAX_BYTES;
+  });
+}
+
+// Ligne `documents` d'une pièce jointe client. Nom téléchargé par Florence : toujours terminé par
+// l'extension réellement stockée.
+export function uploadDocument(
+  u: Upload,
+  ids: { client_id: string; procedure_id: string | null },
+  title: string,
+  mime = UPLOAD_MIME
+) {
+  const ext = uploadExtension(u.path, mime);
+  const name =
+    (typeof u.original_filename === 'string' && u.original_filename.trim().slice(0, 200)) ||
+    'document';
+  return {
+    ...ids,
+    kind: 'SUPPORTING_DOC',
+    title,
+    storage_path: u.path,
+    uploaded_by: 'CLIENT',
+    original_filename: uploadExtension(name, mime) === ext ? name : `${name}.${ext}`,
+  };
 }
