@@ -453,8 +453,46 @@ Add a case when you change one of these modules.
 
 **Not yet tested for real**:
 - The full fin de contrat signature path (check that the parent doesn't receive the DocuSeal email twice).
-- October recap with the 1st RDV line ([famille A] 1.47 h, [famille B] 1.73 h).
+- October recap with the 1st RDV line (2 families: 1.47 h and 1.73 h, see Suivi CESU).
 
 **Next**: see `TODO.md`:
 - 29/10 meeting, blocks A–F: quick fixes, contract reviewer for schools, bulk actions in Suivi CESU, 1st RDV whole hours, normalised address, waiting-list switch, Partenaires and Ressources Lycée / Collège pages, CMS.
 - 19/10 security / perf audit. Priorities: `CRON_SECRET` on Vercel, close `/api/storage/upload`, `requireAdmin()`, idempotent renouvellement-envoi (Next.js upgraded to 15.5.28 on 02/11).
+
+---
+
+## 12. Security rules (every change)
+
+The data is sensitive: minors, health fields (`troubles_*`, `suivi_psy`), CESU numbers, signed contracts. One admin session or the service-role key opens everything. Treat the repo as public: no real names, numbers or files in code, docs, tests or commits.
+
+- **Public routes** (`PUBLIC_API` in `middleware.ts`): the token is the only control. Check its format, expiry and type server side before any read, write, upload or email. Never trust an id sent by the browser (`procedureId`, `clientId`): derive it from the token.
+- **Service role** bypasses RLS: every `createServiceRoleClient()` query is filtered by the token or the owner. No `.insert(body)` / `.update(body)` with the raw request body: pick the fields.
+- **Admin routes**: the middleware checks the session, not the role. Until `requireAdmin()` exists, a new admin route checks `is_admin` itself.
+- **Crons**: check `Authorization: Bearer ${CRON_SECRET}` and stay idempotent (claim or date guard, like `cron/signatures`). Anyone can call a cron URL.
+- **Emails**: HTML-escape every value that comes from a form or the DB before it reaches a template or a subject. Links come from `NEXT_PUBLIC_BASE_URL`, never from the request `Host`.
+- **Uploads**: signed upload URL tied to the token (pattern: `api/formulaire/recueil-informations/upload-url`), `uploadExtension` allowlist, size cap, per-client prefix, random file name.
+- **Errors**: anonymous callers get a generic French message. `error.message`, PostgREST and DocuSeal errors go to `console.error` only.
+- **Logs**: ids only. No names, emails, phones, messages or health fields in `console.log`.
+- **DB changes**: a new table ships with RLS on and `is_admin()` policies in the same migration. After a migration: `npx supabase db advisors --remote=yywqvlpxsfiavndeqhdu --type security`. Read-only live checks: `npx supabase db query --remote=yywqvlpxsfiavndeqhdu --read-only "<sql>"` (CLI login: `npx supabase login`).
+- **Dependencies**: `npm audit --omit=dev` before pushing a dependency change. Apply Next.js security releases within the week.
+- **Review**: a diff that touches `middleware.ts`, a public route, tokens, uploads, crons or emails gets `/security-review` before the push. A finding names the attacker, the input, the control bypassed and the impact; anything else is a hardening note.
+
+## 13. Design principles (the UI is validated: change it as little as possible)
+
+Florence approved the design (Chakra theme, `brand` / `accent`, email shell). Do not restyle or "modernise". These rules apply to new screens and fixes only, and the existing pattern always wins.
+
+- Reuse a Chakra component, theme token or the pattern of a neighbouring page. No new colour, font, shadow or radius.
+- Every new list, form or fetch has loading, empty and error states, in French.
+- Accessibility basics: visible label on every input, `aria-label` on icon-only buttons, never remove the focus ring, 44px tap targets and 16px inputs on public forms (families fill them on phones), validate on submit and say what is wrong instead of disabling the button.
+- New copy: buttons are verb + object ("Envoyer le formulaire"); errors say what happened and what to do next.
+- Dates and amounts through `lib/format.ts` (`fr-FR`); hours and euros in tables use `fontVariantNumeric="tabular-nums"`.
+- No new animation beyond Chakra defaults; anything added respects `prefers-reduced-motion`.
+- Check UI changes at 390px and 1440px before pushing.
+- Design tools (`npx impeccable detect`, `/impeccable audit`, jakubkrehel `interface-review`) only as read-only reports. No edit-time design hooks here, and ignore findings that contradict the validated design.
+
+## 14. Working method
+
+- Done means verified: run the §1 checks fresh and quote the result before saying "done". UI: look at it in the browser.
+- Bugs: reproduce, find the root cause, fix it once where all callers go through. After 3 failed attempts, stop and rethink with Thomas.
+- Money, hours, dates, tokens: add or extend a `lib/*.check.mjs` assertion that fails before the fix.
+- Review or tool feedback is checked, not obeyed blindly.

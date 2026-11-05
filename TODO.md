@@ -49,7 +49,7 @@ Taille : XS = quelques lignes · S = < ½ j · M = ~1 j · L = plusieurs jours.
 
 **C2. 1er RDV : seules les heures entières sont facturées, le reste va au compteur** — S
 - Ex. 1,97 h → 1 h facturée sur le mois choisi, 0,97 h ajoutée au compteur de report du mois (incrémente le compteur).
-- Modifie la règle du 13/10 (durée facturée telle quelle) : `lib/heures-report.ts` (+ test `heures-report.check.mjs`), récap PDF/email, aperçus. [famille A] / [famille B] (1,47 h / 1,73 h en oct.) : recalcul à prévoir si le récap d'octobre n'est pas encore parti.
+- Modifie la règle du 13/10 (durée facturée telle quelle) : `lib/heures-report.ts` (+ test `heures-report.check.mjs`), récap PDF/email, aperçus. 2 familles concernées (1,47 h et 1,73 h en oct., voir Suivi CESU) : recalcul à prévoir si le récap d'octobre n'est pas encore parti.
 
 ### D. Fin de contrat (particulier)
 
